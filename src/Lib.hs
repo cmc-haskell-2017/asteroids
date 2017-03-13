@@ -43,5 +43,106 @@ data Spaceship = Spaceship
 initUniverse :: StdGen -> Universe
 initUniverse g = Universe
   { asteroids  = initAsteroids g
-  , spaceship = initSpaceShip
+  , spaceship = initSpaceship
   }
+  
+-- | Начальное состояние корабля.
+initSpaceship :: Spaceship
+initSpaceship = Spaceship
+  { -- ????
+  }
+  
+  -- | Инициализировать один астероид.
+initAsteroid :: Point -> Asteroid
+initAsteroid a = -- ???
+
+-- | Инициализировать случайный бесконечный
+-- список астероидов для игровой вселенной.
+initAsteroids :: StdGen -> [Asteroid]
+initAsteroids a = map initAsteroid
+  --(??? a)
+
+  -- =========================================
+-- Отрисовка игровой вселенной
+-- =========================================
+
+-- | Отобразить игровую вселенную.
+drawUniverse :: Universe -> Picture
+drawUniverse u = pictures
+  [ drawAsteroids  (asteroids u)
+  , drawSpaceship (spaceship u)
+  ]
+  
+drawAsteroids :: -- ???
+
+drawSpaceship :: -- ???
+  
+
+-- =========================================
+-- Обработка событий
+-- =========================================
+
+-- | Обработчик событий игры.
+handleUniverse :: Event -> Universe -> Universe
+handleUniverse (EventKey (SpecialKey KeySpace) Down _ _) = fireSpaceship
+handleUniverse _ = id
+
+fireSpaceship :: -- ???
+
+-- =========================================
+-- Обновление игровой вселенной
+-- =========================================
+
+-- | Обновить состояние игровой вселенной.
+updateUniverse :: Float -> Universe -> Universe
+updateUniverse dt u
+  | isGameOver u = resetUniverse u
+  | otherwise = u
+      { asteroids  = updateAsteroids  dt (asteroids  u)
+      , spaceship = updateSpaceship dt (spaceship u)
+      }
+  where
+   -- ???
+
+-- | Обновить состояние корабля.
+updateSpaceship :: Float -> Spaceship -> Spaceship
+updateSpaceship dt spaceship = -- ???
+
+-- | Обновить астероиды игровой вселенной.
+updateAsteroids :: Float -> [Asteroid] -> [Asteroid]
+updateAsteroids _ [] = []
+updateAsteroids -- ???
+
+-- | Сбросить игру.
+resetUniverse :: Universe -> Universe
+resetUniverse u = u
+  { asteroids  = tail (asteroids u)
+  , spaceship = initSpaceship
+  }
+
+-- | Конец игры?
+isGameOver :: Universe -> Bool
+isGameOver u = spaceshipFaceAsteroid
+  where
+    spaceshipFaceAsteroid = -- ???
+
+-- =========================================
+-- Константы, параметры игры
+-- =========================================
+
+-- | Ширина экрана.
+screenWidth :: Int
+screenWidth = 800
+
+-- | Высота экрана.
+screenHeight :: Int
+screenHeight = 450
+
+-- | Положение правого края экрана.
+screenRight :: Offset
+screenRight = fromIntegral screenWidth / 2
+
+-- | Положение левого края экрана.
+screenLeft :: Offset
+screenLeft = - fromIntegral screenWidth / 2
+
