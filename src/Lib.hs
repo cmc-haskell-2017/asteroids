@@ -1,7 +1,13 @@
 module Asteroids where
 
 run :: IO ()
-run = putStrLn "This project is not yet implemented"
+run = do
+  g <- newStdGen
+  play display bgColor fps (initUniverse g) drawUniverse handleUniverse updateUniverse
+  where
+    display = InWindow "Flappy Lambda" (screenWidth, screenHeight) (200, 200)
+    bgColor = black   -- цвет фона
+    fps     = 60      -- кол-во кадров в секунду
 
 -- =========================================
 -- Модель игровой вселенной
@@ -32,3 +38,10 @@ data Spaceship = Spaceship
 , spaceshipDirection :: Vector --  ^ Направление корабля
 , spaceshipSize :: Float -- ^ Размер корабля
 } deriving (Eq, Show)
+
+-- | Инициализация игровой вселенной.
+initUniverse :: StdGen -> Universe
+initUniverse g = Universe
+  { asteroids  = initAsteroids g
+  , spaceship = initSpaceShip
+  }
