@@ -10,7 +10,7 @@ run = do
   g <- newStdGen
   play display bgColor fps (initUniverse g) drawUniverse handleUniverse updateUniverse
   where
-    display = InWindow "Flappy Lambda" (screenWidth, screenHeight) (200, 200)
+    display = InWindow "Asteroids" (screenWidth, screenHeight) (200, 200)
     bgColor = black   -- цвет фона
     fps     = 60      -- кол-во кадров в секунду
 
