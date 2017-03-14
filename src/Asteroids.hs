@@ -21,12 +21,13 @@ run = do
 type Point = (Double, Double)
 
 -- |Вектор
-type Vector = (Double, Double, Double)
+type Vector = (Double, Double)
 
 -- | Игровая вселенная
 data Universe = Universe
 { asteroids :: [Asteroid] -- ^ Астероиды
 , spaceship :: Spaceship -- ^ Космический корабль
+, fireballs :: [Fireball] -- Паш, для этого тебе тип надо сделать
 }
 
 -- | Астероид
@@ -43,6 +44,8 @@ data Spaceship = Spaceship
 , spaceshipDirection :: Vector --  ^ Направление корабля
 , spaceshipSize :: Float -- ^ Размер корабля
 } deriving (Eq, Show)
+
+-- Тут тип пули (одной) будет:
 
 -- | Инициализация игровой вселенной.
 initUniverse :: StdGen -> Universe
@@ -67,6 +70,8 @@ initAsteroids :: StdGen -> [Asteroid]
 initAsteroids a = map initAsteroid
   --(??? a)
 
+-- Инициализация для пуль, хз как лучше,  наверное как и астероиды?
+
   -- =========================================
 -- Отрисовка игровой вселенной
 -- =========================================
@@ -78,7 +83,7 @@ drawUniverse u = pictures
   , drawSpaceship (spaceship u)
   ]
   
-drawAsteroids :: -- ???
+drawAsteroids :: -- ??? Тимуру
 
 drawSpaceship :: -- ???
   
@@ -92,7 +97,7 @@ handleUniverse :: Event -> Universe -> Universe
 handleUniverse (EventKey (SpecialKey KeySpace) Down _ _) = fireSpaceship
 handleUniverse _ = id
 
-fireSpaceship :: -- ???
+fireSpaceship :: -- ??? Паш, твоё, тут как раз появляются пули и летят по направлению корабля 
 
 -- =========================================
 -- Обновление игровой вселенной
@@ -107,7 +112,7 @@ updateUniverse dt u
       , spaceship = updateSpaceship dt (spaceship u)
       }
   where
-   -- ???
+   -- ??? тут почти у всех
 
 -- | Обновить состояние корабля.
 updateSpaceship :: Float -> Spaceship -> Spaceship
@@ -116,7 +121,7 @@ updateSpaceship dt spaceship = -- ???
 -- | Обновить астероиды игровой вселенной.
 updateAsteroids :: Float -> [Asteroid] -> [Asteroid]
 updateAsteroids _ [] = []
-updateAsteroids -- ???
+updateAsteroids -- ??? Тимур
 
 -- | Сбросить игру.
 resetUniverse :: Universe -> Universe
@@ -127,10 +132,11 @@ resetUniverse u = u
 
 -- | Конец игры?
 isGameOver :: Universe -> Bool
-isGameOver u = spaceshipFaceAsteroid
+isGameOver u = spaceshipFaceAsteroids
   where
-    spaceshipFaceAsteroid = -- ???
+    spaceshipFaceAsteroids = -- ??? - Паше
 
+spaceshipFaceAsteroid -- Паше
 -- =========================================
 -- Константы, параметры игры
 -- =========================================
