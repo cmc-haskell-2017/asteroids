@@ -10,7 +10,7 @@ run = do
   g <- newStdGen
   play display bgColor fps (initUniverse g) drawUniverse handleUniverse updateUniverse
   where
-    display = InWindow "Asteroids" (screenWidth, screenHeight) (200, 200)
+    display = InWindow "Asteroids" (screenWidth, screenHeight) (100, 100)
     bgColor = black   -- цвет фона
     fps     = 60      -- кол-во кадров в секунду
 
@@ -18,56 +18,63 @@ run = do
 -- Модель игровой вселенной
 -- =========================================
 -- |Точка
-type Point = (Double, Double)
+-- type TPoint = (Float, Float)
 
 -- |Вектор
-type Vector = (Double, Double)
+-- type TVector = (Float, Float)
 
 -- | Игровая вселенная
 data Universe = Universe
-{ asteroids :: [Asteroid] -- ^ Астероиды
-, spaceship :: Spaceship -- ^ Космический корабль
-, fireballs :: [Fireball] -- Паш, для этого тебе тип надо сделать
-}
+ { asteroids :: [Asteroid] -- ^ Астероиды
+ , spaceship :: Spaceship -- ^ Космический корабль
+ -- , fireballs :: [Fireball] -- Паш, для этого тебе тип надо сделать
+ }
 
 -- | Астероид
 data Asteroid = Asteroid
-{ asteroidPosition :: Point -- ^ Положение астероида
-, asteroidVelocity :: Vector -- ^ Скорость астероида
-, asteroidSize :: Float -- ^ Размер астероида (Радиус/Диаметр)
-} deriving (Eq, Show)
+ { asteroidPosition :: Point -- ^ Положение астероида
+ , asteroidVelocity :: Vector -- ^ Скорость астероида
+ , asteroidSize :: Float -- ^ Размер астероида (Радиус/Диаметр)
+ } deriving (Eq, Show)
 
 -- | Космический корабль
 data Spaceship = Spaceship
-{ spaceshipPosition :: Point -- ^ Положение корабля
-, spaceshipVelocity :: Vector -- ^ Скорость корабля
-, spaceshipDirection :: Vector --  ^ Направление корабля
-, spaceshipSize :: Float -- ^ Размер корабля
-} deriving (Eq, Show)
+ { spaceshipPosition :: Point -- ^ Положение корабля
+ , spaceshipVelocity :: Vector -- ^ Скорость корабля
+ , spaceshipAccelerate :: Float -- ^ Ускорение
+ , spaceshipDirection :: Float --  ^ Направление корабля
+ , spaceshipAngularV :: Float -- ^ Угловая скорость
+ , spaceshipSize :: Float -- ^ Размер корабля
+ } deriving (Eq, Show)
 
 -- Тут тип пули (одной) будет:
 
 -- | Инициализация игровой вселенной.
 initUniverse :: StdGen -> Universe
 initUniverse g = Universe
-  { asteroids  = initAsteroids g
-  , spaceship = initSpaceship
+  { -- asteroids  = initAsteroids g
+    spaceship = initSpaceship
   }
   
 -- | Начальное состояние корабля.
 initSpaceship :: Spaceship
 initSpaceship = Spaceship
-  { -- ????
+  { spaceshipPosition = (0, 0)
+  , spaceshipVelocity = (0,0) 
+  , spaceshipAccelerate = 0
+  , spaceshipAngularV = 0
+  , spaceshipDirection = 0 
+  , spaceshipSize = 1
   }
   
   -- | Инициализировать один астероид.
-initAsteroid :: Point -> Asteroid
-initAsteroid a = -- ???
+-- initAsteroid :: Point -> Asteroid
+-- initAsteroid a = a-- ???
 
 -- | Инициализировать случайный бесконечный
 -- список астероидов для игровой вселенной.
-initAsteroids :: StdGen -> [Asteroid]
-initAsteroids a = map initAsteroid
+-- initAsteroids :: StdGen -> [Asteroid]
+-- initAsteroids a = map initAsteroid
   --(??? a)
 
 -- Инициализация для пуль, хз как лучше,  наверное как и астероиды?
@@ -79,14 +86,30 @@ initAsteroids a = map initAsteroid
 -- | Отобразить игровую вселенную.
 drawUniverse :: Universe -> Picture
 drawUniverse u = pictures
-  [ drawAsteroids  (asteroids u)
-  , drawSpaceship (spaceship u)
+  [ -- drawAsteroids  (asteroids u)
+    drawSpaceship (spaceship u)
   ]
   
-drawAsteroids :: -- ??? Тимуру
+--drawAsteroids :: -- ??? Тимуру
 
-drawSpaceship :: -- ???
+--drawSpaceship :: -- ???
   
+
+drawSpaceship :: Spaceship -> Picture
+drawSpaceship spaceship = color white drawShip
+  where
+    drawShip = pictures (map polygon (shipPolygons spaceship))
+
+
+shipPolygons :: Spaceship -> [Path]
+shipPolygons ship = map (map move)
+  [ [ (0, 1600), (400, -100), (-400, -100) ]
+  , [ (200, 0), (800, -450), (-800, -450), (-200, 0) ]
+  , [ (800, 600), (800, -650), (650, -450) ]
+  , [ (-800, 600), (-800, -650), (-650, -450) ] 
+  , [ (-300, -450), (300, -450), (450, -700), (-450, -700) ] ]
+  where
+    move (x, y) = spaceshipPosition ship + mulSV 0.03 (rotateV ((spaceshipDirection ship) * pi / 180) (x, y))
 
 -- =========================================
 -- Обработка событий
@@ -94,10 +117,28 @@ drawSpaceship :: -- ???
 
 -- | Обработчик событий игры.
 handleUniverse :: Event -> Universe -> Universe
-handleUniverse (EventKey (SpecialKey KeySpace) Down _ _) = fireSpaceship
+handleUniverse (EventKey (SpecialKey KeyUp) Down _ _) =  moveShip 0.1
+handleUniverse (EventKey (SpecialKey KeyDown) Down _ _) = moveShip (-0.1)
+handleUniverse (EventKey (SpecialKey KeyUp) Up _ _) = moveShip 0 
+handleUniverse (EventKey (SpecialKey KeyDown) Up _ _) = moveShip 0 
+handleUniverse (EventKey (SpecialKey KeyLeft) Down _ _) = turnShip 5 
+handleUniverse (EventKey (SpecialKey KeyRight) Down _ _) = turnShip (-5) 
+handleUniverse (EventKey (SpecialKey KeyLeft) Up _ _) = turnShip 0 
+handleUniverse (EventKey (SpecialKey KeyRight) Up _ _) = turnShip 0 
+handleUniverse (EventKey (SpecialKey KeySpace) Down _ _) = id -- fireSpaceship 
 handleUniverse _ = id
 
-fireSpaceship :: -- ??? Паш, твоё, тут как раз появляются пули и летят по направлению корабля 
+moveShip :: Float -> Universe -> Universe
+moveShip a u = u 
+ { spaceship = (spaceship u) {spaceshipAccelerate = a }
+ }
+
+turnShip :: Float -> Universe -> Universe
+turnShip a u = u 
+ { spaceship = (spaceship u) {spaceshipAngularV = a }
+ }
+
+--fireSpaceship :: -- ??? Паш, твоё, тут как раз появляются пули и летят по направлению корабля 
 
 -- =========================================
 -- Обновление игровой вселенной
@@ -105,23 +146,45 @@ fireSpaceship :: -- ??? Паш, твоё, тут как раз появляют�
 
 -- | Обновить состояние игровой вселенной.
 updateUniverse :: Float -> Universe -> Universe
-updateUniverse dt u
-  | isGameOver u = resetUniverse u
+updateUniverse dt u  
+  | False = u -- isGameOver u = resetUniverse u
   | otherwise = u
-      { asteroids  = updateAsteroids  dt (asteroids  u)
-      , spaceship = updateSpaceship dt (spaceship u)
-      }
-  where
-   -- ??? тут почти у всех
+   { -- asteroids  = updateAsteroids  dt (asteroids  u)
+    spaceship = updateSpaceship dt (spaceship u)
+   }
+ --where
+ -- ??? тут почти у всех
 
 -- | Обновить состояние корабля.
 updateSpaceship :: Float -> Spaceship -> Spaceship
-updateSpaceship dt spaceship = -- ???
+updateSpaceship dt spaceship =  spaceship 
+	{
+		spaceshipPosition = ((checkWidth spaceship),(checkHeight spaceship))
+		, spaceshipVelocity = 
+			(((if w  then (-1) else 1) * (fst(spaceshipVelocity spaceship))),((if h  then (-1) else 1) * (snd(spaceshipVelocity spaceship))))  +  mul 
+		, spaceshipDirection = if newDir > 180 then newDir - 360
+								else if newDir < -180 then newDir + 360 else newDir
+	}
+	where 
+		h = (checkHeight spaceship) == (fromIntegral screenHeight / 2) || (checkHeight spaceship) == (-1) * (fromIntegral screenHeight / 2)  
+		w = (checkWidth spaceship) == (fromIntegral screenWidth / 2) || (checkWidth spaceship) == (-1) * (fromIntegral screenWidth / 2)
+		newDir = spaceshipDirection spaceship + (spaceshipAngularV spaceship)
+		mul = mulSV (spaceshipAccelerate spaceship) (unitVectorAtAngle (((spaceshipDirection spaceship) + 90) * pi / 180)) 
+
+checkHeight :: Spaceship -> Float
+checkHeight ship 
+	| (snd (spaceshipPosition ship)) >= 0 = min (fromIntegral screenHeight / 2) (snd (spaceshipPosition ship + spaceshipVelocity ship))
+	| otherwise = max (-1 * (fromIntegral screenHeight / 2)) (snd (spaceshipPosition ship + spaceshipVelocity ship))
+
+checkWidth :: Spaceship -> Float
+checkWidth ship 
+	| (fst (spaceshipPosition ship)) >= 0 = min (fromIntegral screenWidth / 2) (fst (spaceshipPosition ship + spaceshipVelocity ship))
+	| otherwise = max (-1 * (fromIntegral screenWidth / 2)) (fst (spaceshipPosition ship + spaceshipVelocity ship))
 
 -- | Обновить астероиды игровой вселенной.
 updateAsteroids :: Float -> [Asteroid] -> [Asteroid]
 updateAsteroids _ [] = []
-updateAsteroids -- ??? Тимур
+-- updateAsteroids -- ??? Тимур
 
 -- | Сбросить игру.
 resetUniverse :: Universe -> Universe
@@ -134,25 +197,25 @@ resetUniverse u = u
 isGameOver :: Universe -> Bool
 isGameOver u = spaceshipFaceAsteroids
   where
-    spaceshipFaceAsteroids = -- ??? - Паше
+    spaceshipFaceAsteroids = False-- ??? - Паше
 
-spaceshipFaceAsteroid -- Паше
+-- spaceshipFaceAsteroid -- Паше
 -- =========================================
 -- Константы, параметры игры
 -- =========================================
 
 -- | Ширина экрана.
 screenWidth :: Int
-screenWidth = 800
+screenWidth = 1600
 
 -- | Высота экрана.
 screenHeight :: Int
-screenHeight = 450
+screenHeight = 900
 
 -- | Положение правого края экрана.
-screenRight :: Offset
+screenRight :: Float
 screenRight = fromIntegral screenWidth / 2
 
 -- | Положение левого края экрана.
-screenLeft :: Offset
+screenLeft :: Float
 screenLeft = - fromIntegral screenWidth / 2
