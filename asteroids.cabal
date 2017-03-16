@@ -1,4 +1,4 @@
-name:                my-project
+name:                asteroids
 version:             0.1
 -- synopsis:
 -- description:
@@ -15,24 +15,26 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   ghc-options:         -Wall -fno-warn-type-defaults
-  exposed-modules:     Lib
+  exposed-modules:     Asteroids
   build-depends:       base >= 4.7 && < 5
+                     , random
+                     , gloss
   default-language:    Haskell2010
 
-executable my-project
+executable asteroids
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
-                     , my-project
+                     , asteroids
   default-language:    Haskell2010
 
-test-suite my-project-test
+test-suite asteroids-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
   build-depends:       base
-                     , my-project
+                     , asteroids
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
