@@ -15,7 +15,7 @@ stack build
 Собрать и запустить проект можно при помощи команды
 
 ```
-stack build && stack exec asteroids
+stack build && stack exec my-project
 ```
 
 Запустить тесты можно при помощи команды
