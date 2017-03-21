@@ -124,11 +124,14 @@ drawUniverse :: Images -> Universe -> Picture
 drawUniverse images u = pictures
   [ -- drawAsteroids (asteroids u)
     drawBackground (imageBackground images) (background u)
-    ,pictures (map drawBullet (bullets u))
+    ,drawBullets (bullets u)
     ,drawSpaceship (spaceship u) 
   ]
   
 --drawAsteroids :: -- ??? Тимуру
+
+drawBullets :: [Bullet] -> Picture
+drawBullets bullets = pictures (map drawBullet bullets)
 
 drawBullet :: Bullet -> Picture
 drawBullet bullet = color white bulletPic
@@ -236,16 +239,15 @@ updateBullet :: Float -> Bullet -> Bullet
 updateBullet dt bullet = bullet
   { bulletPosition = (width, height) }
   where
-    width  = fst (bulletPosition bullet + bulletVelocity bullet)
-    height = snd (bulletPosition bullet + bulletVelocity bullet)
+    (width, height) = bulletPosition bullet + bulletVelocity bullet
 
 -- | Обновить состояние корабля.
 updateSpaceship :: Float -> Spaceship -> Spaceship
 updateSpaceship dt spaceship = spaceship 
 	{ spaceshipPosition = ((checkWidth spaceship),(checkHeight spaceship))
 	, spaceshipVelocity = 
-	    (((if w then (-1) else 1) * (fst (spaceshipVelocity spaceship))),
-		 ((if h then (-1) else 1) * (snd (spaceshipVelocity spaceship)))) + mul 
+	    (((if w then (-0.99) else 0.99) * (fst (spaceshipVelocity spaceship))),
+		 ((if h then (-0.99) else 0.99) * (snd (spaceshipVelocity spaceship)))) + mul 
 	, spaceshipDirection = if newDir > 180 then newDir - 360
 						     else if newDir < -180 then newDir + 360 else newDir
 	}
