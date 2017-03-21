@@ -11,7 +11,7 @@ run images = do
   g <- newStdGen
   play display bgColor fps (initUniverse g) (drawUniverse images) handleUniverse updateUniverse
   where
-    display = InWindow "Asteroids" (screenWidth, screenHeight) (100, 100)
+    display = InWindow "Asteroids" (screenWidth, screenHeight) (150, 150)
     bgColor = black   -- цвет фона
     fps     = 60      -- кол-во кадров в секунду
 
@@ -22,7 +22,7 @@ loadImages = do
   Just background  <- loadJuicyPNG "images/background.png"
   return Images
     { -- imageAsteroid   = scale 0.1 0.1 asteroid
-      imageBackground  = scale 1 1 background
+      imageBackground  = scale 2 2 background
     }
 
 
@@ -47,6 +47,7 @@ data Universe = Universe
 -- | Фон
 data Background = Background
  { backgroundPosition :: Point -- ^ Положение фона
+ , backgroundVelocity :: Vector -- ^ Вектор скорости фона
  } deriving (Eq, Show)
 
 -- | Астероид
@@ -91,6 +92,7 @@ initSpaceship = Spaceship
 initBackground :: Background
 initBackground = Background
    { backgroundPosition = (0, 0)
+   , backgroundVelocity = (0, 0)
    }
   
   -- | Инициализировать один астероид.
@@ -147,8 +149,8 @@ shipPolygons ship = map (map move)
 
 -- | Обработчик событий игры.
 handleUniverse :: Event -> Universe -> Universe
-handleUniverse (EventKey (SpecialKey KeyUp) Down _ _) =  moveShip 0.1
-handleUniverse (EventKey (SpecialKey KeyDown) Down _ _) = moveShip (-0.1)
+handleUniverse (EventKey (SpecialKey KeyUp) Down _ _) =  moveShip 0.05
+handleUniverse (EventKey (SpecialKey KeyDown) Down _ _) = moveShip (-0.05)
 handleUniverse (EventKey (SpecialKey KeyUp) Up _ _) = moveShip 0 
 handleUniverse (EventKey (SpecialKey KeyDown) Up _ _) = moveShip 0 
 handleUniverse (EventKey (SpecialKey KeyLeft) Down _ _) = turnShip 5 
@@ -181,6 +183,7 @@ updateUniverse dt u
   | otherwise = u
    { -- asteroids  = updateAsteroids  dt (asteroids  u)
     spaceship = updateSpaceship dt (spaceship u)
+    ,background = updateBackground u
    }
  --where
  -- ??? тут почти у всех
@@ -210,6 +213,15 @@ checkWidth :: Spaceship -> Float
 checkWidth ship 
 	| (fst (spaceshipPosition ship)) >= 0 = min (fromIntegral screenWidth / 2) (fst (spaceshipPosition ship + spaceshipVelocity ship))
 	| otherwise = max (-1 * (fromIntegral screenWidth / 2)) (fst (spaceshipPosition ship + spaceshipVelocity ship))
+
+
+-- | Обновить фон
+updateBackground :: Universe -> Background
+updateBackground u = Background
+   {
+      backgroundPosition = (backgroundPosition (background u)) + (backgroundVelocity (background u))
+    , backgroundVelocity = (-1)* (spaceshipVelocity (spaceship u))
+   }
 
 -- | Обновить астероиды игровой вселенной.
 updateAsteroids :: Float -> [Asteroid] -> [Asteroid]
