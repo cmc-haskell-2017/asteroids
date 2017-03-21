@@ -20,9 +20,11 @@ loadImages :: IO Images
 loadImages = do
   -- Just asteroid   <- loadJuicyPNG "images/asteroid.png"
   Just background  <- loadJuicyPNG "images/background.png"
+  Just spaceship  <- loadJuicyPNG "images/spaceship.png"
   return Images
     { -- imageAsteroid   = scale 0.1 0.1 asteroid
       imageBackground  = scale 2 2 background
+    , imageSpaceship  = scale 0.2 0.2 spaceship
     }
 
 
@@ -34,6 +36,7 @@ loadImages = do
 data Images = Images
   { -- imageAsteroid  :: Picture   -- ^ Изображение астероида.
    imageBackground :: Picture   -- ^ Фон.
+  , imageSpaceship :: Picture   -- ^ Корабль.
   }
 
 -- | Игровая вселенная
@@ -101,6 +104,17 @@ initBackground = Background
    { backgroundPosition = (0, 0)
    , backgroundVelocity = (0, 0)
    }
+
+-- | Инициализация пули
+initBullet :: Universe -> Bullet
+initBullet u
+  = Bullet
+    { bulletPosition  = spaceshipPosition (spaceship u)
+  , bulletVelocity  = rotateV ((45+(spaceshipDirection (spaceship u))) * pi / 180) (10, 10)
+  , bulletDirection = spaceshipDirection (spaceship u)
+  , bulletSize      = 0.05 -- не нужен, наверное, вообще
+  }
+
   
   -- | Инициализировать один астероид.
 -- initAsteroid :: Point -> Asteroid
@@ -125,10 +139,21 @@ drawUniverse images u = pictures
   [ -- drawAsteroids (asteroids u)
     drawBackground (imageBackground images) (background u)
     ,drawBullets (bullets u)
-    ,drawSpaceship (spaceship u) 
+    ,drawSpaceship (imageSpaceship images) (spaceship u) 
   ]
   
 --drawAsteroids :: -- ??? Тимуру
+
+-- | Отобразить фон.
+drawBackground :: Picture -> Background -> Picture
+drawBackground image background = translate x y image
+  where
+    (x, y) = backgroundPosition background
+
+drawSpaceship :: Picture -> Spaceship -> Picture
+drawSpaceship image spaceship = translate x y (rotate ((-1)*(spaceshipDirection spaceship)) image)
+  where
+    (x, y) = spaceshipPosition spaceship
 
 drawBullets :: [Bullet] -> Picture
 drawBullets bullets = pictures (map drawBullet bullets)
@@ -137,23 +162,6 @@ drawBullet :: Bullet -> Picture
 drawBullet bullet = color white bulletPic
   where
     bulletPic = pictures (map polygon (bulletPolygons bullet))
-
-bulletPolygons :: Bullet -> [Path]
-bulletPolygons bullet = map (map move)
-  [ [ (-100, -100), (100, -100), (100, 100), (-100, 100) ] ]
-  where
-    move (x, y) = bulletPosition bullet + mulSV 0.03 (rotateV ((bulletDirection bullet) * pi / 180) (x, y))
-
--- | Отобразить фон.
-drawBackground :: Picture -> Background -> Picture
-drawBackground image background = translate x y image
-  where
-    (x, y) = backgroundPosition background
-
-drawSpaceship :: Spaceship -> Picture
-drawSpaceship spaceship = color green drawShip
-  where
-    drawShip = pictures (map polygon (shipPolygons spaceship))
 
 
 shipPolygons :: Spaceship -> [Path]
@@ -166,6 +174,13 @@ shipPolygons ship = map (map move)
   where
     move (x, y) = spaceshipPosition ship + mulSV 0.03 (rotateV ((spaceshipDirection ship) * pi / 180) (x, y))
 
+
+bulletPolygons :: Bullet -> [Path]
+bulletPolygons bullet = map (map move)
+  [ [ (-100, -100), (100, -100), (100, 100), (-100, 100) ] ]
+  where
+    move (x, y) = bulletPosition bullet + mulSV 0.03 (rotateV ((bulletDirection bullet) * pi / 180) (x, y))
+
 -- =========================================
 -- Обработка событий
 -- =========================================
@@ -176,7 +191,7 @@ handleUniverse (EventKey (SpecialKey KeyUp) Down _ _)    = moveShip 0.05
 handleUniverse (EventKey (SpecialKey KeyDown) Down _ _)  = moveShip (-0.05)
 handleUniverse (EventKey (SpecialKey KeyUp) Up _ _)      = moveShip 0 
 handleUniverse (EventKey (SpecialKey KeyDown) Up _ _)    = moveShip 0 
-handleUniverse (EventKey (SpecialKey KeyLeft) Down _ _)  = turnShip 5 
+handleUniverse (EventKey (SpecialKey KeyLeft) Down _ _)  = turnShip (5) 
 handleUniverse (EventKey (SpecialKey KeyRight) Down _ _) = turnShip (-5) 
 handleUniverse (EventKey (SpecialKey KeyLeft) Up _ _)    = turnShip 0 
 handleUniverse (EventKey (SpecialKey KeyRight) Up _ _)   = turnShip 0 
@@ -199,15 +214,6 @@ fireSpaceship u = u
   { bullets = initBullet u : bullets u
   }
 
--- | Инициализация пули
-initBullet :: Universe -> Bullet
-initBullet u
-  = Bullet
-    { bulletPosition  = spaceshipPosition (spaceship u)
-	, bulletVelocity  = rotateV ((45 + spaceshipDirection (spaceship u)) * pi / 180) (10, 10)
-	, bulletDirection = spaceshipDirection (spaceship u)
-	, bulletSize      = 0.05 -- не нужен, наверное, вообще
-	}
 
 -- =========================================
 -- Обновление игровой вселенной
