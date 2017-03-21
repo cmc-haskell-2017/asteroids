@@ -308,11 +308,11 @@ isGameOver u = spaceshipFaceAsteroids
 
 -- | Ширина экрана.
 screenWidth :: Int
-screenWidth = 1600
+screenWidth = 1366
 
 -- | Высота экрана.
 screenHeight :: Int
-screenHeight = 900
+screenHeight = 768
 
 -- | Положение правого края экрана.
 screenRight :: Float
