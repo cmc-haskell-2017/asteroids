@@ -46,7 +46,7 @@ data Universe = Universe
 
 -- | Фон
 data Background = Background
- { backgroundPosition :: Point -- ^ Положение фона
+ { backgroundPosition :: Point  -- ^ Положение фона
  , backgroundVelocity :: Vector -- ^ Вектор скорости фона
  } deriving (Eq, Show)
 
@@ -69,28 +69,30 @@ data Spaceship = Spaceship
 
 -- Пуля
 data Bullet = Bullet
-  { bulletPosition :: Point  -- ^ Положение пули
-  , bulletVelocity :: Vector -- ^ Скорость пули
-  , bulletSize     :: Float  -- ^ Размер пули
-  } deriving (Eq, Show)
+ { bulletPosition  :: Point  -- ^ Положение пули
+ , bulletVelocity  :: Vector -- ^ Скорость пули
+ , bulletDirection :: Float  -- ^ Направление пули
+ , bulletSize      :: Float  -- ^ Размер пули
+ } deriving (Eq, Show)
 
 -- | Инициализация игровой вселенной.
 initUniverse :: StdGen -> Universe
 initUniverse g = Universe
   { -- asteroids  = initAsteroids g
-    spaceship = initSpaceship
+    bullets     = []
+   ,spaceship  = initSpaceship
    ,background = initBackground
   }
   
 -- | Начальное состояние корабля.
 initSpaceship :: Spaceship
 initSpaceship = Spaceship
-  { spaceshipPosition = (0, 0)
-  , spaceshipVelocity = (0,0) 
+  { spaceshipPosition   = (0, 0)
+  , spaceshipVelocity   = (0, 0) 
   , spaceshipAccelerate = 0
-  , spaceshipAngularV = 0
-  , spaceshipDirection = 0 
-  , spaceshipSize = 1
+  , spaceshipAngularV   = 0
+  , spaceshipDirection  = 0 
+  , spaceshipSize       = 1
   }
 
 -- | Инициализация фона.
@@ -120,12 +122,24 @@ initBackground = Background
 -- | Отобразить игровую вселенную.
 drawUniverse :: Images -> Universe -> Picture
 drawUniverse images u = pictures
-  [ -- drawAsteroids  (asteroids u)
-    drawBackground  (imageBackground  images) (background  u)
+  [ -- drawAsteroids (asteroids u)
+    drawBackground (imageBackground images) (background u)
+    ,pictures (map drawBullet (bullets u))
     ,drawSpaceship (spaceship u) 
   ]
   
 --drawAsteroids :: -- ??? Тимуру
+
+drawBullet :: Bullet -> Picture
+drawBullet bullet = color white bulletPic
+  where
+    bulletPic = pictures (map polygon (bulletPolygons bullet))
+
+bulletPolygons :: Bullet -> [Path]
+bulletPolygons bullet = map (map move)
+  [ [ (-100, -100), (100, -100), (100, 100), (-100, 100) ] ]
+  where
+    move (x, y) = bulletPosition bullet + mulSV 0.03 (rotateV ((bulletDirection bullet) * pi / 180) (x, y))
 
 -- | Отобразить фон.
 drawBackground :: Picture -> Background -> Picture
@@ -155,41 +169,41 @@ shipPolygons ship = map (map move)
 
 -- | Обработчик событий игры.
 handleUniverse :: Event -> Universe -> Universe
-handleUniverse (EventKey (SpecialKey KeyUp) Down _ _) =  moveShip 0.05
-handleUniverse (EventKey (SpecialKey KeyDown) Down _ _) = moveShip (-0.05)
-handleUniverse (EventKey (SpecialKey KeyUp) Up _ _) = moveShip 0 
-handleUniverse (EventKey (SpecialKey KeyDown) Up _ _) = moveShip 0 
-handleUniverse (EventKey (SpecialKey KeyLeft) Down _ _) = turnShip 5 
+handleUniverse (EventKey (SpecialKey KeyUp) Down _ _)    = moveShip 0.05
+handleUniverse (EventKey (SpecialKey KeyDown) Down _ _)  = moveShip (-0.05)
+handleUniverse (EventKey (SpecialKey KeyUp) Up _ _)      = moveShip 0 
+handleUniverse (EventKey (SpecialKey KeyDown) Up _ _)    = moveShip 0 
+handleUniverse (EventKey (SpecialKey KeyLeft) Down _ _)  = turnShip 5 
 handleUniverse (EventKey (SpecialKey KeyRight) Down _ _) = turnShip (-5) 
-handleUniverse (EventKey (SpecialKey KeyLeft) Up _ _) = turnShip 0 
-handleUniverse (EventKey (SpecialKey KeyRight) Up _ _) = turnShip 0 
-handleUniverse (EventKey (SpecialKey KeySpace) Down _ _) = id -- fireSpaceship 
-handleUniverse _ = id
+handleUniverse (EventKey (SpecialKey KeyLeft) Up _ _)    = turnShip 0 
+handleUniverse (EventKey (SpecialKey KeyRight) Up _ _)   = turnShip 0 
+handleUniverse (EventKey (SpecialKey KeySpace) Down _ _) = fireSpaceship 
+handleUniverse _                                         = id
 
 moveShip :: Float -> Universe -> Universe
 moveShip a u = u 
- { spaceship = (spaceship u) {spaceshipAccelerate = a }
+ { spaceship = (spaceship u) { spaceshipAccelerate = a }
  }
 
 turnShip :: Float -> Universe -> Universe
 turnShip a u = u 
- { spaceship = (spaceship u) {spaceshipAngularV = a }
+ { spaceship = (spaceship u) { spaceshipAngularV = a }
  }
 
 -- | Выстрел корабля
 fireSpaceship :: Universe -> Universe
 fireSpaceship u = u
-  { bullets = (initBullet u) : (bullets u)
+  { bullets = initBullet u : bullets u
   }
 
 -- | Инициализация пули
 initBullet :: Universe -> Bullet
 initBullet u
   = Bullet
-    { bulletPosition = spaceshipPosition . spaceship u
-	-- скорость нужно увеличить как-то
-	, bulletVelocity = spaceshipVelocity . spaceship u
-	, bulletSize     = 0.05 -- что-то другое надо, наверное
+    { bulletPosition  = spaceshipPosition (spaceship u)
+	, bulletVelocity  = rotateV ((45 + spaceshipDirection (spaceship u)) * pi / 180) (10, 10)
+	, bulletDirection = spaceshipDirection (spaceship u)
+	, bulletSize      = 0.05 -- не нужен, наверное, вообще
 	}
 
 -- =========================================
@@ -199,28 +213,47 @@ initBullet u
 -- | Обновить состояние игровой вселенной.
 updateUniverse :: Float -> Universe -> Universe
 updateUniverse dt u  
-  | False = u -- isGameOver u = resetUniverse u
+  | False     = u -- isGameOver u = resetUniverse u
   | otherwise = u
    { -- asteroids  = updateAsteroids  dt (asteroids  u)
-    spaceship = updateSpaceship dt (spaceship u)
+     bullets    = updateBullets dt (bullets u)
+    ,spaceship  = updateSpaceship dt (spaceship u)
     ,background = updateBackground u
    }
  --where
  -- ??? тут почти у всех
 
+-- | Обновить состояние пуль
+updateBullets :: Float -> [Bullet] -> [Bullet]
+updateBullets dt bullets = filter visible (map (updateBullet dt) bullets)
+  where
+    visible bullet = (abs width) <= (fromIntegral screenWidth / 2) && (abs height) <= (fromIntegral screenHeight / 2)
+	where
+	  (width, height)  = bulletPosition bullet
+
+-- | Обновить состояние одной пули
+updateBullet :: Float -> Bullet -> Bullet
+updateBullet dt bullet = bullet
+  { bulletPosition = (width, height) }
+  where
+    width  = fst (bulletPosition bullet + bulletVelocity bullet)
+    height = snd (bulletPosition bullet + bulletVelocity bullet)
+
 -- | Обновить состояние корабля.
 updateSpaceship :: Float -> Spaceship -> Spaceship
-updateSpaceship dt spaceship =  spaceship 
-	{
-		spaceshipPosition = ((checkWidth spaceship),(checkHeight spaceship))
-		, spaceshipVelocity = 
-			(((if w  then (-1) else 1) * (fst(spaceshipVelocity spaceship))),((if h  then (-1) else 1) * (snd(spaceshipVelocity spaceship))))  +  mul 
-		, spaceshipDirection = if newDir > 180 then newDir - 360
-								else if newDir < -180 then newDir + 360 else newDir
+updateSpaceship dt spaceship = spaceship 
+	{ spaceshipPosition = ((checkWidth spaceship),(checkHeight spaceship))
+	, spaceshipVelocity = 
+	    (((if w then (-1) else 1) * (fst (spaceshipVelocity spaceship))),
+		 ((if h then (-1) else 1) * (snd (spaceshipVelocity spaceship)))) + mul 
+	, spaceshipDirection = if newDir > 180 then newDir - 360
+						     else if newDir < -180 then newDir + 360 else newDir
 	}
 	where 
-		h = (checkHeight spaceship) == (fromIntegral screenHeight / 2) || (checkHeight spaceship) == (-1) * (fromIntegral screenHeight / 2)  
-		w = (checkWidth spaceship) == (fromIntegral screenWidth / 2) || (checkWidth spaceship) == (-1) * (fromIntegral screenWidth / 2)
+		h = (checkHeight spaceship) == (fromIntegral screenHeight / 2) ||
+		  (checkHeight spaceship) == (-1) * (fromIntegral screenHeight / 2)  
+		w = (checkWidth spaceship) == (fromIntegral screenWidth / 2) ||
+		  (checkWidth spaceship) == (-1) * (fromIntegral screenWidth / 2)
 		newDir = spaceshipDirection spaceship + (spaceshipAngularV spaceship)
 		mul = mulSV (spaceshipAccelerate spaceship) (unitVectorAtAngle (((spaceshipDirection spaceship) + 90) * pi / 180)) 
 
@@ -238,10 +271,9 @@ checkWidth ship
 -- | Обновить фон
 updateBackground :: Universe -> Background
 updateBackground u = Background
-   {
-      backgroundPosition = (backgroundPosition (background u)) + (backgroundVelocity (background u))
-    , backgroundVelocity = (-1)* (spaceshipVelocity (spaceship u))
-   }
+  { backgroundPosition = (backgroundPosition (background u)) + (backgroundVelocity (background u))
+  , backgroundVelocity = (-1)* (spaceshipVelocity (spaceship u))
+  }
 
 -- | Обновить астероиды игровой вселенной.
 updateAsteroids :: Float -> [Asteroid] -> [Asteroid]
