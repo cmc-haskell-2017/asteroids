@@ -110,6 +110,7 @@ initBackground = Background
 
 -- Инициализация для пуль, хз как лучше,  наверное как и астероиды?
 
+
   -- =========================================
 -- Отрисовка игровой вселенной
 -- =========================================
@@ -173,7 +174,21 @@ turnShip a u = u
  { spaceship = (spaceship u) {spaceshipAngularV = a }
  }
 
---fireSpaceship :: -- ??? Паш, твоё, тут как раз появляются пули и летят по направлению корабля 
+-- | Выстрел корабля
+fireSpaceship :: Universe -> Universe
+fireSpaceship u = u
+  { bullets = (initBullet u) : (bullets u)
+  }
+
+-- | Инициализация пули
+initBullet :: Universe -> Bullet
+initBullet u
+  = Bullet
+    { bulletPosition = spaceshipPosition . spaceship u
+	-- скорость нужно увеличить как-то
+	, bulletVelocity = spaceshipVelocity . spaceship u
+	, bulletSize     = 0.05 -- что-то другое надо, наверное
+	}
 
 -- =========================================
 -- Обновление игровой вселенной
