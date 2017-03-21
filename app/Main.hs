@@ -3,4 +3,6 @@ module Main where
 import Asteroids
 
 main :: IO ()
-main = run
+main = do
+   images <- loadImages
+   run images

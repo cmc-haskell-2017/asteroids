@@ -4,31 +4,50 @@ import System.Random
 import Graphics.Gloss.Data.Vector
 import Graphics.Gloss.Geometry.Line
 import Graphics.Gloss.Interface.Pure.Game
+import Graphics.Gloss.Juicy
 
-run :: IO ()
-run = do
+run :: Images -> IO ()
+run images = do
   g <- newStdGen
-  play display bgColor fps (initUniverse g) drawUniverse handleUniverse updateUniverse
+  play display bgColor fps (initUniverse g) (drawUniverse images) handleUniverse updateUniverse
   where
     display = InWindow "Asteroids" (screenWidth, screenHeight) (100, 100)
     bgColor = black   -- цвет фона
     fps     = 60      -- кол-во кадров в секунду
 
+-- | Загрузить изображения из файлов.
+loadImages :: IO Images
+loadImages = do
+  -- Just asteroid   <- loadJuicyPNG "images/asteroid.png"
+  Just background  <- loadJuicyPNG "images/background.png"
+  return Images
+    { -- imageAsteroid   = scale 0.1 0.1 asteroid
+      imageBackground  = scale 1 1 background
+    }
+
+
 -- =========================================
 -- Модель игровой вселенной
 -- =========================================
--- |Точка
--- type TPoint = (Float, Float)
 
--- |Вектор
--- type TVector = (Float, Float)
+-- | Изображения объектов.
+data Images = Images
+  { -- imageAsteroid  :: Picture   -- ^ Изображение астероида.
+   imageBackground :: Picture   -- ^ Фон.
+  }
 
 -- | Игровая вселенная
 data Universe = Universe
  { asteroids :: [Asteroid] -- ^ Астероиды
  , spaceship :: Spaceship -- ^ Космический корабль
+ , background :: Background -- ^ Фон
  -- , fireballs :: [Fireball] -- Паш, для этого тебе тип надо сделать
  }
+
+-- | Фон
+data Background = Background
+ { backgroundPosition :: Point -- ^ Положение фона
+ } deriving (Eq, Show)
 
 -- | Астероид
 data Asteroid = Asteroid
@@ -54,6 +73,7 @@ initUniverse :: StdGen -> Universe
 initUniverse g = Universe
   { -- asteroids  = initAsteroids g
     spaceship = initSpaceship
+   ,background = initBackground
   }
   
 -- | Начальное состояние корабля.
@@ -66,6 +86,12 @@ initSpaceship = Spaceship
   , spaceshipDirection = 0 
   , spaceshipSize = 1
   }
+
+-- | Инициализация фона.
+initBackground :: Background
+initBackground = Background
+   { backgroundPosition = (0, 0)
+   }
   
   -- | Инициализировать один астероид.
 -- initAsteroid :: Point -> Asteroid
@@ -84,19 +110,23 @@ initSpaceship = Spaceship
 -- =========================================
 
 -- | Отобразить игровую вселенную.
-drawUniverse :: Universe -> Picture
-drawUniverse u = pictures
+drawUniverse :: Images -> Universe -> Picture
+drawUniverse images u = pictures
   [ -- drawAsteroids  (asteroids u)
-    drawSpaceship (spaceship u)
+    drawBackground  (imageBackground  images) (background  u)
+    ,drawSpaceship (spaceship u) 
   ]
   
 --drawAsteroids :: -- ??? Тимуру
 
---drawSpaceship :: -- ???
-  
+-- | Отобразить фон.
+drawBackground :: Picture -> Background -> Picture
+drawBackground image background = translate x y image
+  where
+    (x, y) = backgroundPosition background
 
 drawSpaceship :: Spaceship -> Picture
-drawSpaceship spaceship = color white drawShip
+drawSpaceship spaceship = color green drawShip
   where
     drawShip = pictures (map polygon (shipPolygons spaceship))
 
