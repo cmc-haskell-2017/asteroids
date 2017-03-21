@@ -38,10 +38,10 @@ data Images = Images
 
 -- | Игровая вселенная
 data Universe = Universe
- { asteroids :: [Asteroid] -- ^ Астероиды
- , spaceship :: Spaceship -- ^ Космический корабль
+ { asteroids  :: [Asteroid] -- ^ Астероиды
+ , spaceship  :: Spaceship  -- ^ Космический корабль
  , background :: Background -- ^ Фон
- -- , fireballs :: [Fireball] -- Паш, для этого тебе тип надо сделать
+ , bullets    :: [Bullet]   -- ^ Пули
  }
 
 -- | Фон
@@ -51,22 +51,27 @@ data Background = Background
 
 -- | Астероид
 data Asteroid = Asteroid
- { asteroidPosition :: Point -- ^ Положение астероида
+ { asteroidPosition :: Point  -- ^ Положение астероида
  , asteroidVelocity :: Vector -- ^ Скорость астероида
- , asteroidSize :: Float -- ^ Размер астероида (Радиус/Диаметр)
+ , asteroidSize     :: Float  -- ^ Размер астероида
  } deriving (Eq, Show)
 
 -- | Космический корабль
 data Spaceship = Spaceship
- { spaceshipPosition :: Point -- ^ Положение корабля
- , spaceshipVelocity :: Vector -- ^ Скорость корабля
- , spaceshipAccelerate :: Float -- ^ Ускорение
- , spaceshipDirection :: Float --  ^ Направление корабля
- , spaceshipAngularV :: Float -- ^ Угловая скорость
- , spaceshipSize :: Float -- ^ Размер корабля
+ { spaceshipPosition   :: Point  -- ^ Положение корабля
+ , spaceshipVelocity   :: Vector -- ^ Скорость корабля
+ , spaceshipAccelerate :: Float  -- ^ Ускорение
+ , spaceshipDirection  :: Float  -- ^ Направление корабля
+ , spaceshipAngularV   :: Float  -- ^ Угловая скорость
+ , spaceshipSize       :: Float  -- ^ Размер корабля
  } deriving (Eq, Show)
 
--- Тут тип пули (одной) будет:
+-- Пуля
+data Bullet = Bullet
+  { bulletPosition :: Point  -- ^ Положение пули
+  , bulletVelocity :: Vector -- ^ Скорость пули
+  , bulletSize     :: Float  -- ^ Размер пули
+  } deriving (Eq, Show)
 
 -- | Инициализация игровой вселенной.
 initUniverse :: StdGen -> Universe
