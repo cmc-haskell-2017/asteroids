@@ -23,7 +23,7 @@ loadImages = do
   Just background <- loadJuicyPNG "images/background.png"
   Just spaceship  <- loadJuicyPNG "images/spaceship.png"
   return Images
-    { imageBullet     = scale 0.05 0.05 bullet
+    { imageBullet     = scale 0.5 0.5 bullet
 	--, imageAsteroid   = scale 0.1 0.1 asteroid
     , imageBackground = scale 2 2 background
     , imageSpaceship  = scale 0.2 0.2 spaceship
@@ -200,8 +200,8 @@ bulletPolygons bullet = map (map move)
 
 -- | Обработчик событий игры.
 handleUniverse :: Event -> Universe -> Universe
-handleUniverse (EventKey (SpecialKey KeyUp) Down _ _)    = moveShip 0.05
-handleUniverse (EventKey (SpecialKey KeyDown) Down _ _)  = moveShip (-0.05)
+handleUniverse (EventKey (SpecialKey KeyUp) Down _ _)    = moveShip 0.1
+handleUniverse (EventKey (SpecialKey KeyDown) Down _ _)  = moveShip (-0.1)
 handleUniverse (EventKey (SpecialKey KeyUp) Up _ _)      = moveShip 0 
 handleUniverse (EventKey (SpecialKey KeyDown) Up _ _)    = moveShip 0 
 handleUniverse (EventKey (SpecialKey KeyLeft) Down _ _)  = turnShip (5) 
