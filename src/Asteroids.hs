@@ -114,7 +114,7 @@ initBullet u
   = Bullet
     { bulletPosition  = spaceshipPosition (spaceship u)
     , bulletVelocity  = rotateV 
-	    ((spaceshipDirection (spaceship u)) * pi / 180) (0, 15)
+	    ((spaceshipDirection (spaceship u)) * pi / 180) (0, 10)
     , bulletDirection = spaceshipDirection (spaceship u)
     , bulletSize      = 0.05 -- не нужен, наверное, вообще
     }
