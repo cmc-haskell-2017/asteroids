@@ -82,7 +82,7 @@ data Bullet = Bullet
  , bulletSize      :: Float  -- ^ Размер пули
  } deriving (Eq, Show)
 
--- | Инициализация игровой вселенной.
+-- | Инициализация игровой вселенной
 initUniverse :: StdGen -> Universe
 initUniverse g = Universe
   { bullets    = []
@@ -91,7 +91,7 @@ initUniverse g = Universe
   , background = initBackground
   }
   
--- | Начальное состояние корабля.
+-- | Начальное состояние корабля
 initSpaceship :: Spaceship
 initSpaceship = Spaceship
   { spaceshipPosition   = (0, 0)
@@ -102,7 +102,7 @@ initSpaceship = Spaceship
   , spaceshipSize       = 1
   }
 
--- | Инициализация фона.
+-- | Инициализация фона
 initBackground :: Background
 initBackground = Background
    { backgroundPosition = (0, 0)
@@ -114,12 +114,12 @@ initBullet :: Universe -> Bullet
 initBullet u
   = Bullet
     { bulletPosition  = spaceshipPosition (spaceship u)
+	  + rotateV (spaceshipDirection (spaceship u) * pi / 180) (0, 60)
     , bulletVelocity  = rotateV 
 	    ((spaceshipDirection (spaceship u)) * pi / 180) (0, 10)
     , bulletDirection = spaceshipDirection (spaceship u)
     , bulletSize      = 0.05 -- не нужен, наверное, вообще
     }
-
   
   -- | Инициализировать один астероид.
 -- initAsteroid :: Point -> Asteroid
@@ -131,9 +131,6 @@ initBullet u
 -- initAsteroids a = map initAsteroid
   --(??? a)
 
--- Инициализация для пуль, хз как лучше,  наверное как и астероиды?
-
-
   -- =========================================
 -- Отрисовка игровой вселенной
 -- =========================================
@@ -142,8 +139,8 @@ initBullet u
 drawUniverse :: Images -> Universe -> Picture
 drawUniverse images u = pictures
   [ drawBackground (imageBackground images) (background u)
-  , drawBullets    (imageBullet images)     (bullets u)
   , drawSpaceship  (imageSpaceship images)  (spaceship u) 
+  , drawBullets    (imageBullet images)     (bullets u)
   --, drawAsteroids  (imageAsteroid images)   (asteroids u)
   ]
   
@@ -156,8 +153,8 @@ drawBackground image background = translate x y image
     (x, y) = backgroundPosition background
 
 drawSpaceship :: Picture -> Spaceship -> Picture
-drawSpaceship image spaceship =
-  translate x y (rotate (- spaceshipDirection spaceship) image)
+drawSpaceship image spaceship
+  = translate x y (rotate (- spaceshipDirection spaceship) image)
   where
     (x, y) = spaceshipPosition spaceship
 
@@ -183,16 +180,15 @@ shipPolygons ship = map (map move)
   , [ (-800, 600), (-800, -650), (-650, -450) ] 
   , [ (-300, -450), (300, -450), (450, -700), (-450, -700) ] ]
   where
-    move (x, y) = spaceshipPosition ship +
-	  mulSV 0.03 (rotateV ((spaceshipDirection ship) * pi / 180) (x, y))
-
+    move (x, y) = spaceshipPosition ship
+	  + mulSV 0.03 (rotateV ((spaceshipDirection ship) * pi / 180) (x, y))
 
 bulletPolygons :: Bullet -> [Path]
 bulletPolygons bullet = map (map move)
   [ [ (-100, -100), (100, -100), (100, 100), (-100, 100) ] ]
   where
-    move (x, y) = bulletPosition bullet +
-	  mulSV 0.03 (rotateV ((bulletDirection bullet) * pi / 180) (x, y))
+    move (x, y) = bulletPosition bullet
+	  + mulSV 0.03 (rotateV ((bulletDirection bullet) * pi / 180) (x, y))
 
 -- =========================================
 -- Обработка событий
@@ -208,7 +204,7 @@ handleUniverse (EventKey (SpecialKey KeyLeft) Down _ _)  = turnShip (5)
 handleUniverse (EventKey (SpecialKey KeyRight) Down _ _) = turnShip (-5) 
 handleUniverse (EventKey (SpecialKey KeyLeft) Up _ _)    = turnShip 0 
 handleUniverse (EventKey (SpecialKey KeyRight) Up _ _)   = turnShip 0 
-handleUniverse (EventKey (SpecialKey KeySpace) Down _ _) = fireSpaceship 
+handleUniverse (EventKey (SpecialKey KeySpace) Down _ _) = fireSpaceship
 handleUniverse _                                         = id
 
 moveShip :: Float -> Universe -> Universe
@@ -227,7 +223,6 @@ fireSpaceship u = u
   { bullets = initBullet u : bullets u
   }
 
-
 -- =========================================
 -- Обновление игровой вселенной
 -- =========================================
@@ -237,20 +232,20 @@ updateUniverse :: Float -> Universe -> Universe
 updateUniverse dt u  
   | False     = u -- isGameOver u = resetUniverse u
   | otherwise = u
-   { -- asteroids  = updateAsteroids  dt (asteroids  u)
-     bullets    = updateBullets dt (bullets u)
-    ,spaceship  = updateSpaceship dt (spaceship u)
-    ,background = updateBackground u
-   }
- --where
- -- ??? тут почти у всех
+      { bullets    = updateBullets dt (bullets u)
+      --, asteroids  = updateAsteroids dt (asteroids  u)
+      , spaceship  = updateSpaceship dt (spaceship u)
+      , background = updateBackground u
+      }
+    --where
+    -- ??? тут почти у всех
 
 -- | Обновить состояние пуль
 updateBullets :: Float -> [Bullet] -> [Bullet]
 updateBullets dt bullets = filter visible (map (updateBullet dt) bullets)
   where
-    visible bullet = (abs width) <= (fromIntegral screenWidth / 2) &&
-	  (abs height) <= (fromIntegral screenHeight / 2)
+    visible bullet = (abs width) <= (fromIntegral screenWidth / 2)
+	  && (abs height) <= (fromIntegral screenHeight / 2)
 	where
 	  (width, height)  = bulletPosition bullet
 
@@ -265,17 +260,17 @@ updateBullet dt bullet = bullet
 updateSpaceship :: Float -> Spaceship -> Spaceship
 updateSpaceship dt spaceship = spaceship 
 	{ spaceshipPosition = ((checkWidth spaceship),(checkHeight spaceship))
-	, spaceshipVelocity = 
-	    (((if w then (-0.99) else 0.99) * (fst (spaceshipVelocity spaceship))),
+	, spaceshipVelocity
+	    = (((if w then (-0.99) else 0.99) * (fst (spaceshipVelocity spaceship))),
 		 ((if h then (-0.99) else 0.99) * (snd (spaceshipVelocity spaceship)))) + mul 
 	, spaceshipDirection = if newDir > 180 then newDir - 360
 						     else if newDir < -180 then newDir + 360 else newDir
 	}
 	where 
-		h = (checkHeight spaceship) == (fromIntegral screenHeight / 2) ||
-		  (checkHeight spaceship) == (-1) * (fromIntegral screenHeight / 2)  
-		w = (checkWidth spaceship) == (fromIntegral screenWidth / 2) ||
-		  (checkWidth spaceship) == (-1) * (fromIntegral screenWidth / 2)
+		h = (checkHeight spaceship) == (fromIntegral screenHeight / 2)
+		  || (checkHeight spaceship) == (-1) * (fromIntegral screenHeight / 2)  
+		w = (checkWidth spaceship) == (fromIntegral screenWidth / 2)
+		  || (checkWidth spaceship) == (-1) * (fromIntegral screenWidth / 2)
 		newDir = spaceshipDirection spaceship + (spaceshipAngularV spaceship)
 		mul = mulSV (spaceshipAccelerate spaceship)
 		  (unitVectorAtAngle (((spaceshipDirection spaceship) + 90) * pi / 180)) 
@@ -294,12 +289,11 @@ checkWidth ship
 	| otherwise = max (-1 * (fromIntegral screenWidth / 2))
 	    (fst (spaceshipPosition ship + spaceshipVelocity ship))
 
-
 -- | Обновить фон
 updateBackground :: Universe -> Background
 updateBackground u = Background
-  { backgroundPosition =
-      (backgroundPosition (background u)) + (backgroundVelocity (background u))
+  { backgroundPosition
+      = (backgroundPosition (background u)) + (backgroundVelocity (background u))
   , backgroundVelocity = (-1)* (spaceshipVelocity (spaceship u))
   }
 
@@ -317,11 +311,17 @@ resetUniverse u = u
 
 -- | Конец игры?
 isGameOver :: Universe -> Bool
-isGameOver u = spaceshipFaceAsteroids
-  where
-    spaceshipFaceAsteroids = False-- ??? - Паше
+isGameOver u = spaceshipFaceAsteroids u || spaceshipFaceBullets u
 
--- spaceshipFaceAsteroid -- Паше
+-- | Определение столкновения корабля(кораблей) с астероидами
+spaceshipFaceAsteroids :: Universe -> Bool -- ??? -- Паше
+spaceshipFaceAsteroids _ = False
+
+-- Если будет мультиплеер с несколькими кораблями (а он, скорее всего, будет)
+-- | Определение столкновения с пулей
+spaceshipFaceBullets :: Universe -> Bool -- ??? -- Паше
+spaceshipFaceBullets _ = False
+
 -- =========================================
 -- Константы, параметры игры
 -- =========================================
