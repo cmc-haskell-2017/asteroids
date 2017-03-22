@@ -23,7 +23,7 @@ loadImages = do
   Just background <- loadJuicyPNG "images/background.png"
   Just spaceship  <- loadJuicyPNG "images/spaceship.png"
   return Images
-    { imageBullet     = scale 0.5 0.5 bullet
+    { imageBullet     = scale 0.07 0.07 bullet
 	--, imageAsteroid   = scale 0.1 0.1 asteroid
     , imageBackground = scale 2 2 background
     , imageSpaceship  = scale 0.2 0.2 spaceship
