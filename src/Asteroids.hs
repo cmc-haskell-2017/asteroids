@@ -237,35 +237,64 @@ updateBullet dt bullet = bullet
 -- | Обновить состояние корабля.
 updateSpaceship :: Float -> Spaceship -> Spaceship
 updateSpaceship dt spaceship = spaceship 
-	{ spaceshipPosition = ((checkWidth spaceship),(checkHeight spaceship))
-	, spaceshipVelocity
-	    = (((if w then (-0.99) else 0.99) * (fst (spaceshipVelocity spaceship))),
-		 ((if h then (-0.99) else 0.99) * (snd (spaceshipVelocity spaceship)))) + mul 
-	, spaceshipDirection = if newDir > 180 then newDir - 360
-						     else if newDir < -180 then newDir + 360 else newDir
+	{ spaceshipPosition  = updateShipPosition spaceship
+	, spaceshipVelocity  = updateShipVelocity spaceship
+	, spaceshipDirection = updateShipDirection spaceship
 	}
-	where 
-		h = (checkHeight spaceship) == (fromIntegral screenHeight / 2)
-		  || (checkHeight spaceship) == (- fromIntegral screenHeight / 2)  
-		w = (checkWidth spaceship) == (fromIntegral screenWidth / 2)
-		  || (checkWidth spaceship) == (- fromIntegral screenWidth / 2)
-		newDir = spaceshipDirection spaceship + (spaceshipAngularV spaceship)
-		mul = mulSV (spaceshipAccelerate spaceship)
-		  (unitVectorAtAngle (((spaceshipDirection spaceship) + 90) * pi / 180)) 
 
-checkHeight :: Spaceship -> Float
-checkHeight ship 
-	| (snd (spaceshipPosition ship)) >= 0 = min (fromIntegral screenHeight / 2)
-	    (snd (spaceshipPosition ship + spaceshipVelocity ship))
-	| otherwise = max (- fromIntegral screenHeight / 2)
-	    (snd (spaceshipPosition ship + spaceshipVelocity ship))
+-- | Обновление положения корабля
+updateShipPosition :: Spaceship -> Point
+updateShipPosition ship = (updateShipX ship, updateShipY ship)
 
-checkWidth :: Spaceship -> Float
-checkWidth ship 
-	| (fst (spaceshipPosition ship)) >= 0 = min (fromIntegral screenWidth / 2)
-	    (fst (spaceshipPosition ship + spaceshipVelocity ship))
-	| otherwise = max (- fromIntegral screenWidth / 2)
-	    (fst (spaceshipPosition ship + spaceshipVelocity ship))
+-- | Обновление координаты X для корабля
+updateShipX :: Spaceship -> Float
+updateShipX ship 
+    | x >= 0    = min x' (  fromIntegral screenWidth / 2)
+    | otherwise = max x' (- fromIntegral screenWidth / 2)
+    where
+      x  = fst (spaceshipPosition ship)
+      x' = fst (spaceshipPosition ship + spaceshipVelocity ship)
+
+-- | Обновление координаты Y для корабля
+updateShipY :: Spaceship -> Float
+updateShipY ship 
+    | y >= 0    = min y' (  fromIntegral screenHeight / 2)
+    | otherwise = max y' (- fromIntegral screenHeight / 2)
+    where
+      y  = snd (spaceshipPosition ship)
+      y' = snd (spaceshipPosition ship + spaceshipVelocity ship)
+
+-- | Обновление скорости корабля
+updateShipVelocity :: Spaceship -> Vector
+updateShipVelocity ship = (velocityX, velocityY) + acceleration
+  where
+    acceleration = mulSV (spaceshipAccelerate ship)
+      (unitVectorAtAngle ((90 + spaceshipDirection ship) * pi / 180))
+    velocityX = crossX * fst (spaceshipVelocity ship)
+      where
+        crossX
+          | crossRight || crossLeft = - 0.99
+          | otherwise               =   0.99
+          where
+            crossRight = updateShipX ship ==   fromIntegral screenWidth / 2
+            crossLeft  = updateShipX ship == - fromIntegral screenWidth / 2
+    velocityY = crossY * snd (spaceshipVelocity ship)
+      where
+        crossY
+          | crossUp || crossDown    = - 0.99
+          | otherwise               =   0.99
+          where
+            crossUp    = updateShipY ship ==   fromIntegral screenHeight / 2
+            crossDown  = updateShipY ship == - fromIntegral screenHeight / 2
+
+-- | Обновление направления корабля
+updateShipDirection :: Spaceship -> Float
+updateShipDirection ship
+  | newDirection >   180 = newDirection - 360
+  | newDirection < - 180 = newDirection + 360
+  | otherwise            = newDirection
+  where
+    newDirection = spaceshipDirection ship + spaceshipAngularV ship
 
 -- | Обновить фон
 updateBackground :: Universe -> Background
@@ -277,10 +306,10 @@ updateBackground u = Background
 
 -- | Обновить астероиды игровой вселенной.
 updateAsteroids :: Float -> [Asteroid] -> [Asteroid]
-updateAsteroids _ [] = [] -- ??? Тимур
+updateAsteroids dt asteroids = asteroids -- ??? Тимур
 
 updateAsteroid :: Float -> Asteroid -> Asteroid -- ??? Тимур
-updateAsteroid _ a = a
+updateAsteroid dt asteroid = asteroid
 
 -- | Сбросить игру.
 resetUniverse :: Universe -> Universe
