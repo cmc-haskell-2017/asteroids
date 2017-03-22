@@ -280,6 +280,7 @@ updateAsteroids :: Float -> [Asteroid] -> [Asteroid]
 updateAsteroids _ [] = [] -- ??? Тимур
 
 updateAsteroid :: Float -> Asteroid -> Asteroid -- ??? Тимур
+updateAsteroid _ a = a
 
 -- | Сбросить игру.
 resetUniverse :: Universe -> Universe
