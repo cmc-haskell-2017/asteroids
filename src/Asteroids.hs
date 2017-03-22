@@ -25,7 +25,7 @@ loadImages = do
   return Images
     { imageBullet     = scale 0.07 0.07 bullet
 	, imageAsteroid   = scale 0.1 0.1 asteroid
-    , imageBackground = scale 2 2 background
+    , imageBackground = scale 1.5 1.5 background
     , imageSpaceship  = scale 0.2 0.2 spaceship
     }
 
