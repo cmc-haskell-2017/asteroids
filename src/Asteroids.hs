@@ -276,16 +276,16 @@ updateShipVelocity ship = (velocityX, velocityY) + acceleration
           | crossRight || crossLeft = - 0.99
           | otherwise               =   0.99
           where
-            crossRight = updateShipX ship ==   fromIntegral screenWidth / 2
-            crossLeft  = updateShipX ship == - fromIntegral screenWidth / 2
+            crossRight = updateShipX ship >=   fromIntegral screenWidth / 2
+            crossLeft  = updateShipX ship <= - fromIntegral screenWidth / 2
     velocityY = crossY * snd (spaceshipVelocity ship)
       where
         crossY
           | crossUp || crossDown    = - 0.99
           | otherwise               =   0.99
           where
-            crossUp    = updateShipY ship ==   fromIntegral screenHeight / 2
-            crossDown  = updateShipY ship == - fromIntegral screenHeight / 2
+            crossUp    = updateShipY ship >=   fromIntegral screenHeight / 2
+            crossDown  = updateShipY ship <= - fromIntegral screenHeight / 2
 
 -- | Обновление направления корабля
 updateShipDirection :: Spaceship -> Float
