@@ -23,7 +23,7 @@ loadImages = do
   Just background <- loadJuicyPNG "images/background.png"
   Just spaceship  <- loadJuicyPNG "images/spaceship.png"
   return Images
-    { imageBullet     = scale 0.1 0.1 bullet
+    { imageBullet     = scale 0.05 0.05 bullet
 	--, imageAsteroid   = scale 0.1 0.1 asteroid
     , imageBackground = scale 2 2 background
     , imageSpaceship  = scale 0.2 0.2 spaceship
@@ -37,9 +37,9 @@ loadImages = do
 -- | Изображения объектов.
 data Images = Images
   { imageBullet     :: Picture -- ^ Рокета.
-  --, imageAsteroid   :: Picture   -- ^ Изображение астероида.
-  , imageBackground :: Picture   -- ^ Фон.
-  , imageSpaceship  :: Picture   -- ^ Корабль.
+  --, imageAsteroid   :: Picture -- ^ Изображение астероида.
+  , imageBackground :: Picture -- ^ Фон.
+  , imageSpaceship  :: Picture -- ^ Корабль.
   }
 
 -- | Игровая вселенная
@@ -71,6 +71,7 @@ data Spaceship = Spaceship
  , spaceshipDirection  :: Float  -- ^ Направление корабля
  , spaceshipAngularV   :: Float  -- ^ Угловая скорость
  , spaceshipSize       :: Float  -- ^ Размер корабля
+-- , isFire              :: Bool   -- ^ Стреляет ли в данный момент корабль
  } deriving (Eq, Show)
 
 -- Пуля
