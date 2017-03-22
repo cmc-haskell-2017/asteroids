@@ -239,30 +239,25 @@ updateSpaceship :: Float -> Spaceship -> Spaceship
 updateSpaceship dt spaceship = spaceship 
 	{ spaceshipPosition  = updateShipPosition spaceship
 	, spaceshipVelocity  = updateShipVelocity spaceship
-	, spaceshipDirection = updateShipDirection spaceship
+	, spaceshipDirection = (if newDir > 180 then (-1) else (if newDir < -180 then (1) else 0))*360 + newDir 
 	}
+  where
+    newDir = spaceshipDirection spaceship + spaceshipAngularV spaceship
 
 -- | Обновление положения корабля
-updateShipPosition :: Spaceship -> Point
-updateShipPosition ship = (updateShipX ship, updateShipY ship)
+updateShipPosition :: Spaceship -> Vector
+updateShipPosition ship = (checkBoards (fst(spaceshipPosition ship)) (fst newPos) w, checkBoards (snd(spaceshipPosition ship)) (snd newPos) h)
+  where 
+    newPos = (spaceshipPosition ship + spaceshipVelocity ship)
+    w = fromIntegral screenWidth / 2
+    h = fromIntegral screenHeight / 2
 
--- | Обновление координаты X для корабля
-updateShipX :: Spaceship -> Float
-updateShipX ship 
-    | x >= 0    = min x' (  fromIntegral screenWidth / 2)
-    | otherwise = max x' (- fromIntegral screenWidth / 2)
-    where
-      x  = fst (spaceshipPosition ship)
-      x' = fst (spaceshipPosition ship + spaceshipVelocity ship)
 
--- | Обновление координаты Y для корабля
-updateShipY :: Spaceship -> Float
-updateShipY ship 
-    | y >= 0    = min y' (  fromIntegral screenHeight / 2)
-    | otherwise = max y' (- fromIntegral screenHeight / 2)
-    where
-      y  = snd (spaceshipPosition ship)
-      y' = snd (spaceshipPosition ship + spaceshipVelocity ship)
+checkBoards :: Float -> Float -> Float -> Float
+checkBoards x y z
+    | x >= 0    = min y (  z)
+    | otherwise = max y (- z)
+    
 
 -- | Обновление скорости корабля
 updateShipVelocity :: Spaceship -> Vector
@@ -276,25 +271,16 @@ updateShipVelocity ship = (velocityX, velocityY) + acceleration
           | crossRight || crossLeft = - 0.99
           | otherwise               =   0.99
           where
-            crossRight = updateShipX ship ==   fromIntegral screenWidth / 2
-            crossLeft  = updateShipX ship == - fromIntegral screenWidth / 2
+            crossRight = fst(updateShipPosition ship) ==   fromIntegral screenWidth / 2
+            crossLeft  = fst(updateShipPosition ship) == - fromIntegral screenWidth / 2
     velocityY = crossY * snd (spaceshipVelocity ship)
       where
         crossY
           | crossUp || crossDown    = - 0.99
           | otherwise               =   0.99
           where
-            crossUp    = updateShipY ship ==   fromIntegral screenHeight / 2
-            crossDown  = updateShipY ship == - fromIntegral screenHeight / 2
-
--- | Обновление направления корабля
-updateShipDirection :: Spaceship -> Float
-updateShipDirection ship
-  | newDirection >   180 = newDirection - 360
-  | newDirection < - 180 = newDirection + 360
-  | otherwise            = newDirection
-  where
-    newDirection = spaceshipDirection ship + spaceshipAngularV ship
+            crossUp    = snd(updateShipPosition ship) ==   fromIntegral screenHeight / 2
+            crossDown  = snd(updateShipPosition ship) == - fromIntegral screenHeight / 2
 
 -- | Обновить фон
 updateBackground :: Universe -> Background
