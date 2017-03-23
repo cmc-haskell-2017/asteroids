@@ -25,7 +25,7 @@ loadImages = do
   return Images
     { imageBullet     = scale 0.07 0.07 bullet
 	, imageAsteroid   = scale  0.1  0.1 asteroid
-    , imageBackground = scale  1.5  1.5 background
+    , imageBackground = scale  2.5  2.5 background
     , imageSpaceship  = scale  0.2  0.2 spaceship
     }
 
@@ -333,11 +333,11 @@ spaceshipFaceBullets _ = False
 
 -- | Ширина экрана.
 screenWidth :: Int
-screenWidth = 1366
+screenWidth = 1200
 
 -- | Высота экрана.
 screenHeight :: Int
-screenHeight = 768
+screenHeight = 700
 
 -- | Положение правого края экрана.
 screenRight :: Float
