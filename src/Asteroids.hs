@@ -214,16 +214,20 @@ fireSpaceship u = u
 updateUniverse :: Float -> Universe -> Universe
 updateUniverse dt u  
   | isGameOver u = resetUniverse u
-  | otherwise = u
-      { bullets    = updateBullets dt (bullets u)
-      , asteroids  = updateAsteroids dt (asteroids u)
+  | otherwise = bulletsFaceAsteroids u
+      { bullets    = updateBullets (bullets u)
+      , asteroids  = updateAsteroids (asteroids u)
       , spaceship  = updateSpaceship (spaceship u)
       , background = updateBackground u
       }
 
+-- | Столкновение одной пули с астероидами
+bulletsFaceAsteroids :: Universe -> Universe
+bulletsFaceAsteroids u = u
+
 -- | Обновить состояние пуль
-updateBullets :: Float -> [Bullet] -> [Bullet]
-updateBullets dt bullets = filter visible (map (updateBullet dt) bullets)
+updateBullets :: [Bullet] -> [Bullet]
+updateBullets bullets = filter visible (map updateBullet bullets)
   where
     visible bullet = (abs x) <= (fromIntegral screenWidth / 2)
 	  && (abs y) <= (fromIntegral screenHeight / 2)
@@ -231,8 +235,8 @@ updateBullets dt bullets = filter visible (map (updateBullet dt) bullets)
 	  (x, y)  = bulletPosition bullet
 
 -- | Обновить состояние одной пули
-updateBullet :: Float -> Bullet -> Bullet
-updateBullet dt bullet = bullet
+updateBullet :: Bullet -> Bullet
+updateBullet bullet = bullet
   { bulletPosition = (x, y) }
   where
     (x, y) = bulletPosition bullet + bulletVelocity bullet
@@ -255,9 +259,7 @@ updateShipPosition ship = (checkBoards (fst(spaceshipPosition ship)) (fst newPos
     w = fromIntegral screenWidth / 2
     h = fromIntegral screenHeight / 2
 
-
-
--- Проверка выхода за границы
+-- | Проверка выхода за границы
 checkBoards :: Float -> Float -> Float -> Float
 checkBoards x y z
     | x >= 0    = min y (  z)
@@ -301,11 +303,11 @@ updateBackground u = Background
     h = fromIntegral screenHeight / 2
 
 -- | Обновить астероиды игровой вселенной.
-updateAsteroids :: Float -> [Asteroid] -> [Asteroid]
-updateAsteroids dt asteroids = asteroids -- ??? Тимур
+updateAsteroids :: [Asteroid] -> [Asteroid]
+updateAsteroids asteroids = asteroids -- ??? Тимур
 
-updateAsteroid :: Float -> Asteroid -> Asteroid -- ??? Тимур
-updateAsteroid dt asteroid = asteroid
+updateAsteroid :: Asteroid -> Asteroid -- ??? Тимур
+updateAsteroid asteroid = asteroid
 
 -- | Сбросить игру.
 resetUniverse :: Universe -> Universe
