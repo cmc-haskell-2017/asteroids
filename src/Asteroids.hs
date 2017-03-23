@@ -122,13 +122,12 @@ initBullet u
   
   -- | Инициализировать один астероид.
 -- initAsteroid :: Point -> Asteroid
--- initAsteroid a = a-- ???
+-- initAsteroid a = a
 
 -- | Инициализировать случайный бесконечный
 -- список астероидов для игровой вселенной.
 -- initAsteroids :: StdGen -> [Asteroid]
 -- initAsteroids a = map initAsteroid
-  --(??? a)
 
   -- =========================================
 -- Отрисовка игровой вселенной
@@ -153,15 +152,18 @@ drawBackground image background = translate x y image
   where
     (x, y) = backgroundPosition background
 
+-- | Отобразить корабль.
 drawSpaceship :: Picture -> Spaceship -> Picture
 drawSpaceship image spaceship
   = translate x y (rotate (- spaceshipDirection spaceship) image)
   where
     (x, y) = spaceshipPosition spaceship
 
+-- | Отобразить пули.
 drawBullets :: Picture -> [Bullet] -> Picture
 drawBullets image bullets = pictures (map (drawBullet image) bullets)
 
+-- | Отобразить пулю.
 drawBullet :: Picture -> Bullet -> Picture
 drawBullet image bullet =
   translate x y (rotate (- bulletDirection bullet) image)
@@ -185,11 +187,14 @@ handleUniverse (EventKey (SpecialKey KeyRight) Up _ _)   = turnShip 0
 handleUniverse (EventKey (SpecialKey KeySpace) Down _ _) = fireSpaceship
 handleUniverse _                                         = id
 
+
+-- Движение корабля
 moveShip :: Float -> Universe -> Universe
 moveShip a u = u 
  { spaceship = (spaceship u) { spaceshipAccelerate = a }
  }
 
+-- Поворот корабля
 turnShip :: Float -> Universe -> Universe
 turnShip a u = u 
  { spaceship = (spaceship u) { spaceshipAngularV = a }
@@ -215,8 +220,6 @@ updateUniverse dt u
       , spaceship  = updateSpaceship (spaceship u)
       , background = updateBackground u
       }
-    --where
-    -- ??? тут почти у всех
 
 -- | Обновить состояние пуль
 updateBullets :: Float -> [Bullet] -> [Bullet]
@@ -253,6 +256,8 @@ updateShipPosition ship = (checkBoards (fst(spaceshipPosition ship)) (fst newPos
     h = fromIntegral screenHeight / 2
 
 
+
+-- Проверка выхода за границы
 checkBoards :: Float -> Float -> Float -> Float
 checkBoards x y z
     | x >= 0    = min y (  z)
@@ -288,7 +293,6 @@ updateBackground :: Universe -> Background
 updateBackground u = Background
   { backgroundPosition 
     = (checkBoards (fst(backgroundPosition (background u))) (fst newPos) w, checkBoards (snd(backgroundPosition (background u))) (snd newPos) h)
---  = (backgroundPosition (background u)) + (backgroundVelocity (background u))
   ,backgroundVelocity = (- spaceshipVelocity (spaceship u))
   }
   where 
