@@ -24,11 +24,10 @@ loadImages = do
   Just spaceship  <- loadJuicyPNG "images/spaceship.png"
   return Images
     { imageBullet     = scale 0.07 0.07 bullet
-	, imageAsteroid   = scale 0.1 0.1 asteroid
-    , imageBackground = scale 1.5 1.5 background
-    , imageSpaceship  = scale 0.2 0.2 spaceship
+	, imageAsteroid   = scale  0.1  0.1 asteroid
+    , imageBackground = scale  1.5  1.5 background
+    , imageSpaceship  = scale  0.2  0.2 spaceship
     }
-
 
 -- =========================================
 -- Модель игровой вселенной
@@ -44,48 +43,48 @@ data Images = Images
 
 -- | Игровая вселенная
 data Universe = Universe
- { asteroids  :: [Asteroid] -- ^ Астероиды
- , spaceship  :: Spaceship  -- ^ Космический корабль
- , background :: Background -- ^ Фон
- , bullets    :: [Bullet]   -- ^ Пули
- }
+  { asteroids  :: [Asteroid] -- ^ Астероиды
+  , spaceship  :: Spaceship  -- ^ Космический корабль
+  , background :: Background -- ^ Фон
+  , bullets    :: [Bullet]   -- ^ Пули
+  }
 
 -- | Фон
 data Background = Background
- { backgroundPosition :: Point  -- ^ Положение фона
- , backgroundVelocity :: Vector -- ^ Вектор скорости фона
- } deriving (Eq, Show)
+  { backgroundPosition :: Point  -- ^ Положение фона
+  , backgroundVelocity :: Vector -- ^ Вектор скорости фона
+  } deriving (Eq, Show)
 
 -- | Астероид
 data Asteroid = Asteroid
- { asteroidPosition :: Point  -- ^ Положение астероида
- , asteroidVelocity :: Vector -- ^ Скорость астероида
- , asteroidSize     :: Float  -- ^ Размер астероида
- } deriving (Eq, Show)
+  { asteroidPosition :: Point  -- ^ Положение астероида
+  , asteroidVelocity :: Vector -- ^ Скорость астероида
+  , asteroidSize     :: Float  -- ^ Размер астероида
+  } deriving (Eq, Show)
 
 -- | Космический корабль
 data Spaceship = Spaceship
- { spaceshipPosition   :: Point  -- ^ Положение корабля
- , spaceshipVelocity   :: Vector -- ^ Скорость корабля
- , spaceshipAccelerate :: Float  -- ^ Ускорение
- , spaceshipDirection  :: Float  -- ^ Направление корабля
- , spaceshipAngularV   :: Float  -- ^ Угловая скорость
- , spaceshipSize       :: Float  -- ^ Размер корабля
- } deriving (Eq, Show)
+  { spaceshipPosition   :: Point  -- ^ Положение корабля
+  , spaceshipVelocity   :: Vector -- ^ Скорость корабля
+  , spaceshipAccelerate :: Float  -- ^ Ускорение
+  , spaceshipDirection  :: Float  -- ^ Направление корабля
+  , spaceshipAngularV   :: Float  -- ^ Угловая скорость
+  , spaceshipSize       :: Float  -- ^ Размер корабля
+  } deriving (Eq, Show)
 
 -- Пуля
 data Bullet = Bullet
- { bulletPosition  :: Point  -- ^ Положение пули
- , bulletVelocity  :: Vector -- ^ Скорость пули
- , bulletDirection :: Float  -- ^ Направление пули
- , bulletSize      :: Float  -- ^ Размер пули
- } deriving (Eq, Show)
+  { bulletPosition  :: Point  -- ^ Положение пули
+  , bulletVelocity  :: Vector -- ^ Скорость пули
+  , bulletDirection :: Float  -- ^ Направление пули
+  , bulletSize      :: Float  -- ^ Размер пули
+  } deriving (Eq, Show)
 
 -- | Инициализация игровой вселенной
 initUniverse :: StdGen -> Universe
 initUniverse g = Universe
   { bullets    = []
-  --, asteroids  = initAsteroids g
+  , asteroids  = initAsteroids g
   , spaceship  = initSpaceship
   , background = initBackground
   }
@@ -117,17 +116,16 @@ initBullet u
     , bulletVelocity  = rotateV 
 	    ((spaceshipDirection (spaceship u)) * pi / 180) (0, 10)
     , bulletDirection = spaceshipDirection (spaceship u)
-    , bulletSize      = 0.05 -- не нужен, наверное, вообще
+    , bulletSize      = 0.07
     }
   
-  -- | Инициализировать один астероид.
+-- | Инициализировать один астероид.
 -- initAsteroid :: Point -> Asteroid
--- initAsteroid a = a
 
 -- | Инициализировать случайный бесконечный
 -- список астероидов для игровой вселенной.
--- initAsteroids :: StdGen -> [Asteroid]
--- initAsteroids a = map initAsteroid
+initAsteroids :: StdGen -> [Asteroid]
+initAsteroids x = []
 
   -- =========================================
 -- Отрисовка игровой вселенной
@@ -187,18 +185,17 @@ handleUniverse (EventKey (SpecialKey KeyRight) Up _ _)   = turnShip 0
 handleUniverse (EventKey (SpecialKey KeySpace) Down _ _) = fireSpaceship
 handleUniverse _                                         = id
 
-
--- Движение корабля
+-- | Движение корабля
 moveShip :: Float -> Universe -> Universe
 moveShip a u = u 
- { spaceship = (spaceship u) { spaceshipAccelerate = a }
- }
+  { spaceship = (spaceship u) { spaceshipAccelerate = a }
+  }
 
--- Поворот корабля
+-- | Поворот корабля
 turnShip :: Float -> Universe -> Universe
 turnShip a u = u 
- { spaceship = (spaceship u) { spaceshipAngularV = a }
- }
+  { spaceship = (spaceship u) { spaceshipAngularV = a }
+  }
 
 -- | Выстрел корабля
 fireSpaceship :: Universe -> Universe
@@ -221,7 +218,7 @@ updateUniverse dt u
       , background = updateBackground u
       }
 
--- | Столкновение одной пули с астероидами
+-- | Столкновение пулей с астероидами
 bulletsFaceAsteroids :: Universe -> Universe
 bulletsFaceAsteroids u = u
 
