@@ -212,7 +212,7 @@ updateUniverse dt u
   | otherwise = u
       { bullets    = updateBullets dt (bullets u)
       , asteroids  = updateAsteroids dt (asteroids u)
-      , spaceship  = updateSpaceship dt (spaceship u)
+      , spaceship  = updateSpaceship (spaceship u)
       , background = updateBackground u
       }
     --where
@@ -235,8 +235,8 @@ updateBullet dt bullet = bullet
     (x, y) = bulletPosition bullet + bulletVelocity bullet
 
 -- | Обновить состояние корабля.
-updateSpaceship :: Float -> Spaceship -> Spaceship
-updateSpaceship dt spaceship = spaceship 
+updateSpaceship :: Spaceship -> Spaceship
+updateSpaceship spaceship = spaceship 
 	{ spaceshipPosition  = updateShipPosition spaceship
 	, spaceshipVelocity  = updateShipVelocity spaceship
 	, spaceshipDirection = (if newDir > 180 then (-1) else (if newDir < -180 then (1) else 0))*360 + newDir 
@@ -286,10 +286,15 @@ updateShipVelocity ship = (velocityX, velocityY) + acceleration
 -- | Обновить фон
 updateBackground :: Universe -> Background
 updateBackground u = Background
-  { backgroundPosition
-      = (backgroundPosition (background u)) + (backgroundVelocity (background u))
-  , backgroundVelocity = (- spaceshipVelocity (spaceship u))
+  { backgroundPosition 
+    = (checkBoards (fst(backgroundPosition (background u))) (fst newPos) w, checkBoards (snd(backgroundPosition (background u))) (snd newPos) h)
+--  = (backgroundPosition (background u)) + (backgroundVelocity (background u))
+  ,backgroundVelocity = (- spaceshipVelocity (spaceship u))
   }
+  where 
+    newPos = (backgroundPosition (background u)) + (backgroundVelocity (background u))
+    w = fromIntegral screenWidth / 2
+    h = fromIntegral screenHeight / 2
 
 -- | Обновить астероиды игровой вселенной.
 updateAsteroids :: Float -> [Asteroid] -> [Asteroid]
