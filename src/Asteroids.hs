@@ -36,7 +36,7 @@ loadImages = do
 
 -- | Изображения объектов.
 data Images = Images
-  { imageBullet     :: Picture -- ^ Рокета.
+  { imageBullet     :: Picture -- ^ Ракета.
   , imageAsteroid   :: Picture -- ^ Изображение астероида.
   , imageBackground :: Picture -- ^ Фон.
   , imageSpaceship  :: Picture -- ^ Корабль.
