@@ -81,14 +81,36 @@ data Bullet = Bullet
   , bulletSize      :: Float  -- ^ Размер пули
   } deriving (Eq, Show)
 
-points :: StdGen -> Float -> Float -> [Point]
-points g k1 k2 = zipWith (\ x y -> (x, y)) (randomRs (k1, k2) g) (randomRs (k1, k2) g)
+-- | Бесконечный список позиций для астероидов
+positions :: StdGen -> Float -> Float -> [Point]
+positions g k1 k2
+-- Стоит добавить проверку на то,
+-- что астероид будет создаваться там же,
+-- где находится корабль
+  = zipWith (\ x y -> (x, y)) (randomRs (k1, k2) g) (randomRs (k1, k2) g)
+
+-- | Бесконечный список скоростей для астероидов
+vectors :: StdGen -> Float -> Float -> [Vector]
+vectors g k1 k2
+  = zipWith (\ x y -> (x, y)) (randomRs (k1, k2) g) (randomRs (k1, k2) g)
+
+-- | Бесконечный список направлений для астероидов
+directions :: StdGen -> Float -> Float -> [Float]
+directions g k1 k2 = randomRs (k1, k2) g
+
+-- | Бесконечный список размеров для астероидов
+sizes :: StdGen -> Float -> Float -> [Float]
+sizes g k1 k2 = randomRs (k1, k2) g
 
 -- | Инициализация игровой вселенной
 initUniverse :: StdGen -> Universe
 initUniverse g = Universe
   { bullets    = []
-  , asteroids  = initAsteroids 3 (points g 0.0 180.0) 0.0 (points g 0.1 0.5) (randomRs (0.1, 0.5) g) 
+  , asteroids  = initAsteroids 8
+                               (positions  g (-250.0) 250.0)
+                               (directions g      0.0 360.0)
+                               (vectors    g      0.1   0.5)
+                               (sizes      g      0.3   1.0) 
   , spaceship  = initSpaceship
   , background = initBackground
   }
@@ -101,20 +123,20 @@ initBackground = Background
    }
   
 -- | Инициализировать один астероид.
-initAsteroid :: Point -> Float -> Point -> Float  -> Asteroid
-initAsteroid pos dir v s = Asteroid 
-		{ asteroidPosition  =  pos
-		, asteroidDirection =  dir
-		, asteroidVelocity  =  v
-		, asteroidSize      =  s
-		}
+initAsteroid :: Point -> Float -> Vector -> Float -> Asteroid
+initAsteroid position direction velocity size = Asteroid 
+  { asteroidPosition  = position
+  , asteroidDirection = direction
+  , asteroidVelocity  = rotateV (direction * pi / 180) velocity
+  , asteroidSize      = size
+  }
 
 -- | Инициализировать случайный бесконечный
 -- список астероидов для игровой вселенной.
-
-initAsteroids :: Int -> [Point] -> Float -> [Point] -> [Float] ->[Asteroid]
+initAsteroids :: Int -> [Point] -> [Float] -> [Vector] -> [Float] ->[Asteroid]
 initAsteroids 0 _ _ _ _ = []
-initAsteroids n (x:xs) y (z:zs) (d:ds) = initAsteroid x y z d : initAsteroids (n-1) xs y zs ds
+initAsteroids n (p : positions) (d : directions) (v : velocities) (s : sizes)
+  = initAsteroid p d v s : initAsteroids (n-1) positions directions velocities sizes
 
 -- | Начальное состояние корабля
 initSpaceship :: Spaceship
@@ -138,7 +160,6 @@ initBullet u = Bullet
     , bulletSize      = 0.07
     }
 
-
   -- =========================================
 -- Отрисовка игровой вселенной
 -- =========================================
@@ -157,9 +178,10 @@ drawAsteroids image asteroids = pictures (map (drawAsteroid image) asteroids)
 
 drawAsteroid :: Picture -> Asteroid -> Picture 
 drawAsteroid image asteroid
-  = translate x y (rotate (- asteroidDirection asteroid) image)
+  = scale size size (translate x y (rotate (- asteroidDirection asteroid) image))
   where
-  	(x ,y) = asteroidPosition asteroid	
+    size   = asteroidSize asteroid
+    (x ,y) = asteroidPosition asteroid
 
 -- | Отобразить фон.
 drawBackground :: Picture -> Background -> Picture
@@ -220,10 +242,10 @@ fireSpaceship u = u
   { bullets  = initBullet u : bullets u
   }
 
-
 -- =========================================
 -- Обновление игровой вселенной
 -- =========================================
+
 -- | Обновить состояние игровой вселенной.
 updateUniverse :: Float -> Universe -> Universe
 updateUniverse dt u 
@@ -315,14 +337,13 @@ updateBackground u = Background
     w = fromIntegral screenWidth / 2
     h = fromIntegral screenHeight / 2
 
-
 -- | Обновить астероиды игровой вселенной.
 updateAsteroids :: Float -> [Asteroid] -> [Asteroid]
 updateAsteroids _ [] = []
 updateAsteroids dt asteroids =  filter visible (map updateAsteroid asteroids)
   where
-    visible asteroid = (abs x) <= (fromIntegral screenWidth / 2) &&
-	  				   (abs y) <= (fromIntegral screenHeight / 2)
+    visible asteroid = (abs x) <= (fromIntegral screenWidth / 2)
+      && (abs y) <= (fromIntegral screenHeight / 2)
 	where
 	  (x, y)  = asteroidPosition asteroid
 
