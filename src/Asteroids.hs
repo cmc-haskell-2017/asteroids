@@ -9,7 +9,7 @@ import Graphics.Gloss.Juicy
 run :: Images -> IO ()
 run images = do
   g <- newStdGen
-  play display bgColor fps (initUniverse g) (drawUniverse images) handleUniverse (updateUniverse g)
+  play display bgColor fps (initUniverse g) (drawUniverse images) (handleUniverse g) (updateUniverse g)
   where
     display = InWindow "Asteroids" (screenWidth, screenHeight) (150, 150)
     bgColor = black   -- цвет фона
@@ -22,11 +22,13 @@ loadImages = do
   Just asteroid   <- loadJuicyPNG "images/asteroid.png"
   Just background <- loadJuicyPNG "images/background.png"
   Just spaceship  <- loadJuicyPNG "images/spaceship.png"
+  Just table      <- loadJuicyPNG "images/table.png"
   return Images
     { imageBullet     = scale 0.07 0.07 bullet
 	, imageAsteroid   = scale  0.5  0.5 asteroid
     , imageBackground = scale  1.5  1.5 background
     , imageSpaceship  = scale  0.2  0.2 spaceship
+    , imageTable      = scale  1.0 1.0  table
     }
 
 -- =========================================
@@ -39,6 +41,7 @@ data Images = Images
   , imageAsteroid   :: Picture -- ^ Aстероид.
   , imageBackground :: Picture -- ^ Фон.
   , imageSpaceship  :: Picture -- ^ Корабль.
+  , imageTable      :: Picture -- ^ Заставка
   }
 
 -- | Игровая вселенная
@@ -47,7 +50,13 @@ data Universe = Universe
   , spaceship  :: Spaceship  -- ^ Космический корабль
   , background :: Background -- ^ Фон
   , bullets    :: [Bullet]   -- ^ Пули
+  , tables     :: [Table]    -- ^ Заставка
   }
+
+-- | Заставка
+data Table = Table 
+  { tablePosition :: Point -- ^ Положение фона
+  }  deriving (Eq, Show)  
 
 -- | Фон
 data Background = Background
@@ -114,6 +123,7 @@ initUniverse g = Universe
     = initAsteroids asteroidsNumber (positions g) (directions g) (vectors g) (sizes g)
   , spaceship  = initSpaceship
   , background = initBackground
+  , tables     = []
   }
   
 -- | Инициализация фона
@@ -175,6 +185,16 @@ initBullet u = Bullet
     , bulletSize      = 50
     }
 
+-- | Инициализация заставка
+initTables :: Int ->[Table]
+initTables 0 = []
+initTables n = initTable : initTables (n-1)
+
+initTable :: Table
+initTable = Table
+  { tablePosition = (0, 0)
+  } 
+
   -- =========================================
 -- Отрисовка игровой вселенной
 -- =========================================
@@ -186,6 +206,7 @@ drawUniverse images u = pictures
   , drawSpaceship  (imageSpaceship images)  (spaceship u) 
   , drawBullets    (imageBullet images)     (bullets u)
   , drawAsteroids  (imageAsteroid images)   (asteroids u)
+  , drawTables     (imageTable images)      (tables u)
   ]
   
 drawAsteroids :: Picture -> [Asteroid] -> Picture
@@ -222,22 +243,32 @@ drawBullet image bullet =
   where
     (x, y) = bulletPosition bullet
 
+-- | Отобразить заставку 
+drawTables :: Picture -> [Table] -> Picture
+drawTables image tables = pictures (map (drawTable image) tables)
+
+drawTable :: Picture -> Table -> Picture
+drawTable image table = translate x y image
+  where
+    (x, y) = tablePosition table
+
 -- =========================================
 -- Обработка событий
 -- =========================================
 
 -- | Обработчик событий игры.
-handleUniverse :: Event -> Universe -> Universe
-handleUniverse (EventKey (SpecialKey KeyUp) Down _ _)    = moveShip 0.1
-handleUniverse (EventKey (SpecialKey KeyDown) Down _ _)  = moveShip (-0.1)
-handleUniverse (EventKey (SpecialKey KeyUp) Up _ _)      = moveShip 0 
-handleUniverse (EventKey (SpecialKey KeyDown) Up _ _)    = moveShip 0 
-handleUniverse (EventKey (SpecialKey KeyLeft) Down _ _)  = turnShip (5) 
-handleUniverse (EventKey (SpecialKey KeyRight) Down _ _) = turnShip (-5) 
-handleUniverse (EventKey (SpecialKey KeyLeft) Up _ _)    = turnShip 0 
-handleUniverse (EventKey (SpecialKey KeyRight) Up _ _)   = turnShip 0 
-handleUniverse (EventKey (SpecialKey KeySpace) Down _ _) = fireSpaceship
-handleUniverse _                                         = id
+handleUniverse :: StdGen -> Event -> Universe -> Universe
+handleUniverse _ (EventKey (SpecialKey KeyUp) Down _ _)    = moveShip 0.1
+handleUniverse _ (EventKey (SpecialKey KeyDown) Down _ _)  = moveShip (-0.1)
+handleUniverse _ (EventKey (SpecialKey KeyUp) Up _ _)      = moveShip 0 
+handleUniverse _ (EventKey (SpecialKey KeyDown) Up _ _)    = moveShip 0 
+handleUniverse _ (EventKey (SpecialKey KeyLeft) Down _ _)  = turnShip (5) 
+handleUniverse _ (EventKey (SpecialKey KeyRight) Down _ _) = turnShip (-5) 
+handleUniverse _ (EventKey (SpecialKey KeyLeft) Up _ _)    = turnShip 0 
+handleUniverse _ (EventKey (SpecialKey KeyRight) Up _ _)   = turnShip 0 
+handleUniverse _ (EventKey (SpecialKey KeySpace) Down _ _) = fireSpaceship
+handleUniverse g (EventKey (SpecialKey KeyEnter) Down _ _) = resetUniverse g
+handleUniverse _ _                                         = id
 
 -- | Движение корабля
 moveShip :: Float -> Universe -> Universe
@@ -263,7 +294,7 @@ fireSpaceship u = u
 -- | Обновить состояние игровой вселенной.
 updateUniverse :: StdGen -> Float -> Universe -> Universe
 updateUniverse g dt u 
-  | isGameOver u = resetUniverse g u
+  | isGameOver u = u { tables = initTables 1 }	-- resetUniverse g u
   | otherwise = bulletsFaceAsteroids u
       { bullets    = updateBullets (bullets u)
       , asteroids  = updateAsteroids g (asteroids u) 
@@ -407,6 +438,7 @@ resetUniverse g u = u
       = initAsteroids asteroidsNumber (positions g) (directions g) (vectors g) (sizes g)
   , bullets    = []
   , spaceship  = initSpaceship
+  , tables = []
   }
 
 -- | Конец игры?
@@ -464,14 +496,3 @@ screenRight = fromIntegral screenWidth / 2
 screenLeft :: Float
 screenLeft = - fromIntegral screenWidth / 2
 
--- | Скорость движения астероида по вселенной (в пикселях в секунду).
-speed :: Float
-speed = 100.0
-
--- | Небходимое расстояние между игроком и новоявленным астероидом.
-playerOffset :: Float 
-playerOffset = 300.0
-
--- | Расстояние между астероидами.
-defaultOffset :: Float
-defaultOffset = 150.0
