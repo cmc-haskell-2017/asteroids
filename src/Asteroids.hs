@@ -111,8 +111,8 @@ sizes g k1 k2 = randomRs (k1, k2) g
 initUniverse :: StdGen -> Universe
 initUniverse g = Universe
   { bullets    = []
-  , asteroids  = initAsteroids 50
-                               (positions  g (fromIntegral screenWidth) (fromIntegral screenHeight))
+  , asteroids  = initAsteroids 25
+                               (positions  g (fromIntegral screenWidth / 2) (fromIntegral screenHeight / 2))
                                (directions g      0.0 360.0)
                                (vectors    g      0.6   1.5)
                                (sizes      g      0.6   2.0) 
@@ -137,8 +137,7 @@ initAsteroids n (p : positions) (d : directions) (v : velocities) (s : sizes)
 -- | Инициализировать один астероид.
 initAsteroid :: Point -> Float -> Vector -> Float -> Asteroid
 initAsteroid position direction velocity size = Asteroid 
-  { asteroidPosition  = (if ((x < (fromIntegral screenWidth)) && (y < (fromIntegral screenHeight))) 
-                                then (((fst position) + (fromIntegral screenWidth)), ((snd position) + (fromIntegral screenHeight))) else position) 
+  { asteroidPosition  = (x, y)
   , asteroidDirection = direction
   , asteroidVelocity  = rotateV (direction * pi / 180) velocity
   , asteroidSize      = size
@@ -146,6 +145,13 @@ initAsteroid position direction velocity size = Asteroid
   }
   where
     (x, y) = position
+    w = fromIntegral screenWidth / 2
+    h = fromIntegral screenHeight / 2
+    newposition
+      | x > - w && y > - h = (- w, - h)
+      | x > - w && y <   h = (- w,   h)
+      | x <   w && y > - h = (  w, - h)
+      | x <   w && y <   h = (  w,   h)
 
 -- | Начальное состояние корабля
 initSpaceship :: Spaceship
@@ -351,7 +357,7 @@ updateBackground u = Background
 updateAsteroids :: Float -> Vector -> StdGen -> [Asteroid] -> [Asteroid]
 updateAsteroids _ _ _ [] = []
 updateAsteroids dt v g asteroids 
-  | ((length asteroids) <= 45) = filter visible (map (updateAsteroid v) asteroids)
+  | ((length asteroids) <= 20) = filter visible (map (updateAsteroid v) asteroids)
       ++ initAsteroids 5
            (positions  g (fromIntegral screenWidth) (fromIntegral screenHeight))
            (directions g      0.0 360.0)
@@ -400,7 +406,7 @@ updateAsteroidVelocity asteroid = (velocityX, velocityY)
 -- | Сбросить игру.
 resetUniverse :: StdGen -> Universe -> Universe
 resetUniverse g u = u
-  { asteroids  = initAsteroids 10
+  { asteroids  = initAsteroids 25
                                (positions  g (fromIntegral screenWidth) (fromIntegral screenHeight))
                                (directions g      0.0 360.0)
                                (vectors    g      0.6   1.5)
