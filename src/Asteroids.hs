@@ -83,39 +83,35 @@ data Bullet = Bullet
   } deriving (Eq, Show)
 
 -- | Бесконечный список позиций для астероидов
-positions :: StdGen -> Float -> Float -> [Point]
-positions g k1 k2
--- Стоит добавить проверку на то,
--- что астероид будет создаваться там же,
--- где находится корабль
-  = zipWith (\ x y -> (x, y)) (randomRs (-k1, k1) g1) (randomRs (-k2, k2) g2)
+positions :: StdGen -> [Point]
+positions g
+  = zipWith (\ x y -> (x, y)) (randomRs (- width, width) g1) (randomRs (- height, height) g2)
   where
     (g1, g2) = split g
+    width    = fromIntegral screenWidth / 2
+    height   = fromIntegral screenHeight / 2
 
 -- | Бесконечный список скоростей для астероидов
-vectors :: StdGen -> Float -> Float -> [Vector]
-vectors g k1 k2
-  = zipWith (\ x y -> (x, y)) (randomRs (k1, k2) g1) (randomRs (k1, k2) g2)
+vectors :: StdGen -> [Vector]
+vectors g
+  = zipWith (\ x y -> (x, y)) (randomRs (0.5, 1.5) g1) (randomRs (0.5, 1.5) g2)
   where
     (g1, g2) = split g
 
 -- | Бесконечный список направлений для астероидов
-directions :: StdGen -> Float -> Float -> [Float]
-directions g k1 k2 = randomRs (k1, k2) g
+directions :: StdGen -> [Float]
+directions g = randomRs (0.0, 360.0) g
 
 -- | Бесконечный список размеров для астероидов
-sizes :: StdGen -> Float -> Float -> [Float]
-sizes g k1 k2 = randomRs (k1, k2) g
+sizes :: StdGen -> [Float]
+sizes g = randomRs (0.5, 2.0) g
 
 -- | Инициализация игровой вселенной
 initUniverse :: StdGen -> Universe
 initUniverse g = Universe
   { bullets    = []
-  , asteroids  = initAsteroids 25
-                               (positions  g (fromIntegral screenWidth / 2) (fromIntegral screenHeight / 2))
-                               (directions g      0.0 360.0)
-                               (vectors    g      0.6   1.5)
-                               (sizes      g      0.6   2.0) 
+  , asteroids
+    = initAsteroids asteroidsNumber (positions g) (directions g) (vectors g) (sizes g)
   , spaceship  = initSpaceship
   , background = initBackground
   }
@@ -137,21 +133,25 @@ initAsteroids n (p : positions) (d : directions) (v : velocities) (s : sizes)
 -- | Инициализировать один астероид.
 initAsteroid :: Point -> Float -> Vector -> Float -> Asteroid
 initAsteroid position direction velocity size = Asteroid 
-  { asteroidPosition  = (x, y)
+  { asteroidPosition  = newPosition
   , asteroidDirection = direction
   , asteroidVelocity  = rotateV (direction * pi / 180) velocity
   , asteroidSize      = size
-  , asteroidRadius    = size * 50
+  , asteroidRadius    = size * 90
   }
   where
     (x, y) = position
-    w = fromIntegral screenWidth / 2
-    h = fromIntegral screenHeight / 2
-    newposition
-      | x > - w && y > - h = (- w, - h)
-      | x > - w && y <   h = (- w,   h)
-      | x <   w && y > - h = (  w, - h)
-      | x <   w && y <   h = (  w,   h)
+    w      = fromIntegral screenWidth / 4
+    h      = fromIntegral screenHeight / 4
+    newX
+      | x < 0 && x > - w = x - w
+      | x > 0 && x <   w = x + w
+      | otherwise        = x
+    newY
+      | y < 0 && y > - h = y - h
+      | y > 0 && y <   h = y + h
+      | otherwise        = y
+    newPosition = (newX, newY)
 
 -- | Начальное состояние корабля
 initSpaceship :: Spaceship
@@ -254,8 +254,7 @@ turnShip a u = u
 -- | Выстрел корабля
 fireSpaceship :: Universe -> Universe
 fireSpaceship u = u
-  { bullets  = initBullet u : bullets u
-  }
+  { bullets  = initBullet u : bullets u }
 
 -- =========================================
 -- Обновление игровой вселенной
@@ -267,7 +266,7 @@ updateUniverse g dt u
   | isGameOver u = resetUniverse g u
   | otherwise = bulletsFaceAsteroids u
       { bullets    = updateBullets (bullets u)
-      , asteroids  = updateAsteroids dt (spaceshipVelocity (spaceship u)) g (asteroids u) 
+      , asteroids  = updateAsteroids g (asteroids u) 
       , spaceship  = updateSpaceship (spaceship u)
       , background = updateBackground u
       }
@@ -278,9 +277,8 @@ bulletsFaceAsteroids u =
 	bulletsFaceAsteroids2 u (asteroids u) (bullets u)
 	
 bulletsFaceAsteroids2 :: Universe -> [Asteroid] -> [Bullet] -> Universe
-bulletsFaceAsteroids2 u a b = u{
-							        asteroids = checkCollisions a b []
-							   }
+bulletsFaceAsteroids2 u a b 
+  = u { asteroids = checkCollisions a b [] }
 
 checkCollisions :: [Asteroid] -> [Bullet] -> [Asteroid] -> [Asteroid]
 checkCollisions [] _ newA = newA
@@ -308,9 +306,9 @@ updateBullets bullets = filter visible (map updateBullet bullets)
 -- | Обновить состояние одной пули
 updateBullet :: Bullet -> Bullet
 updateBullet bullet = bullet
-  { bulletPosition = (x, y) }
+  { bulletPosition = newPosition }
   where
-    (x, y) = bulletPosition bullet + bulletVelocity bullet
+    newPosition = bulletPosition bullet + bulletVelocity bullet
 
 -- | Обновить состояние корабля.
 updateSpaceship :: Spaceship -> Spaceship
@@ -364,8 +362,9 @@ updateShipVelocity ship = (velocityX, velocityY) + acceleration
 updateBackground :: Universe -> Background
 updateBackground u = Background
   { backgroundPosition 
-    = (checkBoards (fst(backgroundPosition (background u))) (fst newPos) w, checkBoards (snd(backgroundPosition (background u))) (snd newPos) h)
-  ,backgroundVelocity = (- spaceshipVelocity (spaceship u))
+      = (checkBoards (fst (backgroundPosition (background u))) (fst newPos) w
+        , checkBoards (snd(backgroundPosition (background u))) (snd newPos) h)
+  , backgroundVelocity = - spaceshipVelocity (spaceship u)
   }
   where 
     newPos = (backgroundPosition (background u)) + (backgroundVelocity (background u))
@@ -373,63 +372,32 @@ updateBackground u = Background
     h = fromIntegral screenHeight / 2
 
 -- | Обновить астероиды игровой вселенной.
-updateAsteroids :: Float -> Vector -> StdGen -> [Asteroid] -> [Asteroid]
-updateAsteroids _ _ _ [] = []
-updateAsteroids dt v g asteroids 
-  | ((length asteroids) <= 20) = filter visible (map (updateAsteroid v) asteroids)
-      ++ initAsteroids 5
-           (positions  g (fromIntegral screenWidth) (fromIntegral screenHeight))
-           (directions g      0.0 360.0)
-           (vectors    g      0.6   1.5)
-           (sizes      g      0.6   2.0)
-  | otherwise =  filter visible (map (updateAsteroid v) asteroids)
-                where
-                   visible asteroid = (abs x) <= (2*fromIntegral screenWidth)
-                                      && (abs y) <= (2*fromIntegral screenHeight)
-	                 where
-	                   (x, y)  = asteroidPosition asteroid
+updateAsteroids :: StdGen -> [Asteroid] -> [Asteroid]
+updateAsteroids _ [] = []
+updateAsteroids g asteroids 
+  | length asteroids <= asteroidsNumber - 20
+      = filter visible (map updateAsteroid asteroids)
+        ++ initAsteroids 20 (positions g) (directions g) (vectors g) (sizes g)
+  | otherwise =  filter visible (map updateAsteroid asteroids)
+    where
+      width            = fromIntegral screenWidth / 2
+      height           = fromIntegral screenHeight / 2
+      visible asteroid = abs x <= width + asteroidRadius asteroid
+        && abs y <= height + asteroidRadius asteroid
+	    where
+	      (x, y)  = asteroidPosition asteroid
 
-updateAsteroid :: Vector -> Asteroid -> Asteroid 
-updateAsteroid v asteroid = asteroid
-	{ asteroidPosition = updateAsteroidPosition asteroid
-   ,asteroidVelocity = updateAsteroidVelocity asteroid - mulSV 0.01 v
-  }
-
-updateAsteroidPosition :: Asteroid -> Vector
-updateAsteroidPosition asteroid = (checkBoards (fst(asteroidPosition asteroid)) (fst newPos) w, checkBoards (snd(asteroidPosition asteroid)) (snd newPos) h)
+updateAsteroid :: Asteroid -> Asteroid 
+updateAsteroid asteroid = asteroid
+  { asteroidPosition = newPosition }
   where
-    newPos = (asteroidPosition asteroid) + (asteroidVelocity asteroid)
-    w = fromIntegral screenWidth
-    h = fromIntegral screenHeight
+    newPosition = asteroidPosition asteroid + asteroidVelocity asteroid
 
-updateAsteroidVelocity :: Asteroid -> Vector
-updateAsteroidVelocity asteroid = (velocityX, velocityY)
-  where
-    velocityX = crossX * fst (asteroidVelocity asteroid)
-      where
-        crossX
-          | crossRight || crossLeft = - 1
-          | otherwise               =   1
-          where
-            crossRight = fst(updateAsteroidPosition asteroid) ==   fromIntegral screenWidth
-            crossLeft  = fst(updateAsteroidPosition asteroid) == - fromIntegral screenWidth
-
-    velocityY = crossY * snd (asteroidVelocity asteroid)
-      where
-        crossY
-          | crossUp || crossDown    = - 1
-          | otherwise               =   1
-          where
-            crossUp    = snd(updateAsteroidPosition asteroid) ==   fromIntegral screenHeight
-            crossDown  = snd(updateAsteroidPosition asteroid) == - fromIntegral screenHeight
 -- | Сбросить игру.
 resetUniverse :: StdGen -> Universe -> Universe
 resetUniverse g u = u
-  { asteroids  = initAsteroids 25
-                               (positions  g (fromIntegral screenWidth) (fromIntegral screenHeight))
-                               (directions g      0.0 360.0)
-                               (vectors    g      0.6   1.5)
-                               (sizes      g      0.6   2.0)  
+  { asteroids
+      = initAsteroids asteroidsNumber (positions g) (directions g) (vectors g) (sizes g)
   , bullets    = []
   , spaceship  = initSpaceship
   }
@@ -452,7 +420,6 @@ collision :: Point -> Float -> Point -> Float -> Bool
 collision (x1, y1) r1 (x2, y2) r2 = d <= (r1 + r2)
 	where d = sqrt((x1-x2)^2 + (y1-y2)^2)
 
-
 -- Если будет мультиплеер с несколькими кораблями (а он, скорее всего, будет)
 -- | Определение столкновения с пулей
 spaceshipFaceBullets :: Universe -> Bool -- ??? -- Паше
@@ -461,6 +428,10 @@ spaceshipFaceBullets _ = False
 -- =========================================
 -- Константы, параметры игры
 -- =========================================
+
+-- | Количество астероидов
+asteroidsNumber :: Int
+asteroidsNumber = 50
 
 -- | Ширина экрана.
 screenWidth :: Int
@@ -480,7 +451,7 @@ screenLeft = - fromIntegral screenWidth / 2
 
 -- | Скорость движения астероида по вселенной (в пикселях в секунду).
 speed :: Float
-speed = 100
+speed = 100.0
 
 -- | Небходимое расстояние между игроком и новоявленным астероидом.
 playerOffset :: Float 
