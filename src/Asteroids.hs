@@ -106,11 +106,11 @@ sizes g k1 k2 = randomRs (k1, k2) g
 initUniverse :: StdGen -> Universe
 initUniverse g = Universe
   { bullets    = []
-  , asteroids  = initAsteroids 8
-                               (positions  g (fromIntegral screenWidth / 2) (fromIntegral screenHeight / 2))
+  , asteroids  = initAsteroids 30
+                               (positions  g (fromIntegral screenWidth) (fromIntegral screenHeight))
                                (directions g      0.0 360.0)
-                               (vectors    g      0.1   0.5)
-                               (sizes      g      0.3   1.0) 
+                               (vectors    g      0.6   1.5)
+                               (sizes      g      0.6   2.0) 
   , spaceship  = initSpaceship
   , background = initBackground
   }
@@ -342,18 +342,44 @@ updateAsteroids :: Float -> Vector -> [Asteroid] -> [Asteroid]
 updateAsteroids _ _ [] = []
 updateAsteroids dt v asteroids =  filter visible (map (updateAsteroid v) asteroids)
   where
-    visible asteroid = (abs x) <= (fromIntegral screenWidth / 2)
-      && (abs y) <= (fromIntegral screenHeight / 2)
+    visible asteroid = (abs x) <= (2*fromIntegral screenWidth)
+      && (abs y) <= (2*fromIntegral screenHeight)
 	where
 	  (x, y)  = asteroidPosition asteroid
 
 updateAsteroid :: Vector -> Asteroid -> Asteroid 
 updateAsteroid v asteroid = asteroid
-	{ asteroidPosition = (x, y) 
-   ,asteroidVelocity = asteroidVelocity asteroid - v}
- 	 where
-    	(x, y) = asteroidPosition asteroid + asteroidVelocity asteroid
+	{ asteroidPosition = updateAsteroidPosition asteroid
+   ,asteroidVelocity = updateAsteroidVelocity asteroid - mulSV 0.01 v
+  }
 
+updateAsteroidPosition :: Asteroid -> Vector
+updateAsteroidPosition asteroid = (checkBoards (fst(asteroidPosition asteroid)) (fst newPos) w, checkBoards (snd(asteroidPosition asteroid)) (snd newPos) h)
+  where
+    newPos = (asteroidPosition asteroid) + (asteroidVelocity asteroid)
+    w = fromIntegral screenWidth
+    h = fromIntegral screenHeight
+
+updateAsteroidVelocity :: Asteroid -> Vector
+updateAsteroidVelocity asteroid = (velocityX, velocityY)
+  where
+    velocityX = crossX * fst (asteroidVelocity asteroid)
+      where
+        crossX
+          | crossRight || crossLeft = - 1
+          | otherwise               =   1
+          where
+            crossRight = fst(updateAsteroidPosition asteroid) ==   fromIntegral screenWidth
+            crossLeft  = fst(updateAsteroidPosition asteroid) == - fromIntegral screenWidth
+
+    velocityY = crossY * snd (asteroidVelocity asteroid)
+      where
+        crossY
+          | crossUp || crossDown    = - 1
+          | otherwise               =   1
+          where
+            crossUp    = snd(updateAsteroidPosition asteroid) ==   fromIntegral screenHeight
+            crossDown  = snd(updateAsteroidPosition asteroid) == - fromIntegral screenHeight
 -- | Сбросить игру.
 resetUniverse :: Universe -> Universe
 resetUniverse u = u
