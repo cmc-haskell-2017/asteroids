@@ -106,7 +106,7 @@ sizes g k1 k2 = randomRs (k1, k2) g
 initUniverse :: StdGen -> Universe
 initUniverse g = Universe
   { bullets    = []
-  , asteroids  = initAsteroids 3
+  , asteroids  = initAsteroids 10
                                (positions  g (fromIntegral screenWidth) (fromIntegral screenHeight))
                                (directions g      0.0 360.0)
                                (vectors    g      0.6   1.5)
@@ -383,7 +383,7 @@ updateAsteroidVelocity asteroid = (velocityX, velocityY)
 -- | Сбросить игру.
 resetUniverse :: StdGen -> Universe -> Universe
 resetUniverse g u = u
-  { asteroids  = initAsteroids 30
+  { asteroids  = initAsteroids 10
                                (positions  g (fromIntegral screenWidth) (fromIntegral screenHeight))
                                (directions g      0.0 360.0)
                                (vectors    g      0.6   1.5)
