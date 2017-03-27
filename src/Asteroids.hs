@@ -252,7 +252,7 @@ updateUniverse dt u
   | isGameOver u = resetUniverse u
   | otherwise = bulletsFaceAsteroids u
       { bullets    = updateBullets (bullets u)
-      , asteroids  = updateAsteroids dt (asteroids u)
+      , asteroids  = updateAsteroids dt (spaceshipVelocity (spaceship u)) (asteroids u) 
       , spaceship  = updateSpaceship (spaceship u)
       , background = updateBackground u
       }
@@ -338,18 +338,19 @@ updateBackground u = Background
     h = fromIntegral screenHeight / 2
 
 -- | Обновить астероиды игровой вселенной.
-updateAsteroids :: Float -> [Asteroid] -> [Asteroid]
-updateAsteroids _ [] = []
-updateAsteroids dt asteroids =  filter visible (map updateAsteroid asteroids)
+updateAsteroids :: Float -> Vector -> [Asteroid] -> [Asteroid]
+updateAsteroids _ _ [] = []
+updateAsteroids dt v asteroids =  filter visible (map (updateAsteroid v) asteroids)
   where
     visible asteroid = (abs x) <= (fromIntegral screenWidth / 2)
       && (abs y) <= (fromIntegral screenHeight / 2)
 	where
 	  (x, y)  = asteroidPosition asteroid
 
-updateAsteroid :: Asteroid -> Asteroid 
-updateAsteroid asteroid = asteroid
-	{ asteroidPosition = (x, y) }
+updateAsteroid :: Vector -> Asteroid -> Asteroid 
+updateAsteroid v asteroid = asteroid
+	{ asteroidPosition = (x, y) 
+   ,asteroidVelocity = asteroidVelocity asteroid - v}
  	 where
     	(x, y) = asteroidPosition asteroid + asteroidVelocity asteroid
 
