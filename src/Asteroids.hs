@@ -122,16 +122,6 @@ initBackground = Background
    { backgroundPosition = (0, 0)
    , backgroundVelocity = (0, 0)
    }
-  
--- | Инициализировать один астероид.
-initAsteroid :: Point -> Float -> Vector -> Float -> Asteroid
-initAsteroid position direction velocity size = Asteroid 
-  { asteroidPosition  = position
-  , asteroidDirection = direction
-  , asteroidVelocity  = rotateV (direction * pi / 180) velocity
-  , asteroidSize      = size
-  , asteroidRadius    = size * 50
-  }
 
 -- | Инициализировать случайный бесконечный
 -- список астероидов для игровой вселенной.
@@ -139,6 +129,17 @@ initAsteroids :: Int -> [Point] -> [Float] -> [Vector] -> [Float] ->[Asteroid]
 initAsteroids 0 _ _ _ _ = []
 initAsteroids n (p : positions) (d : directions) (v : velocities) (s : sizes)
   = initAsteroid p d v s : initAsteroids (n-1) positions directions velocities sizes
+
+-- | Инициализировать один астероид.
+initAsteroid :: Point -> Float -> Vector -> Float -> Asteroid
+initAsteroid position direction velocity size = Asteroid 
+  { asteroidPosition  = (if (((fst position) < (fromIntegral screenWidth)) && ((snd position) < (fromIntegral screenHeight))) 
+                                then (((fst position) + (fromIntegral screenWidth)), ((snd position) + (fromIntegral screenHeight))) else position) 
+  , asteroidDirection = direction
+  , asteroidVelocity  = rotateV (direction * pi / 180) velocity
+  , asteroidSize      = size
+  , asteroidRadius    = size * 50
+  }
 
 -- | Начальное состояние корабля
 initSpaceship :: Spaceship
@@ -254,7 +255,7 @@ updateUniverse g dt u
   | isGameOver u = resetUniverse g u
   | otherwise = bulletsFaceAsteroids u
       { bullets    = updateBullets (bullets u)
-      , asteroids  = updateAsteroids dt (spaceshipVelocity (spaceship u)) (asteroids u) 
+      , asteroids  = updateAsteroids dt (spaceshipVelocity (spaceship u)) g (asteroids u) 
       , spaceship  = updateSpaceship (spaceship u)
       , background = updateBackground u
       }
@@ -262,6 +263,7 @@ updateUniverse g dt u
 -- | Столкновение пули с астероидами
 bulletsFaceAsteroids :: Universe -> Universe
 bulletsFaceAsteroids u = u
+
 
 -- | Обновить состояние пуль
 updateBullets :: [Bullet] -> [Bullet]
@@ -340,14 +342,20 @@ updateBackground u = Background
     h = fromIntegral screenHeight / 2
 
 -- | Обновить астероиды игровой вселенной.
-updateAsteroids :: Float -> Vector -> [Asteroid] -> [Asteroid]
-updateAsteroids _ _ [] = []
-updateAsteroids dt v asteroids =  filter visible (map (updateAsteroid v) asteroids)
-  where
-    visible asteroid = (abs x) <= (2*fromIntegral screenWidth)
-      && (abs y) <= (2*fromIntegral screenHeight)
-	where
-	  (x, y)  = asteroidPosition asteroid
+updateAsteroids :: Float -> Vector -> StdGen -> [Asteroid] -> [Asteroid]
+updateAsteroids _ _ _ [] = []
+updateAsteroids dt v g asteroids 
+  | ((length asteroids) < 5) = initAsteroids 10
+                                           (positions  g (fromIntegral screenWidth) (fromIntegral screenHeight))
+                                           (directions g      0.0 360.0)
+                                           (vectors    g      0.6   1.5)
+                                           (sizes      g      0.6   2.0)
+  | otherwise =  filter visible (map (updateAsteroid v) asteroids)
+                where
+                   visible asteroid = (abs x) <= (2*fromIntegral screenWidth)
+                                      && (abs y) <= (2*fromIntegral screenHeight)
+	                 where
+	                   (x, y)  = asteroidPosition asteroid
 
 updateAsteroid :: Vector -> Asteroid -> Asteroid 
 updateAsteroid v asteroid = asteroid
@@ -399,7 +407,7 @@ isGameOver :: Universe -> Bool
 isGameOver u = spaceshipFaceAsteroids u || spaceshipFaceBullets u
 
 -- | Определение столкновения корабля(кораблей) с астероидами
-spaceshipFaceAsteroids :: Universe -> Bool -- ??? -- Паше
+spaceshipFaceAsteroids :: Universe -> Bool -- 
 spaceshipFaceAsteroids u = 
 	spaceshipFaceAsteroids2 (spaceshipPosition (spaceship u)) (spaceshipSize (spaceship u)) (asteroids u)
 
