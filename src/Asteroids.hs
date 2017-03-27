@@ -383,9 +383,12 @@ updateAsteroids _ [] = []
 updateAsteroids g asteroids 
   | length asteroids <= asteroidsNumber - 2
       = filter visible (map updateAsteroid asteroids)
-        ++ initAsteroids 2 (positions g) (directions g) (vectors g) (sizes g)
+        ++ initAsteroids 2 (positions g3) (directions g4) (vectors g5) (sizes g6)
   | otherwise =  filter visible (map updateAsteroid asteroids)
     where
+      (g1,g2) = split g
+      (g3,g4) = split g1
+      (g5,g6) = split g2
       visible asteroid = abs x <= 2*screenRight + asteroidRadius asteroid
         && abs y <= 2*screenUp + asteroidRadius asteroid
 	    where
