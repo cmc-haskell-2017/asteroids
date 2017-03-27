@@ -160,7 +160,7 @@ initBullet u = Bullet
     , bulletVelocity  = rotateV 
 	    ((spaceshipDirection (spaceship u)) * pi / 180) (0, 10)
     , bulletDirection = spaceshipDirection (spaceship u)
-    , bulletSize      = 0.07
+    , bulletSize      = 50
     }
 
   -- =========================================
@@ -262,7 +262,26 @@ updateUniverse g dt u
 
 -- | Столкновение пули с астероидами
 bulletsFaceAsteroids :: Universe -> Universe
-bulletsFaceAsteroids u = u
+bulletsFaceAsteroids u = 
+	bulletsFaceAsteroids2 u (asteroids u) (bullets u)
+	
+bulletsFaceAsteroids2 :: Universe -> [Asteroid] -> [Bullet] -> Universe
+bulletsFaceAsteroids2 u a b = u{
+							        asteroids = checkCollisions a b []
+							   }
+
+checkCollisions :: [Asteroid] -> [Bullet] -> [Asteroid] -> [Asteroid]
+checkCollisions [] _ newA = newA
+checkCollisions a [] _ = a
+checkCollisions (a:as) b newA 
+	| checkCollisions2 (asteroidPosition a) (asteroidSize a) b = checkCollisions as b newA 
+	| otherwise = checkCollisions as b (a:newA)
+	
+
+checkCollisions2 :: Point -> Float -> [Bullet] -> Bool
+checkCollisions2 _ _ [] = False
+checkCollisions2  pos rad (b:bs) =  (collision pos rad (bulletPosition b) (bulletSize b)) 
+						            || (checkCollisions2 pos rad bs)
 
 
 -- | Обновить состояние пуль
