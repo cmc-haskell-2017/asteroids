@@ -278,28 +278,37 @@ bulletsFaceAsteroids u =
 	
 bulletsFaceAsteroids2 :: Universe -> [Asteroid] -> [Bullet] -> Universe
 bulletsFaceAsteroids2 u a b 
-  = u { asteroids = checkCollisions a b [] }
+  = u { asteroids = checkCollisions a b [] 
+        , bullets = checkCollisionsForBulets a b }
 
 checkCollisions :: [Asteroid] -> [Bullet] -> [Asteroid] -> [Asteroid]
 checkCollisions [] _ newA = newA
 checkCollisions a [] _ = a
 checkCollisions (a:as) b newA 
-	| checkCollisions2 (asteroidPosition a) (asteroidSize a) b = checkCollisions as b newA 
+	| (checkCollisions2 (asteroidPosition a) (asteroidSize a) b) /= b = checkCollisions as b newA 
 	| otherwise = checkCollisions as b (a:newA)
+
+checkCollisionsForBulets :: [Asteroid] -> [Bullet] -> [Bullet]
+checkCollisionsForBulets [] b = b
+checkCollisionsForBulets a [] = []
+checkCollisionsForBulets (a:as) b 
+  | (checkCollisions2 (asteroidPosition a) (asteroidSize a) b) == b = checkCollisionsForBulets as b 
+  | otherwise = checkCollisions2 (asteroidPosition a) (asteroidSize a) b
 	
 
-checkCollisions2 :: Point -> Float -> [Bullet] -> Bool
-checkCollisions2 _ _ [] = False
-checkCollisions2  pos rad (b:bs) =  (collision pos rad (bulletPosition b) (bulletSize b)) 
-						            || (checkCollisions2 pos rad bs)
+checkCollisions2 :: Point -> Float -> [Bullet] -> [Bullet]
+checkCollisions2 _ _ [] = []
+checkCollisions2  pos rad (b:bs)
+    | collision pos rad (bulletPosition b) (bulletSize b) = bs
+	  | otherwise = [b] ++ (checkCollisions2 pos rad bs)
 
 
 -- | Обновить состояние пуль
 updateBullets :: [Bullet] -> [Bullet]
 updateBullets bullets = filter visible (map updateBullet bullets)
   where
-    visible bullet = (abs x) <= (fromIntegral screenWidth / 2)
-	  && (abs y) <= (fromIntegral screenHeight / 2)
+    visible bullet = (abs x) <= screenRight
+	  && (abs y) <= screenUp
 	where
 	  (x, y)  = bulletPosition bullet
 
@@ -322,11 +331,10 @@ updateSpaceship spaceship = spaceship
 
 -- | Обновление положения корабля
 updateShipPosition :: Spaceship -> Vector
-updateShipPosition ship = (checkBoards (fst(spaceshipPosition ship)) (fst newPos) w, checkBoards (snd(spaceshipPosition ship)) (snd newPos) h)
+updateShipPosition ship = (checkBoards (fst(spaceshipPosition ship)) (fst newPos) screenRight
+                         , checkBoards (snd(spaceshipPosition ship)) (snd newPos) screenUp)
   where 
     newPos = (spaceshipPosition ship + spaceshipVelocity ship)
-    w = fromIntegral screenWidth / 2
-    h = fromIntegral screenHeight / 2
 
 -- | Проверка выхода за границы
 checkBoards :: Float -> Float -> Float -> Float
@@ -362,28 +370,24 @@ updateShipVelocity ship = (velocityX, velocityY) + acceleration
 updateBackground :: Universe -> Background
 updateBackground u = Background
   { backgroundPosition 
-      = (checkBoards (fst (backgroundPosition (background u))) (fst newPos) w
-        , checkBoards (snd(backgroundPosition (background u))) (snd newPos) h)
+      = (checkBoards (fst (backgroundPosition (background u))) (fst newPos) screenRight
+        , checkBoards (snd(backgroundPosition (background u))) (snd newPos) screenUp)
   , backgroundVelocity = - spaceshipVelocity (spaceship u)
   }
   where 
     newPos = (backgroundPosition (background u)) + (backgroundVelocity (background u))
-    w = fromIntegral screenWidth / 2
-    h = fromIntegral screenHeight / 2
 
 -- | Обновить астероиды игровой вселенной.
 updateAsteroids :: StdGen -> [Asteroid] -> [Asteroid]
 updateAsteroids _ [] = []
 updateAsteroids g asteroids 
-  | length asteroids <= asteroidsNumber - 20
+  | length asteroids <= asteroidsNumber - 2
       = filter visible (map updateAsteroid asteroids)
-        ++ initAsteroids 20 (positions g) (directions g) (vectors g) (sizes g)
+        ++ initAsteroids 2 (positions g) (directions g) (vectors g) (sizes g)
   | otherwise =  filter visible (map updateAsteroid asteroids)
     where
-      width            = fromIntegral screenWidth / 2
-      height           = fromIntegral screenHeight / 2
-      visible asteroid = abs x <= width + asteroidRadius asteroid
-        && abs y <= height + asteroidRadius asteroid
+      visible asteroid = abs x <= 2*screenRight + asteroidRadius asteroid
+        && abs y <= 2*screenUp + asteroidRadius asteroid
 	    where
 	      (x, y)  = asteroidPosition asteroid
 
@@ -440,6 +444,14 @@ screenWidth =  1366
 -- | Высота экрана.
 screenHeight :: Int
 screenHeight = 768
+
+-- | Положение верхнего края экрана.
+screenUp :: Float
+screenUp = fromIntegral screenHeight / 2
+
+-- | Положение нижнего края экрана.
+screenDown :: Float
+screenDown = - fromIntegral screenHeight / 2
 
 -- | Положение правого края экрана.
 screenRight :: Float
