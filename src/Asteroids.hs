@@ -87,7 +87,7 @@ positions g k1 k2
 -- Стоит добавить проверку на то,
 -- что астероид будет создаваться там же,
 -- где находится корабль
-  = zipWith (\ x y -> (x, y)) (randomRs (k1, k2) g) (randomRs (k1, k2) g)
+  = zipWith (\ x y -> (x, y)) (randomRs (-k1, k1) g) (randomRs (-k2, k2) g)
 
 -- | Бесконечный список скоростей для астероидов
 vectors :: StdGen -> Float -> Float -> [Vector]
@@ -107,7 +107,7 @@ initUniverse :: StdGen -> Universe
 initUniverse g = Universe
   { bullets    = []
   , asteroids  = initAsteroids 8
-                               (positions  g (-250.0) 250.0)
+                               (positions  g (fromIntegral screenWidth / 2) (fromIntegral screenHeight / 2))
                                (directions g      0.0 360.0)
                                (vectors    g      0.1   0.5)
                                (sizes      g      0.3   1.0) 
@@ -401,8 +401,8 @@ speed = 100
 
 -- | Небходимое расстояние между игроком и новоявленным астероидом.
 playerOffset :: Float 
-playerOffset = 100
+playerOffset = 300.0
 
 -- | Расстояние между астероидами.
 defaultOffset :: Float
-defaultOffset = 150
+defaultOffset = 150.0
