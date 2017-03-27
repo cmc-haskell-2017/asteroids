@@ -61,6 +61,7 @@ data Asteroid = Asteroid
   , asteroidDirection :: Float  -- ^ Направление астероида
   , asteroidVelocity  :: Vector -- ^ Скорость астероида
   , asteroidSize      :: Float  -- ^ Размер астероида
+  , asteroidRadius    :: Float  -- ^ Радиус астероида
   } deriving (Eq, Show)
 
 -- | Космический корабль
@@ -129,6 +130,7 @@ initAsteroid position direction velocity size = Asteroid
   , asteroidDirection = direction
   , asteroidVelocity  = rotateV (direction * pi / 180) velocity
   , asteroidSize      = size
+  , asteroidRadius    = size * 50
   }
 
 -- | Инициализировать случайный бесконечный
@@ -146,7 +148,7 @@ initSpaceship = Spaceship
   , spaceshipAccelerate = 0
   , spaceshipAngularV   = 0
   , spaceshipDirection  = 0 
-  , spaceshipSize       = 1
+  , spaceshipSize       = 50
   }
 
 -- | Инициализация пули
@@ -398,15 +400,16 @@ isGameOver u = spaceshipFaceAsteroids u || spaceshipFaceBullets u
 
 -- | Определение столкновения корабля(кораблей) с астероидами
 spaceshipFaceAsteroids :: Universe -> Bool -- ??? -- Паше
-spaceshipFaceAsteroids u = sfa (spaceshipPosition (spaceship u)) (spaceshipSize (spaceship u)) (asteroids u)
+spaceshipFaceAsteroids u = 
+	spaceshipFaceAsteroids2 (spaceshipPosition (spaceship u)) (spaceshipSize (spaceship u)) (asteroids u)
 
-sfa :: Point -> Float -> [Asteroid] -> Bool
-sfa _ _ [] = False
-sfa pos rad (a:as) = (collision pos rad (asteroidPosition a) (asteroidSize a)) 
-						|| (sfa pos rad as)
+spaceshipFaceAsteroids2 :: Point -> Float -> [Asteroid] -> Bool
+spaceshipFaceAsteroids2 _ _ [] = False
+spaceshipFaceAsteroids2 pos rad (a:as) = (collision pos rad (asteroidPosition a) (asteroidSize a)) 
+						                 || (spaceshipFaceAsteroids2 pos rad as)
 
 collision :: Point -> Float -> Point -> Float -> Bool
-collision (x1, y1) r1 (x2, y2) r2 = d <= (50 + 50)
+collision (x1, y1) r1 (x2, y2) r2 = d <= (r1 + r2)
 	where d = sqrt((x1-x2)^2 + (y1-y2)^2)
 
 
