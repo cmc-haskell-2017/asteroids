@@ -9,7 +9,7 @@ import Graphics.Gloss.Juicy
 run :: Images -> IO ()
 run images = do
   g <- newStdGen
-  play display bgColor fps (initUniverse g) (drawUniverse images) handleUniverse updateUniverse
+  play display bgColor fps (initUniverse g) (drawUniverse images) handleUniverse (updateUniverse g)
   where
     display = InWindow "Asteroids" (screenWidth, screenHeight) (150, 150)
     bgColor = black   -- цвет фона
@@ -106,7 +106,7 @@ sizes g k1 k2 = randomRs (k1, k2) g
 initUniverse :: StdGen -> Universe
 initUniverse g = Universe
   { bullets    = []
-  , asteroids  = initAsteroids 30
+  , asteroids  = initAsteroids 3
                                (positions  g (fromIntegral screenWidth) (fromIntegral screenHeight))
                                (directions g      0.0 360.0)
                                (vectors    g      0.6   1.5)
@@ -247,9 +247,9 @@ fireSpaceship u = u
 -- =========================================
 
 -- | Обновить состояние игровой вселенной.
-updateUniverse :: Float -> Universe -> Universe
-updateUniverse dt u 
-  | isGameOver u = resetUniverse u
+updateUniverse :: StdGen -> Float -> Universe -> Universe
+updateUniverse g dt u 
+  | isGameOver u = resetUniverse g u
   | otherwise = bulletsFaceAsteroids u
       { bullets    = updateBullets (bullets u)
       , asteroids  = updateAsteroids dt (spaceshipVelocity (spaceship u)) (asteroids u) 
@@ -381,9 +381,13 @@ updateAsteroidVelocity asteroid = (velocityX, velocityY)
             crossUp    = snd(updateAsteroidPosition asteroid) ==   fromIntegral screenHeight
             crossDown  = snd(updateAsteroidPosition asteroid) == - fromIntegral screenHeight
 -- | Сбросить игру.
-resetUniverse :: Universe -> Universe
-resetUniverse u = u
-  { asteroids  = tail (asteroids u)
+resetUniverse :: StdGen -> Universe -> Universe
+resetUniverse g u = u
+  { asteroids  = initAsteroids 30
+                               (positions  g (fromIntegral screenWidth) (fromIntegral screenHeight))
+                               (directions g      0.0 360.0)
+                               (vectors    g      0.6   1.5)
+                               (sizes      g      0.6   2.0)  
   , bullets    = []
   , spaceship  = initSpaceship
   }
@@ -394,7 +398,17 @@ isGameOver u = spaceshipFaceAsteroids u || spaceshipFaceBullets u
 
 -- | Определение столкновения корабля(кораблей) с астероидами
 spaceshipFaceAsteroids :: Universe -> Bool -- ??? -- Паше
-spaceshipFaceAsteroids _ = False
+spaceshipFaceAsteroids u = sfa (spaceshipPosition (spaceship u)) (spaceshipSize (spaceship u)) (asteroids u)
+
+sfa :: Point -> Float -> [Asteroid] -> Bool
+sfa _ _ [] = False
+sfa pos rad (a:as) = (collision pos rad (asteroidPosition a) (asteroidSize a)) 
+						|| (sfa pos rad as)
+
+collision :: Point -> Float -> Point -> Float -> Bool
+collision (x1, y1) r1 (x2, y2) r2 = d <= (50 + 50)
+	where d = sqrt((x1-x2)^2 + (y1-y2)^2)
+
 
 -- Если будет мультиплеер с несколькими кораблями (а он, скорее всего, будет)
 -- | Определение столкновения с пулей
