@@ -25,7 +25,7 @@ loadImages = do
   Just table      <- loadJuicyPNG "images/table.png"
   return Images
     { imageBullet     = scale 0.07 0.07 bullet
-	, imageAsteroid   = scale  0.5  0.5 asteroid
+	, imageAsteroid   = scale  1.0  1.0 asteroid
     , imageBackground = scale  1.5  1.5 background
     , imageSpaceship  = scale  0.2  0.2 spaceship
     , imageTable      = scale  1.0 1.0  table
@@ -117,7 +117,7 @@ angles g = randomRs (0.0, 360.0) g
 
 -- | Бесконечный список размеров для астероидов
 floats :: StdGen -> [Float]
-floats g = randomRs (0.5, 2.0) g
+floats g = randomRs (0.5, 1.0) g
 
 -- | Инициализация игровой вселенной
 initUniverse :: StdGen -> Universe
@@ -158,7 +158,7 @@ initAsteroid position direction velocity size = Asteroid
   , asteroidDirection = direction
   , asteroidVelocity  = rotateV (direction * pi / 180) velocity
   , asteroidSize      = size
-  , asteroidRadius    = size * 90
+  , asteroidRadius    = size * 100
   }
   where
     (x, y) = position
@@ -331,15 +331,15 @@ checkCollisions :: [Asteroid] -> [Bullet] -> [Asteroid] -> [Asteroid]
 checkCollisions [] _ newA = newA
 checkCollisions a [] _ = a
 checkCollisions (a:as) b newA 
-	| (checkCollisions2 (asteroidPosition a) (asteroidSize a) b) /= b = checkCollisions as b newA 
+	| (checkCollisions2 (asteroidPosition a) (asteroidRadius a) b) /= b = checkCollisions as b newA 
 	| otherwise = checkCollisions as b (a:newA)
 
 checkCollisionsForBulets :: [Asteroid] -> [Bullet] -> [Bullet]
 checkCollisionsForBulets [] b = b
 checkCollisionsForBulets a [] = []
 checkCollisionsForBulets (a:as) b 
-  | (checkCollisions2 (asteroidPosition a) (asteroidSize a) b) == b = checkCollisionsForBulets as b 
-  | otherwise = checkCollisions2 (asteroidPosition a) (asteroidSize a) b
+  | (checkCollisions2 (asteroidPosition a) (asteroidRadius a) b) == b = checkCollisionsForBulets as b 
+  | otherwise = checkCollisions2 (asteroidPosition a) (asteroidRadius a) b
 	
 
 checkCollisions2 :: Point -> Float -> [Bullet] -> [Bullet]
@@ -458,7 +458,7 @@ spaceshipFaceAsteroids u =
 spaceshipFaceAsteroids2 :: Point -> Float -> [Asteroid] -> Bool
 spaceshipFaceAsteroids2 _ _ [] = False
 spaceshipFaceAsteroids2 pos rad (a:as)
-  = (collision pos rad (asteroidPosition a) (asteroidSize a)) 
+  = (collision pos rad (asteroidPosition a) (asteroidRadius a)) 
     || (spaceshipFaceAsteroids2 pos rad as)
 
 collision :: Point -> Float -> Point -> Float -> Bool
@@ -476,7 +476,7 @@ spaceshipFaceBullets _ = False
 
 -- | Количество астероидов
 asteroidsNumber :: Int
-asteroidsNumber = 50
+asteroidsNumber = 10
 
 -- | Ширина экрана.
 screenWidth :: Int
