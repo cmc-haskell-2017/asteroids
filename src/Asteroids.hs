@@ -46,15 +46,15 @@ data Images = Images
 
 -- | Игровая вселенная
 data Universe = Universe
-  { asteroids  :: [Asteroid] -- ^ Астероиды
-  , spaceship  :: Spaceship  -- ^ Космический корабль
-  , background :: Background -- ^ Фон
-  , bullets    :: [Bullet]   -- ^ Пули
-  , tables     :: [Table]    -- ^ Заставка
-  , positions  :: [Point]    -- ^ Список позиций астероидов
-  , directions :: [Float]    -- ^ Список направлений астероидов
-  , velocities :: [Vector]   -- ^ Список скоростей астероидов
-  , sizes      :: [Float]    -- ^ Список размеров астероидов
+  { asteroids  :: [Asteroid]  -- ^ Астероиды
+  , spaceship  :: Spaceship   -- ^ Космический корабль
+  , background :: Background  -- ^ Фон
+  , bullets    :: [Bullet]    -- ^ Пули
+  , table      :: Maybe Table -- ^ Заставка
+  , positions  :: [Point]     -- ^ Список позиций астероидов
+  , directions :: [Float]     -- ^ Список направлений астероидов
+  , velocities :: [Vector]    -- ^ Список скоростей астероидов
+  , sizes      :: [Float]     -- ^ Список размеров астероидов
   }
 
 -- | Заставка
@@ -131,7 +131,7 @@ initUniverse g  = Universe
                       (take asteroidsNumber (floats g))
   , spaceship   = initSpaceship
   , background  = initBackground
-  , tables      = []
+  , table       = Nothing
   , positions   = drop asteroidsNumber (points g)
   , directions  = drop asteroidsNumber (angles g)
   , velocities  = drop asteroidsNumber (vectors g)
@@ -196,11 +196,7 @@ initBullet u = Bullet
     , bulletSize      = 50
     }
 
--- | Инициализация заставка
-initTables :: Int ->[Table]
-initTables 0 = []
-initTables n = initTable : initTables (n-1)
-
+-- | Инициализация заставки
 initTable :: Table
 initTable = Table
   { tablePosition = (0, 0)
@@ -213,12 +209,14 @@ initTable = Table
 -- | Отобразить игровую вселенную.
 drawUniverse :: Images -> Universe -> Picture
 drawUniverse images u = pictures
-  [ drawBackground (imageBackground images) (background u)
-  , drawSpaceship  (imageSpaceship images)  (spaceship u) 
-  , drawBullets    (imageBullet images)     (bullets u)
-  , drawAsteroids  (imageAsteroid images)   (asteroids u)
-  , drawTables     (imageTable images)      (tables u)
-  ]
+  ([ drawBackground (imageBackground images) (background u)
+   , drawSpaceship  (imageSpaceship images)  (spaceship u) 
+   , drawBullets    (imageBullet images)     (bullets u)
+   , drawAsteroids  (imageAsteroid images)   (asteroids u)
+   ] ++ gameOver (drawTable (imageTable images) (table u)))
+  where
+    gameOver Nothing      = []
+    gameOver (Just table) = [table]
   
 drawAsteroids :: Picture -> [Asteroid] -> Picture
 drawAsteroids image asteroids = pictures (map (drawAsteroid image) asteroids)
@@ -255,11 +253,9 @@ drawBullet image bullet =
     (x, y) = bulletPosition bullet
 
 -- | Отобразить заставку 
-drawTables :: Picture -> [Table] -> Picture
-drawTables image tables = pictures (map (drawTable image) tables)
-
-drawTable :: Picture -> Table -> Picture
-drawTable image table = translate x y image
+drawTable :: Picture -> Maybe Table -> Maybe Picture
+drawTable _ Nothing          = Nothing
+drawTable image (Just table) = Just (translate x y image)
   where
     (x, y) = tablePosition table
 
@@ -305,7 +301,7 @@ fireSpaceship u = u
 -- | Обновить состояние игровой вселенной.
 updateUniverse :: Float -> Universe -> Universe
 updateUniverse _ u 
-  | isGameOver u = u { tables = initTables 1 }	-- resetUniverse g u
+  | isGameOver u = u { table = Just initTable }	-- resetUniverse g u
   | otherwise = bulletsFaceAsteroids u
       { bullets    = updateBullets (bullets u)
       , asteroids  = updateAsteroids (asteroids u)
