@@ -321,20 +321,21 @@ updateUniverse _ u
 
 -- | Столкновение пули с астероидами
 bulletsFaceAsteroids :: Universe -> Universe
-bulletsFaceAsteroids u = 
-	bulletsFaceAsteroids2 u (asteroids u) (bullets u)
+bulletsFaceAsteroids u =
+  bulletsFaceAsteroids2 u (asteroids u) (bullets u)
 	
 bulletsFaceAsteroids2 :: Universe -> [Asteroid] -> [Bullet] -> Universe
-bulletsFaceAsteroids2 u a b 
-  = u { asteroids = checkCollisions a b [] 
-        , bullets = checkCollisionsForBulets a b }
+bulletsFaceAsteroids2 u a b = u
+  { asteroids = checkCollisions a b [] 
+  , bullets = checkCollisionsForBulets a b
+  }
 
 checkCollisions :: [Asteroid] -> [Bullet] -> [Asteroid] -> [Asteroid]
 checkCollisions [] _ newA = newA
 checkCollisions a [] _ = a
 checkCollisions (a:as) b newA 
-	| (checkCollisions2 (asteroidPosition a) (asteroidRadius a) b) /= b = checkCollisions as b newA 
-	| otherwise = checkCollisions as b (a:newA)
+  | (checkCollisions2 (asteroidPosition a) (asteroidRadius a) b) /= b = checkCollisions as b newA 
+  | otherwise = checkCollisions as b (a:newA)
 
 checkCollisionsForBulets :: [Asteroid] -> [Bullet] -> [Bullet]
 checkCollisionsForBulets [] b = b
@@ -347,8 +348,8 @@ checkCollisionsForBulets (a:as) b
 checkCollisions2 :: Point -> Float -> [Bullet] -> [Bullet]
 checkCollisions2 _ _ [] = []
 checkCollisions2  pos rad (b:bs)
-    | collision pos rad (bulletPosition b) (bulletSize b) = bs
-	  | otherwise = [b] ++ (checkCollisions2 pos rad bs)
+  | collision pos rad (bulletPosition b) (bulletSize b) = bs
+  | otherwise = [b] ++ (checkCollisions2 pos rad bs)
 
 
 -- | Обновить состояние пуль
@@ -465,10 +466,10 @@ spaceshipFaceAsteroids2 pos rad (a:as)
 
 collision :: Point -> Float -> Point -> Float -> Bool
 collision (x1, y1) r1 (x2, y2) r2 = d <= (r1 + r2)
-	where
-      dx = x1 - x2
-      dy = y1 - y2
-      d  = sqrt(dx^2 + dy^2)
+  where
+    dx = x1 - x2
+    dy = y1 - y2
+    d  = sqrt(dx^2 + dy^2)
 
 -- Если будет мультиплеер с несколькими кораблями (а он, скорее всего, будет)
 -- | Определение столкновения с пулей
