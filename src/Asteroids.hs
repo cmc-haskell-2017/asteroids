@@ -209,14 +209,16 @@ initTable = Table
 -- | Отобразить игровую вселенную.
 drawUniverse :: Images -> Universe -> Picture
 drawUniverse images u = pictures
-  ([ drawBackground (imageBackground images) (background u)
-   , drawSpaceship  (imageSpaceship images)  (spaceship u) 
-   , drawBullets    (imageBullet images)     (bullets u)
-   , drawAsteroids  (imageAsteroid images)   (asteroids u)
-   ] ++ gameOver (drawTable (imageTable images) (table u)))
+  [ drawBackground (imageBackground images) (background u)
+  , drawSpaceship  (imageSpaceship images)  (spaceship u) 
+  , drawBullets    (imageBullet images)     (bullets u)
+  , drawAsteroids  (imageAsteroid images)   (asteroids u)
+  , gameOver
+  ]
   where
-    gameOver Nothing      = []
-    gameOver (Just table) = [table]
+    gameOver = case drawTable (imageTable images) (table u) of
+      Nothing    -> blank
+      Just table -> table
   
 drawAsteroids :: Picture -> [Asteroid] -> Picture
 drawAsteroids image asteroids = pictures (map (drawAsteroid image) asteroids)
@@ -226,7 +228,7 @@ drawAsteroid image asteroid
   = scale size size (translate x y (rotate (- asteroidDirection asteroid) image))
   where
     size   = asteroidSize asteroid
-    (x ,y) = asteroidPosition asteroid
+    (x, y) = asteroidPosition asteroid
 
 -- | Отобразить фон.
 drawBackground :: Picture -> Background -> Picture
@@ -452,7 +454,7 @@ isGameOver u = spaceshipFaceAsteroids u || spaceshipFaceBullets u
 
 -- | Определение столкновения корабля(кораблей) с астероидами
 spaceshipFaceAsteroids :: Universe -> Bool
-spaceshipFaceAsteroids u = 
+spaceshipFaceAsteroids u =
   spaceshipFaceAsteroids2 (spaceshipPosition (spaceship u)) (spaceshipSize (spaceship u)) (asteroids u)
 
 spaceshipFaceAsteroids2 :: Point -> Float -> [Asteroid] -> Bool
@@ -463,7 +465,10 @@ spaceshipFaceAsteroids2 pos rad (a:as)
 
 collision :: Point -> Float -> Point -> Float -> Bool
 collision (x1, y1) r1 (x2, y2) r2 = d <= (r1 + r2)
-	where d = sqrt((x1-x2)^2 + (y1-y2)^2)
+	where
+      dx = x1 - x2
+      dy = y1 - y2
+      d  = sqrt(dx^2 + dy^2)
 
 -- Если будет мультиплеер с несколькими кораблями (а он, скорее всего, будет)
 -- | Определение столкновения с пулей
