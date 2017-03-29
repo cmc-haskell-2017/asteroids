@@ -91,9 +91,42 @@ data Bullet = Bullet
   , bulletSize      :: Float  -- ^ Размер пули
   } deriving (Eq, Show)
 
+{-
+instance Random Asteroid where
+random g = (a, g1)
+  where
+    a = Asteroid
+        { asteroidPosition  = newP
+        , asteroidDirection = d
+        , asteroidVelocity  = rotateV (d * pi / 180) v
+        , asteroidSize      = s
+        }
+      where
+        (g1, g2) = split g
+        w = fromIntegral screenWidth
+        h = fromIntegral screenHeight
+        d = fst (randomR (0.0, 360.0) g)
+        v = (fst (randomR (0.5, 1.5) g1), fst (randomR (0.5, 1.5) g2))
+        s = fst (randomR (0.5, 1.0) g)
+        (x, y) = (fst (randomR (-w, w) g1), fst (randomR (-h, h) g2))
+        newX
+          | x < 0 && x > - w = x - w
+          | x > 0 && x <   w = x + w
+          | otherwise        = x
+        newY
+          | y < 0 && y > - h = y - h
+          | y > 0 && y <   h = y + h
+          | otherwise        = y
+        newP = (newX, newY)
+randomRs _ g = a : as
+  where
+    (a, g1) = random g
+    as      = randomRs (Asteroid, Asteroid) g1
+-}
+
 -- | Бесконечный список позиций для астероидов
-points :: StdGen -> [Point]
-points g
+positions :: StdGen -> [Point]
+positions g
   = zipWith (\ x y -> (x, y)) (randomRs (- width, width) g1) (randomRs (- height, height) g2)
   where
     (g1, g2) = split g
@@ -101,33 +134,35 @@ points g
     height   = fromIntegral screenHeight
 
 -- | Бесконечный список скоростей для астероидов
-vectors :: StdGen -> [Vector]
-vectors g
+velocities :: StdGen -> [Vector]
+velocities g
   = zipWith (\ x y -> (x, y)) (randomRs (0.5, 1.5) g1) (randomRs (0.5, 1.5) g2)
   where
     (g1, g2) = split g
 
 -- | Бесконечный список направлений для астероидов
-angles :: StdGen -> [Float]
-angles g = randomRs (0.0, 360.0) g
+directions :: StdGen -> [Float]
+directions g = randomRs (0.0, 360.0) g
 
 -- | Бесконечный список размеров для астероидов
-floats :: StdGen -> [Float]
-floats g = randomRs (0.5, 1.0) g
+sizes :: StdGen -> [Float]
+sizes g = randomRs (0.5, 1.0) g
 
 -- | Бесконечный список астероидов
 asteroidList :: [Point] -> [Float] -> [Vector] -> [Float] -> [Asteroid]
-asteroidList [] _  _  _  = []
-asteroidList _  [] _  _  = []
-asteroidList _  _  [] _  = []
-asteroidList _  _  _  [] = []
 asteroidList (p : pos) (d : dir) (v : vel) (s : siz)
+  = initAsteroid p d v s : asteroidList pos dir vel siz
+asteroidList _ _ _ _ = []
+
+-- | Инициализация астероида
+initAsteroid :: Point -> Float -> Vector -> Float -> Asteroid
+initAsteroid p d v s
   = Asteroid
     { asteroidPosition  = newP
     , asteroidDirection = d
     , asteroidVelocity  = rotateV (d * pi / 180) v
     , asteroidSize      = s
-    } : asteroidList pos dir vel siz
+    }
     where
       (x, y) = p
       w      = screenRight
@@ -163,7 +198,7 @@ initBackground = Background
 -- | Инициализация астероидов
 initAsteroids :: StdGen -> [Asteroid]
 initAsteroids g
-  = asteroidList (points g) (angles g) (vectors g) (floats g)
+  = asteroidList (positions g) (directions g) (velocities g) (sizes g)
 
 -- | Начальное состояние корабля
 initSpaceship :: Spaceship
@@ -311,12 +346,15 @@ updateUniverse _ u
       , freshAsteroids = tail (freshAsteroids u)
       }
 
+-- | Столкновение пуль и астероидов
 --bulletsFaceAsteroids :: [Bullet] -> [Asteroid] -> Bool
---bulletsFaceAsteroids bs as = any (bulletFaceAsteroid as) bs
+--bulletsFaceAsteroids bs as = any (bulletFaceAsteroids as) bs
 
+-- | Столкновение пули с астероидами
 --bulletFaceAsteroids :: [Asteroid] -> Bullet -> Bool
 --bulletFaceAsteroids as b = any (bulletFaceAsteroid b) as
 
+-- | Столкновение пули с астероидом
 --bulletFaceAsteroid :: Bullet -> Asteroid -> Bool
 
 -- | Столкновение пули с астероидами
@@ -357,7 +395,7 @@ checkCollisions2  pos rad (b:bs)
 
 -- | Обновить состояние пуль
 updateBullets :: [Bullet] -> [Bullet]
-updateBullets bullets' = filter visible(map updateBullet bullets')
+updateBullets bullets' = filter visible (map updateBullet bullets')
   where
     visible bullet = (abs x) <= screenRight && (abs y) <= screenUp
      where
@@ -442,6 +480,7 @@ updateAsteroids asteroids' a
         (x, y)  = asteroidPosition asteroid
         radius  = asteroidSize asteroid * 100
 
+-- | Обновить астероид
 updateAsteroid :: Asteroid -> Asteroid 
 updateAsteroid asteroid = asteroid
   { asteroidPosition = newPosition }
@@ -457,12 +496,13 @@ isGameOver :: Universe -> Bool
 isGameOver u = spaceshipFaceAsteroids (spaceship u) (asteroids u)
   || spaceshipFaceBullets (spaceship u) (bullets u)
 
--- | Определение столкновения корабля(кораблей) с астероидами
+-- | Определение столкновения корабля с астероидами
 spaceshipFaceAsteroids :: Spaceship -> [Asteroid] -> Bool
 spaceshipFaceAsteroids ship as =
 -- any (spaceshipFaceAsteroid ship) as
   spaceshipFaceAsteroids2 (spaceshipPosition ship) (spaceshipSize ship) as
 
+-- | Определение столкновения корабля с астероидом
 --spaceShipFaceAsteroid :: Spaceship -> Asteroid -> Bool
 
 spaceshipFaceAsteroids2 :: Point -> Float -> [Asteroid] -> Bool
