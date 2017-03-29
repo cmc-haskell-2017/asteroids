@@ -46,15 +46,12 @@ data Images = Images
 
 -- | Игровая вселенная
 data Universe = Universe
-  { asteroids  :: [Asteroid]  -- ^ Астероиды
-  , spaceship  :: Spaceship   -- ^ Космический корабль
-  , background :: Background  -- ^ Фон
-  , bullets    :: [Bullet]    -- ^ Пули
-  , table      :: Maybe Table -- ^ Заставка
-  , positions  :: [Point]     -- ^ Список позиций астероидов
-  , directions :: [Float]     -- ^ Список направлений астероидов
-  , velocities :: [Vector]    -- ^ Список скоростей астероидов
-  , sizes      :: [Float]     -- ^ Список размеров астероидов
+  { asteroids      :: [Asteroid]  -- ^ Астероиды
+  , spaceship      :: Spaceship   -- ^ Космический корабль
+  , background     :: Background  -- ^ Фон
+  , bullets        :: [Bullet]    -- ^ Пули
+  , table          :: Maybe Table -- ^ Заставка
+  , freshAsteroids :: [Asteroid]  -- ^ Бесконечный список "свежих" астероидов
   }
 
 -- | Заставка
@@ -74,7 +71,6 @@ data Asteroid = Asteroid
   , asteroidDirection :: Float  -- ^ Направление астероида
   , asteroidVelocity  :: Vector -- ^ Скорость астероида
   , asteroidSize      :: Float  -- ^ Размер астероида
-  , asteroidRadius    :: Float  -- ^ Радиус астероида
   } deriving (Eq, Show)
 
 -- | Космический корабль
@@ -119,23 +115,42 @@ angles g = randomRs (0.0, 360.0) g
 floats :: StdGen -> [Float]
 floats g = randomRs (0.5, 1.0) g
 
+-- | Бесконечный список астероидов
+asteroidList :: [Point] -> [Float] -> [Vector] -> [Float] -> [Asteroid]
+asteroidList [] _  _  _  = []
+asteroidList _  [] _  _  = []
+asteroidList _  _  [] _  = []
+asteroidList _  _  _  [] = []
+asteroidList (p : pos) (d : dir) (v : vel) (s : siz)
+  = Asteroid
+    { asteroidPosition  = newP
+    , asteroidDirection = d
+    , asteroidVelocity  = rotateV (d * pi / 180) v
+    , asteroidSize      = s
+    } : asteroidList pos dir vel siz
+    where
+      (x, y) = p
+      w      = screenRight
+      h      = screenUp
+      newX
+        | x < 0 && x > - w = x - w
+        | x > 0 && x <   w = x + w
+        | otherwise        = x
+      newY
+        | y < 0 && y > - h = y - h
+        | y > 0 && y <   h = y + h
+        | otherwise        = y
+      newP = (newX, newY)
+
 -- | Инициализация игровой вселенной
 initUniverse :: StdGen -> Universe
 initUniverse g  = Universe
-  { bullets     = []
-  , asteroids
-      = initAsteroids asteroidsNumber
-                      (take asteroidsNumber (points g))
-                      (take asteroidsNumber (angles g))
-                      (take asteroidsNumber (vectors g))
-                      (take asteroidsNumber (floats g))
-  , spaceship   = initSpaceship
-  , background  = initBackground
-  , table       = Nothing
-  , positions   = drop asteroidsNumber (points g)
-  , directions  = drop asteroidsNumber (angles g)
-  , velocities  = drop asteroidsNumber (vectors g)
-  , sizes       = drop asteroidsNumber (floats g)
+  { bullets        = []
+  , asteroids      = take asteroidsNumber (initAsteroids g)
+  , spaceship      = initSpaceship
+  , background     = initBackground
+  , table          = Nothing
+  , freshAsteroids = drop asteroidsNumber (initAsteroids g)
   }
   
 -- | Инициализация фона
@@ -145,38 +160,10 @@ initBackground = Background
    , backgroundVelocity = (0, 0)
    }
 
--- | Инициализировать список астероидов для игровой вселенной.
-initAsteroids :: Int -> [Point] -> [Float] -> [Vector] -> [Float] -> [Asteroid]
-initAsteroids 0 _ _ _ _ = []
-initAsteroids _ [] _ _ _ = [] -- не удалять, это фикс warning
-initAsteroids _ _ [] _ _ = []
-initAsteroids _ _ _ [] _ = []
-initAsteroids _ _ _ _ [] = []
-initAsteroids n (p : pos) (d : dir) (v : vel) (s : siz)
-  = initAsteroid p d v s : initAsteroids (n-1) pos dir vel siz
-
--- | Инициализировать один астероид.
-initAsteroid :: Point -> Float -> Vector -> Float -> Asteroid
-initAsteroid position direction velocity size = Asteroid 
-  { asteroidPosition  = newPosition
-  , asteroidDirection = direction
-  , asteroidVelocity  = rotateV (direction * pi / 180) velocity
-  , asteroidSize      = size
-  , asteroidRadius    = size * 100
-  }
-  where
-    (x, y) = position
-    w      = fromIntegral screenWidth / 2
-    h      = fromIntegral screenHeight / 2
-    newX
-      | x < 0 && x > - w = x - w
-      | x > 0 && x <   w = x + w
-      | otherwise        = x
-    newY
-      | y < 0 && y > - h = y - h
-      | y > 0 && y <   h = y + h
-      | otherwise        = y
-    newPosition = (newX, newY)
+-- | Инициализация астероидов
+initAsteroids :: StdGen -> [Asteroid]
+initAsteroids g
+  = asteroidList (points g) (angles g) (vectors g) (floats g)
 
 -- | Начальное состояние корабля
 initSpaceship :: Spaceship
@@ -190,13 +177,13 @@ initSpaceship = Spaceship
   }
 
 -- | Инициализация пули
-initBullet :: Universe -> Bullet
-initBullet u = Bullet
-    { bulletPosition  = spaceshipPosition (spaceship u)
-    + rotateV (spaceshipDirection (spaceship u) * pi / 180) (0, 60)
+initBullet :: Spaceship -> Bullet
+initBullet ship = Bullet
+    { bulletPosition  = spaceshipPosition ship
+        + rotateV (spaceshipDirection ship * pi / 180) (0, 60)
     , bulletVelocity  = rotateV 
-      ((spaceshipDirection (spaceship u)) * pi / 180) (0, 10)
-    , bulletDirection = spaceshipDirection (spaceship u)
+      (spaceshipDirection ship * pi / 180) (0, 10)
+    , bulletDirection = spaceshipDirection ship
     , bulletSize      = 50
     }
 
@@ -221,17 +208,18 @@ drawUniverse images u = pictures
   ]
   where
     gameOver = case drawTable (imageTable images) (table u) of
-      Nothing    -> blank
+      Nothing     -> blank
       Just table' -> table'
   
 drawAsteroids :: Picture -> [Asteroid] -> Picture
-drawAsteroids image asteroids' = pictures (map (drawAsteroid image) asteroids')
+drawAsteroids image asteroids' = foldMap (drawAsteroid image) asteroids'
 
 drawAsteroid :: Picture -> Asteroid -> Picture 
 drawAsteroid image asteroid
-  = scale size size (translate x y (rotate (- asteroidDirection asteroid) image))
+  = translate x y (resize (rotate (- asteroidDirection asteroid) image))
   where
     size   = asteroidSize asteroid
+    resize = scale size size
     (x, y) = asteroidPosition asteroid
 
 -- | Отобразить фон.
@@ -250,7 +238,7 @@ drawSpaceship image spaceship'
 -- | Отобразить пули.
 drawBullets :: Picture -> [Bullet] -> Picture
 drawBullets _     []       = blank
-drawBullets image bullets' = pictures (map (drawBullet image) bullets')
+drawBullets image bullets' = foldMap (drawBullet image) bullets'
 
 -- | Отобразить пулю.
 drawBullet :: Picture -> Bullet -> Picture
@@ -272,34 +260,39 @@ drawTable image (Just table') = Just (translate x y image)
 
 -- | Обработчик событий игры.
 handleUniverse :: StdGen -> Event -> Universe -> Universe
-handleUniverse _ (EventKey (SpecialKey KeyUp) Down _ _)    = moveShip 0.1
-handleUniverse _ (EventKey (SpecialKey KeyDown) Down _ _)  = moveShip (-0.1)
-handleUniverse _ (EventKey (SpecialKey KeyUp) Up _ _)      = moveShip 0 
-handleUniverse _ (EventKey (SpecialKey KeyDown) Up _ _)    = moveShip 0 
-handleUniverse _ (EventKey (SpecialKey KeyLeft) Down _ _)  = turnShip (5) 
-handleUniverse _ (EventKey (SpecialKey KeyRight) Down _ _) = turnShip (-5) 
-handleUniverse _ (EventKey (SpecialKey KeyLeft) Up _ _)    = turnShip 0 
-handleUniverse _ (EventKey (SpecialKey KeyRight) Up _ _)   = turnShip 0 
-handleUniverse _ (EventKey (SpecialKey KeySpace) Down _ _) = fireSpaceship
-handleUniverse g (EventKey (SpecialKey KeyEnter) Down _ _) = resetUniverse g
-handleUniverse _ _                                         = id
+handleUniverse _ (EventKey (SpecialKey KeyUp) Down _ _)    u
+  = u { spaceship = moveShip 0.1 (spaceship u) }
+handleUniverse _ (EventKey (SpecialKey KeyDown) Down _ _)  u
+  = u { spaceship = moveShip (-0.1) (spaceship u) }
+handleUniverse _ (EventKey (SpecialKey KeyUp) Up _ _)      u
+  = u { spaceship = moveShip 0 (spaceship u) }
+handleUniverse _ (EventKey (SpecialKey KeyDown) Up _ _)    u
+  = u { spaceship = moveShip 0 (spaceship u) }
+handleUniverse _ (EventKey (SpecialKey KeyLeft) Down _ _)  u
+  = u { spaceship = turnShip 5 (spaceship u) }
+handleUniverse _ (EventKey (SpecialKey KeyRight) Down _ _) u
+  = u { spaceship = turnShip (-5) (spaceship u) }
+handleUniverse _ (EventKey (SpecialKey KeyLeft) Up _ _)    u
+  = u { spaceship = turnShip 0 (spaceship u) }
+handleUniverse _ (EventKey (SpecialKey KeyRight) Up _ _)   u
+  = u { spaceship = turnShip 0 (spaceship u) }
+handleUniverse _ (EventKey (SpecialKey KeySpace) Down _ _) u
+  = u { bullets = fireSpaceship (spaceship u) (bullets u) }
+handleUniverse g (EventKey (SpecialKey KeyEnter) Down _ _) u
+  = resetUniverse g u
+handleUniverse _ _ u = u
 
 -- | Движение корабля
-moveShip :: Float -> Universe -> Universe
-moveShip a u = u 
-  { spaceship = (spaceship u) { spaceshipAccelerate = a }
-  }
+moveShip :: Float -> Spaceship -> Spaceship
+moveShip a ship = ship { spaceshipAccelerate = a }
 
 -- | Поворот корабля
-turnShip :: Float -> Universe -> Universe
-turnShip a u = u 
-  { spaceship = (spaceship u) { spaceshipAngularV = a }
-  }
+turnShip :: Float -> Spaceship -> Spaceship
+turnShip a ship = ship { spaceshipAngularV = a }
 
 -- | Выстрел корабля
-fireSpaceship :: Universe -> Universe
-fireSpaceship u = u
-  { bullets  = initBullet u : bullets u }
+fireSpaceship :: Spaceship -> [Bullet] -> [Bullet]
+fireSpaceship ship bs = initBullet ship : bs
 
 -- =========================================
 -- Обновление игровой вселенной
@@ -310,18 +303,12 @@ updateUniverse :: Float -> Universe -> Universe
 updateUniverse _ u 
   | isGameOver u = u { table = Just initTable } -- resetUniverse g u
   | otherwise = bulletsFaceAsteroids u
-      { bullets    = updateBullets (bullets u)
-      , asteroids  = updateAsteroids (asteroids u)
-                                     (head (positions u))
-                                     (head (directions u))
-                                     (head (velocities u))
-                                     (head (sizes u))
-      , spaceship  = updateSpaceship (spaceship u)
-      , background = updateBackground u
-      , positions  = tail (positions u)
-      , directions = tail (directions u)
-      , velocities = tail (velocities u)
-      , sizes      = tail (sizes u)
+      { bullets        = updateBullets (bullets u)
+      , asteroids
+        = updateAsteroids (asteroids u) (head (freshAsteroids u))
+      , spaceship      = updateSpaceship (spaceship u)
+      , background     = updateBackground u
+      , freshAsteroids = tail (freshAsteroids u)
       }
 
 -- | Столкновение пули с астероидами
@@ -339,15 +326,19 @@ checkCollisions :: [Asteroid] -> [Bullet] -> [Asteroid] -> [Asteroid]
 checkCollisions [] _ newA = newA
 checkCollisions a [] _ = a
 checkCollisions (a:as) b newA 
-  | (checkCollisions2 (asteroidPosition a) (asteroidRadius a) b) /= b = checkCollisions as b newA 
+  | (checkCollisions2 (asteroidPosition a) radius b) /= b = checkCollisions as b newA 
   | otherwise = checkCollisions as b (a:newA)
+  where
+    radius = asteroidSize a * 100
 
 checkCollisionsForBulets :: [Asteroid] -> [Bullet] -> [Bullet]
 checkCollisionsForBulets [] b = b
 checkCollisionsForBulets _ [] = []
 checkCollisionsForBulets (a:as) b 
-  | (checkCollisions2 (asteroidPosition a) (asteroidRadius a) b) == b = checkCollisionsForBulets as b 
-  | otherwise = checkCollisions2 (asteroidPosition a) (asteroidRadius a) b
+  | (checkCollisions2 (asteroidPosition a) radius b) == b = checkCollisionsForBulets as b 
+  | otherwise = checkCollisions2 (asteroidPosition a) radius b
+  where
+    radius = asteroidSize a * 100
 
 checkCollisions2 :: Point -> Float -> [Bullet] -> [Bullet]
 checkCollisions2 _ _ [] = []
@@ -382,7 +373,7 @@ updateSpaceship ship = ship {
     newDir = spaceshipDirection ship + spaceshipAngularV ship
 
 -- | Обновление положения корабля
-updateShipPosition :: Spaceship -> Vector
+updateShipPosition :: Spaceship -> Point
 updateShipPosition ship = (checkBoards (fst(spaceshipPosition ship)) (fst newPos) screenRight
                          , checkBoards (snd(spaceshipPosition ship)) (snd newPos) screenUp)
   where 
@@ -430,17 +421,18 @@ updateBackground u = Background
     newPos = (backgroundPosition (background u)) + (backgroundVelocity (background u))
 
 -- | Обновить астероиды игровой вселенной.
-updateAsteroids :: [Asteroid] -> Point -> Float -> Vector -> Float -> [Asteroid]
-updateAsteroids [] _ _ _ _ = []
-updateAsteroids asteroids' p d v s
+updateAsteroids :: [Asteroid] -> Asteroid -> [Asteroid]
+updateAsteroids [] _  = []
+updateAsteroids asteroids' a
   | length asteroids' < asteroidsNumber
-      = initAsteroid p d v s : filter visible (map updateAsteroid asteroids')
+      = a : filter visible (map updateAsteroid asteroids')
   | otherwise =  filter visible (map updateAsteroid asteroids')
     where
-      visible asteroid = abs x <= 2 * screenRight + asteroidRadius asteroid
-        && abs y <= 2 * screenUp + asteroidRadius asteroid
+      visible asteroid = abs x <= 2 * screenRight + radius
+        && abs y <= 2 * screenUp + radius
         where
         (x, y)  = asteroidPosition asteroid
+        radius  = asteroidSize asteroid * 100
 
 updateAsteroid :: Asteroid -> Asteroid 
 updateAsteroid asteroid = asteroid
@@ -464,8 +456,10 @@ spaceshipFaceAsteroids u =
 spaceshipFaceAsteroids2 :: Point -> Float -> [Asteroid] -> Bool
 spaceshipFaceAsteroids2 _ _ [] = False
 spaceshipFaceAsteroids2 pos rad (a:as)
-  = (collision pos rad (asteroidPosition a) (asteroidRadius a)) 
-    || (spaceshipFaceAsteroids2 pos rad as)
+  = collision pos rad (asteroidPosition a) radius
+    || spaceshipFaceAsteroids2 pos rad as
+  where
+    radius = asteroidSize a * 100
 
 collision :: Point -> Float -> Point -> Float -> Bool
 collision (x1, y1) r1 (x2, y2) r2 = d <= (r1 + r2)
