@@ -60,7 +60,7 @@ data Universe = Universe
 -- | Заставка
 data Table = Table 
   { tablePosition :: Point -- ^ Положение фона
-  }  deriving (Eq, Show)  
+  } deriving (Eq, Show)  
 
 -- | Фон
 data Background = Background
@@ -101,8 +101,8 @@ points g
   = zipWith (\ x y -> (x, y)) (randomRs (- width, width) g1) (randomRs (- height, height) g2)
   where
     (g1, g2) = split g
-    width    = fromIntegral screenWidth / 2
-    height   = fromIntegral screenHeight / 2
+    width    = fromIntegral screenWidth
+    height   = fromIntegral screenHeight
 
 -- | Бесконечный список скоростей для астероидов
 vectors :: StdGen -> [Vector]
@@ -166,8 +166,8 @@ initAsteroid position direction velocity size = Asteroid
   }
   where
     (x, y) = position
-    w      = fromIntegral screenWidth / 4
-    h      = fromIntegral screenHeight / 4
+    w      = fromIntegral screenWidth / 2
+    h      = fromIntegral screenHeight / 2
     newX
       | x < 0 && x > - w = x - w
       | x > 0 && x <   w = x + w
@@ -249,6 +249,7 @@ drawSpaceship image spaceship'
 
 -- | Отобразить пули.
 drawBullets :: Picture -> [Bullet] -> Picture
+drawBullets _     []       = blank
 drawBullets image bullets' = pictures (map (drawBullet image) bullets')
 
 -- | Отобразить пулю.
@@ -260,7 +261,7 @@ drawBullet image bullet =
 
 -- | Отобразить заставку 
 drawTable :: Picture -> Maybe Table -> Maybe Picture
-drawTable _ Nothing          = Nothing
+drawTable _     Nothing       = Nothing
 drawTable image (Just table') = Just (translate x y image)
   where
     (x, y) = tablePosition table'
@@ -436,8 +437,8 @@ updateAsteroids asteroids' p d v s
       = initAsteroid p d v s : filter visible (map updateAsteroid asteroids')
   | otherwise =  filter visible (map updateAsteroid asteroids')
     where
-      visible asteroid = abs x <= 2*screenRight + asteroidRadius asteroid
-        && abs y <= 2*screenUp + asteroidRadius asteroid
+      visible asteroid = abs x <= 2 * screenRight + asteroidRadius asteroid
+        && abs y <= 2 * screenUp + asteroidRadius asteroid
         where
         (x, y)  = asteroidPosition asteroid
 
@@ -484,7 +485,7 @@ spaceshipFaceBullets _ = False
 
 -- | Количество астероидов
 asteroidsNumber :: Int
-asteroidsNumber = 10
+asteroidsNumber = 100
 
 -- | Ширина экрана.
 screenWidth :: Int
