@@ -311,6 +311,14 @@ updateUniverse _ u
       , freshAsteroids = tail (freshAsteroids u)
       }
 
+--bulletsFaceAsteroids :: [Bullet] -> [Asteroid] -> Bool
+--bulletsFaceAsteroids bs as = any (bulletFaceAsteroid as) bs
+
+--bulletFaceAsteroids :: [Asteroid] -> Bullet -> Bool
+--bulletFaceAsteroids as b = any (bulletFaceAsteroid b) as
+
+--bulletFaceAsteroid :: Bullet -> Asteroid -> Bool
+
 -- | Столкновение пули с астероидами
 bulletsFaceAsteroids :: Universe -> Universe
 bulletsFaceAsteroids u = 
@@ -349,7 +357,7 @@ checkCollisions2  pos rad (b:bs)
 
 -- | Обновить состояние пуль
 updateBullets :: [Bullet] -> [Bullet]
-updateBullets bullets' = filter visible (map updateBullet bullets')
+updateBullets bullets' = filter visible(map updateBullet bullets')
   where
     visible bullet = (abs x) <= screenRight && (abs y) <= screenUp
      where
@@ -446,12 +454,16 @@ resetUniverse g _ = initUniverse g
 
 -- | Конец игры?
 isGameOver :: Universe -> Bool
-isGameOver u = spaceshipFaceAsteroids u || spaceshipFaceBullets u
+isGameOver u = spaceshipFaceAsteroids (spaceship u) (asteroids u)
+  || spaceshipFaceBullets (spaceship u) (bullets u)
 
 -- | Определение столкновения корабля(кораблей) с астероидами
-spaceshipFaceAsteroids :: Universe -> Bool
-spaceshipFaceAsteroids u =
-  spaceshipFaceAsteroids2 (spaceshipPosition (spaceship u)) (spaceshipSize (spaceship u)) (asteroids u)
+spaceshipFaceAsteroids :: Spaceship -> [Asteroid] -> Bool
+spaceshipFaceAsteroids ship as =
+-- any (spaceshipFaceAsteroid ship) as
+  spaceshipFaceAsteroids2 (spaceshipPosition ship) (spaceshipSize ship) as
+
+--spaceShipFaceAsteroid :: Spaceship -> Asteroid -> Bool
 
 spaceshipFaceAsteroids2 :: Point -> Float -> [Asteroid] -> Bool
 spaceshipFaceAsteroids2 _ _ [] = False
@@ -468,10 +480,14 @@ collision (x1, y1) r1 (x2, y2) r2 = d <= (r1 + r2)
     dy = y1 - y2
     d  = sqrt(dx^2 + dy^2)
 
--- Если будет мультиплеер с несколькими кораблями (а он, скорее всего, будет)
+-- | Определение столкновения с пулями
+spaceshipFaceBullets :: Spaceship -> [Bullet] -> Bool
+spaceshipFaceBullets _    [] = False
+spaceshipFaceBullets ship bs = any (spaceshipFaceBullet ship) bs
+
 -- | Определение столкновения с пулей
-spaceshipFaceBullets :: Universe -> Bool -- ??? -- Паше
-spaceshipFaceBullets _ = False
+spaceshipFaceBullet :: Spaceship -> Bullet -> Bool
+spaceshipFaceBullet _ _ = False
 
 -- =========================================
 -- Константы, параметры игры
