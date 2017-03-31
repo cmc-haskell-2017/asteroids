@@ -81,6 +81,8 @@ data Spaceship = Spaceship
   , spaceshipDirection  :: Float  -- ^ Направление корабля
   , spaceshipAngularV   :: Float  -- ^ Угловая скорость
   , spaceshipSize       :: Float  -- ^ Размер корабля
+  , isfire              :: Bool   -- ^ Ведётся ли огонь?
+  , fireReload          :: Int -- ^ Счётчик перезарядки 
   } deriving (Eq, Show)
 
 -- Пуля
@@ -208,7 +210,9 @@ initSpaceship = Spaceship
   , spaceshipAccelerate = 0
   , spaceshipAngularV   = 0
   , spaceshipDirection  = 0 
-  , spaceshipSize       = 50
+  , spaceshipSize       = 40
+  , isfire              = False
+  , fireReload          = 0
   }
 
 -- | Инициализация пули
@@ -219,7 +223,7 @@ initBullet ship = Bullet
     , bulletVelocity  = rotateV 
       (spaceshipDirection ship * pi / 180) (0, 10)
     , bulletDirection = spaceshipDirection ship
-    , bulletSize      = 50
+    , bulletSize      = 20
     }
 
 -- | Инициализация заставки
@@ -312,7 +316,9 @@ handleUniverse _ (EventKey (SpecialKey KeyLeft) Up _ _)    u
 handleUniverse _ (EventKey (SpecialKey KeyRight) Up _ _)   u
   = u { spaceship = turnShip 0 (spaceship u) }
 handleUniverse _ (EventKey (SpecialKey KeySpace) Down _ _) u
-  = u { bullets = fireSpaceship (spaceship u) (bullets u) }
+  = u { spaceship = (spaceship u){isfire = True}}
+handleUniverse _ (EventKey (SpecialKey KeySpace) Up _ _) u
+  = u { spaceship = (spaceship u){isfire = False}}  -- bullets = fireSpaceship (spaceship u) (bullets u) }
 handleUniverse g (EventKey (SpecialKey KeyEnter) Down _ _) u
   = resetUniverse g u
 handleUniverse _ _ u = u
@@ -338,7 +344,10 @@ updateUniverse :: Float -> Universe -> Universe
 updateUniverse _ u 
   | isGameOver u = u { table = Just initTable } -- resetUniverse g u
   | otherwise = bulletsFaceAsteroids u
-      { bullets        = updateBullets (bullets u)
+      { bullets        = updateBullets (if 
+                        (isfire (spaceship u)) && ((fireReload (spaceship u)) == reloadTime) 
+                        then fireSpaceship (spaceship u) (bullets u)
+                        else bullets u)
       , asteroids
         = updateAsteroids (asteroids u) (head (freshAsteroids u))
       , spaceship      = updateSpaceship (spaceship u)
@@ -375,7 +384,7 @@ checkCollisions (a:as) b newA
   | (checkCollisions2 (asteroidPosition a) radius b) /= b = checkCollisions as b newA 
   | otherwise = checkCollisions as b (a:newA)
   where
-    radius = asteroidSize a * 100
+    radius = asteroidSize a * 70
 
 checkCollisionsForBulets :: [Asteroid] -> [Bullet] -> [Bullet]
 checkCollisionsForBulets [] b = b
@@ -384,7 +393,7 @@ checkCollisionsForBulets (a:as) b
   | (checkCollisions2 (asteroidPosition a) radius b) == b = checkCollisionsForBulets as b 
   | otherwise = checkCollisions2 (asteroidPosition a) radius b
   where
-    radius = asteroidSize a * 100
+    radius = asteroidSize a * 70
 
 checkCollisions2 :: Point -> Float -> [Bullet] -> [Bullet]
 checkCollisions2 _ _ [] = []
@@ -414,6 +423,7 @@ updateSpaceship ship = ship {
     spaceshipPosition  = updateShipPosition ship
   , spaceshipVelocity  = updateShipVelocity ship
   , spaceshipDirection = (if newDir > 180 then (-1) else (if newDir < -180 then (1) else 0))*360 + newDir 
+  , fireReload = if (fireReload ship) == reloadTime then 0 else (fireReload ship) + 1 
   }
   where
     newDir = spaceshipDirection ship + spaceshipAngularV ship
@@ -478,7 +488,7 @@ updateAsteroids asteroids' a
         && abs y <= 2 * screenUp + radius
         where
         (x, y)  = asteroidPosition asteroid
-        radius  = asteroidSize asteroid * 100
+        radius  = asteroidSize asteroid * 70
 
 -- | Обновить астероид
 updateAsteroid :: Asteroid -> Asteroid 
@@ -511,7 +521,7 @@ spaceshipFaceAsteroids2 pos rad (a:as)
   = collision pos rad (asteroidPosition a) radius
     || spaceshipFaceAsteroids2 pos rad as
   where
-    radius = asteroidSize a * 100
+    radius = asteroidSize a * 70
 
 collision :: Point -> Float -> Point -> Float -> Bool
 collision (x1, y1) r1 (x2, y2) r2 = d <= (r1 + r2)
@@ -536,6 +546,10 @@ spaceshipFaceBullet _ _ = False
 -- | Количество астероидов
 asteroidsNumber :: Int
 asteroidsNumber = 100
+
+-- | Время перезарядки
+reloadTime :: Int
+reloadTime = 10
 
 -- | Ширина экрана.
 screenWidth :: Int
