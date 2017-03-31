@@ -18,8 +18,8 @@ run images = do
 -- | Загрузить изображения из файлов.
 loadImages :: IO Images
 loadImages = do
-  Just bullet     <- loadJuicyPNG "images/bullet.png"
-  Just asteroid   <- loadJuicyPNG "images/asteroid.png"
+  Just bullet      <- loadJuicyPNG "images/bullet.png"
+  Just asteroid    <- loadJuicyPNG "images/asteroid.png"
   Just background' <- loadJuicyPNG "images/background.png"
   Just spaceship'  <- loadJuicyPNG "images/spaceship.png"
   Just table'      <- loadJuicyPNG "images/table.png"
@@ -28,7 +28,7 @@ loadImages = do
     , imageAsteroid   = scale  1.0  1.0 asteroid
     , imageBackground = scale  1.5  1.5 background'
     , imageSpaceship  = scale  0.2  0.2 spaceship'
-    , imageTable      = scale  1.0 1.0  table'
+    , imageTable      = scale  1.0  1.0 table'
     }
 
 -- =========================================
@@ -224,11 +224,9 @@ initBullet ship = Bullet
 
 -- | Инициализация заставки
 initTable :: Table
-initTable = Table
-  { tablePosition = (0, 0)
-  } 
+initTable = Table { tablePosition = (0, 0) }
 
-  -- =========================================
+-- =========================================
 -- Отрисовка игровой вселенной
 -- =========================================
 
@@ -239,12 +237,8 @@ drawUniverse images u = pictures
   , drawSpaceship  (imageSpaceship images)  (spaceship u) 
   , drawBullets    (imageBullet images)     (bullets u)
   , drawAsteroids  (imageAsteroid images)   (asteroids u)
-  , gameOver
+  , drawTable      (imageTable images)      (table u)
   ]
-  where
-    gameOver = case drawTable (imageTable images) (table u) of
-      Nothing     -> blank
-      Just table' -> table'
   
 drawAsteroids :: Picture -> [Asteroid] -> Picture
 drawAsteroids image asteroids' = foldMap (drawAsteroid image) asteroids'
@@ -283,9 +277,9 @@ drawBullet image bullet =
     (x, y) = bulletPosition bullet
 
 -- | Отобразить заставку 
-drawTable :: Picture -> Maybe Table -> Maybe Picture
-drawTable _     Nothing       = Nothing
-drawTable image (Just table') = Just (translate x y image)
+drawTable :: Picture -> Maybe Table -> Picture
+drawTable _     Nothing       = blank
+drawTable image (Just table') = translate x y image
   where
     (x, y) = tablePosition table'
 
