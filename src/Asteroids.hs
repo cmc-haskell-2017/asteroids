@@ -52,12 +52,16 @@ data Universe = Universe
   , bullets        :: [Bullet]    -- ^ Пули
   , table          :: Maybe Table -- ^ Заставка
   , freshAsteroids :: [Asteroid]  -- ^ Бесконечный список "свежих" астероидов
+  , universeScore   :: Score    -- ^ Счёт (кол-во успешно пройденных ворот).
   }
 
 -- | Заставка
 data Table = Table 
   { tablePosition :: Point -- ^ Положение фона
   } deriving (Eq, Show)  
+
+-- | Счёт.
+type Score = Int
 
 -- | Фон
 data Background = Background
@@ -188,6 +192,7 @@ initUniverse g  = Universe
   , background     = initBackground
   , table          = Nothing
   , freshAsteroids = drop asteroidsNumber (initAsteroids g)
+  , universeScore  = 0
   }
   
 -- | Инициализация фона
@@ -244,11 +249,23 @@ drawUniverse images u = pictures
   , drawBullets    (imageBullet images)     (bullets u)
   , drawAsteroids  (imageAsteroid images)   (asteroids u)
   , gameOver
+  , drawScore  (universeScore u)
   ]
   where
     gameOver = case drawTable (imageTable images) (table u) of
       Nothing     -> blank
       Just table' -> table'
+
+-- | Нарисовать счёт в левом верхнем углу экрана.
+drawScore :: Score -> Picture
+drawScore score = translate (-w) h (scale 30 30 (pictures
+  [ color white (polygon [ (0, 0), (0, -6), (10, -6), (10, 0) ])            -- белая рамка
+  , color black (polygon [ (0, 0), (0, -5.9), (9.9, -5.9), (9.9, 0) ])    -- чёрные внутренности
+  , translate 4 (-3.5) (scale 0.01 0.01 (color red (text (show score))))  -- красный счёт
+  ]))
+  where
+    w = fromIntegral screenWidth  / 2
+    h = fromIntegral screenHeight / 2
   
 drawAsteroids :: Picture -> [Asteroid] -> Picture
 drawAsteroids image asteroids' = foldMap (drawAsteroid image) asteroids'
@@ -375,6 +392,7 @@ bulletsFaceAsteroids2 :: Universe -> [Asteroid] -> [Bullet] -> Universe
 bulletsFaceAsteroids2 u a b = u
   { asteroids = checkCollisions a b [] 
   , bullets = checkCollisionsForBulets a b
+  , universeScore  = universeScore u + length (bullets u) - length (checkCollisionsForBulets a b)
   }
 
 checkCollisions :: [Asteroid] -> [Bullet] -> [Asteroid] -> [Asteroid]
