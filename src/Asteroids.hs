@@ -52,7 +52,7 @@ data Universe = Universe
   , bullets        :: [Bullet]    -- ^ Пули
   , table          :: Maybe Table -- ^ Заставка
   , freshAsteroids :: [Asteroid]  -- ^ Бесконечный список "свежих" астероидов
-  , universeScore   :: Score    -- ^ Счёт (кол-во успешно пройденных ворот).
+  , score          :: Score       -- ^ Счёт
   }
 
 -- | Заставка
@@ -89,7 +89,7 @@ data Spaceship = Spaceship
   , fireReload          :: Int    -- ^ Счётчик перезарядки 
   } deriving (Eq, Show)
 
--- Пуля
+-- | Пуля
 data Bullet = Bullet
   { bulletPosition  :: Point  -- ^ Положение пули
   , bulletVelocity  :: Vector -- ^ Скорость пули
@@ -159,7 +159,7 @@ initUniverse g  = Universe
   , background     = initBackground
   , table          = Nothing
   , freshAsteroids = drop asteroidsNumber (initAsteroids g)
-  , universeScore  = 0
+  , score          = 0
   }
   
 -- | Инициализация фона
@@ -214,18 +214,15 @@ drawUniverse images u = pictures
   , drawBullets    (imageBullet images)     (bullets u)
   , drawAsteroids  (imageAsteroid images)   (asteroids u)
   , drawTable      (imageTable images)      (table u)
-  , gameOver
-  , drawScore  (universeScore u)
+  , drawScore      (score u)
   ]
-  where
-    gameOver = case drawTable (imageTable images) (table u)
 
 -- | Нарисовать счёт в левом верхнем углу экрана.
 drawScore :: Score -> Picture
-drawScore score = translate (-w) h (scale 30 30 (pictures
+drawScore s = translate (-w) h (scale 10 10 (pictures
   [ color white (polygon [ (0, 0), (0, -6), (10, -6), (10, 0) ])          -- белая рамка
   , color black (polygon [ (0, 0), (0, -5.9), (9.9, -5.9), (9.9, 0) ])    -- чёрные внутренности
-  , translate 4 (-3.5) (scale 0.01 0.01 (color red (text (show score))))  -- красный счёт
+  , translate 4 (-4.5) (scale 0.03 0.03 (color red (text (show s))))  -- красный счёт
   ]))
   where
     w = fromIntegral screenWidth  / 2
@@ -355,8 +352,8 @@ bulletsFaceAsteroids u =
 bulletsFaceAsteroids2 :: Universe -> [Asteroid] -> [Bullet] -> Universe
 bulletsFaceAsteroids2 u a b = u
   { asteroids = checkCollisions a b [] 
-  , bullets = checkCollisionsForBulets a b
-  , universeScore  = universeScore u + length (bullets u) - length (checkCollisionsForBulets a b)
+  , bullets   = checkCollisionsForBulets a b
+  , score     = score u + length (bullets u) - length (checkCollisionsForBulets a b)
   }
 
 checkCollisions :: [Asteroid] -> [Bullet] -> [Asteroid] -> [Asteroid]
