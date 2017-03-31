@@ -52,12 +52,16 @@ data Universe = Universe
   , bullets        :: [Bullet]    -- ^ Пули
   , table          :: Maybe Table -- ^ Заставка
   , freshAsteroids :: [Asteroid]  -- ^ Бесконечный список "свежих" астероидов
+  , universeScore   :: Score    -- ^ Счёт (кол-во успешно пройденных ворот).
   }
 
 -- | Заставка
 data Table = Table 
   { tablePosition :: Point -- ^ Положение фона
   } deriving (Eq, Show)  
+
+-- | Счёт.
+type Score = Int
 
 -- | Фон
 data Background = Background
@@ -81,6 +85,8 @@ data Spaceship = Spaceship
   , spaceshipDirection  :: Float  -- ^ Направление корабля
   , spaceshipAngularV   :: Float  -- ^ Угловая скорость
   , spaceshipSize       :: Float  -- ^ Размер корабля
+  , isfire              :: Bool   -- ^ Ведётся ли огонь?
+  , fireReload          :: Int    -- ^ Счётчик перезарядки 
   } deriving (Eq, Show)
 
 -- Пуля
@@ -90,39 +96,6 @@ data Bullet = Bullet
   , bulletDirection :: Float  -- ^ Направление пули
   , bulletSize      :: Float  -- ^ Размер пули
   } deriving (Eq, Show)
-
-{-
-instance Random Asteroid where
-random g = (a, g1)
-  where
-    a = Asteroid
-        { asteroidPosition  = newP
-        , asteroidDirection = d
-        , asteroidVelocity  = rotateV (d * pi / 180) v
-        , asteroidSize      = s
-        }
-      where
-        (g1, g2) = split g
-        w = fromIntegral screenWidth
-        h = fromIntegral screenHeight
-        d = fst (randomR (0.0, 360.0) g)
-        v = (fst (randomR (0.5, 1.5) g1), fst (randomR (0.5, 1.5) g2))
-        s = fst (randomR (0.5, 1.0) g)
-        (x, y) = (fst (randomR (-w, w) g1), fst (randomR (-h, h) g2))
-        newX
-          | x < 0 && x > - w = x - w
-          | x > 0 && x <   w = x + w
-          | otherwise        = x
-        newY
-          | y < 0 && y > - h = y - h
-          | y > 0 && y <   h = y + h
-          | otherwise        = y
-        newP = (newX, newY)
-randomRs _ g = a : as
-  where
-    (a, g1) = random g
-    as      = randomRs (Asteroid, Asteroid) g1
--}
 
 -- | Бесконечный список позиций для астероидов
 positions :: StdGen -> [Point]
@@ -186,6 +159,7 @@ initUniverse g  = Universe
   , background     = initBackground
   , table          = Nothing
   , freshAsteroids = drop asteroidsNumber (initAsteroids g)
+  , universeScore  = 0
   }
   
 -- | Инициализация фона
@@ -208,7 +182,9 @@ initSpaceship = Spaceship
   , spaceshipAccelerate = 0
   , spaceshipAngularV   = 0
   , spaceshipDirection  = 0 
-  , spaceshipSize       = 50
+  , spaceshipSize       = 40
+  , isfire              = False
+  , fireReload          = 0
   }
 
 -- | Инициализация пули
@@ -219,7 +195,7 @@ initBullet ship = Bullet
     , bulletVelocity  = rotateV 
       (spaceshipDirection ship * pi / 180) (0, 10)
     , bulletDirection = spaceshipDirection ship
-    , bulletSize      = 50
+    , bulletSize      = 20
     }
 
 -- | Инициализация заставки
@@ -238,7 +214,22 @@ drawUniverse images u = pictures
   , drawBullets    (imageBullet images)     (bullets u)
   , drawAsteroids  (imageAsteroid images)   (asteroids u)
   , drawTable      (imageTable images)      (table u)
+  , gameOver
+  , drawScore  (universeScore u)
   ]
+  where
+    gameOver = case drawTable (imageTable images) (table u)
+
+-- | Нарисовать счёт в левом верхнем углу экрана.
+drawScore :: Score -> Picture
+drawScore score = translate (-w) h (scale 30 30 (pictures
+  [ color white (polygon [ (0, 0), (0, -6), (10, -6), (10, 0) ])          -- белая рамка
+  , color black (polygon [ (0, 0), (0, -5.9), (9.9, -5.9), (9.9, 0) ])    -- чёрные внутренности
+  , translate 4 (-3.5) (scale 0.01 0.01 (color red (text (show score))))  -- красный счёт
+  ]))
+  where
+    w = fromIntegral screenWidth  / 2
+    h = fromIntegral screenHeight / 2
   
 drawAsteroids :: Picture -> [Asteroid] -> Picture
 drawAsteroids image asteroids' = foldMap (drawAsteroid image) asteroids'
@@ -306,7 +297,9 @@ handleUniverse _ (EventKey (SpecialKey KeyLeft) Up _ _)    u
 handleUniverse _ (EventKey (SpecialKey KeyRight) Up _ _)   u
   = u { spaceship = turnShip 0 (spaceship u) }
 handleUniverse _ (EventKey (SpecialKey KeySpace) Down _ _) u
-  = u { bullets = fireSpaceship (spaceship u) (bullets u) }
+  = u { spaceship = (spaceship u){isfire = True}}
+handleUniverse _ (EventKey (SpecialKey KeySpace) Up _ _) u
+  = u { spaceship = (spaceship u){isfire = False}}  -- bullets = fireSpaceship (spaceship u) (bullets u) }
 handleUniverse g (EventKey (SpecialKey KeyEnter) Down _ _) u
   = resetUniverse g u
 handleUniverse _ _ u = u
@@ -332,7 +325,10 @@ updateUniverse :: Float -> Universe -> Universe
 updateUniverse _ u 
   | isGameOver u = u { table = Just initTable } -- resetUniverse g u
   | otherwise = bulletsFaceAsteroids u
-      { bullets        = updateBullets (bullets u)
+      { bullets        = updateBullets (if 
+                        (isfire (spaceship u)) && ((fireReload (spaceship u)) == reloadTime) 
+                        then fireSpaceship (spaceship u) (bullets u)
+                        else bullets u)
       , asteroids
         = updateAsteroids (asteroids u) (head (freshAsteroids u))
       , spaceship      = updateSpaceship (spaceship u)
@@ -360,6 +356,7 @@ bulletsFaceAsteroids2 :: Universe -> [Asteroid] -> [Bullet] -> Universe
 bulletsFaceAsteroids2 u a b = u
   { asteroids = checkCollisions a b [] 
   , bullets = checkCollisionsForBulets a b
+  , universeScore  = universeScore u + length (bullets u) - length (checkCollisionsForBulets a b)
   }
 
 checkCollisions :: [Asteroid] -> [Bullet] -> [Asteroid] -> [Asteroid]
@@ -369,7 +366,7 @@ checkCollisions (a:as) b newA
   | (checkCollisions2 (asteroidPosition a) radius b) /= b = checkCollisions as b newA 
   | otherwise = checkCollisions as b (a:newA)
   where
-    radius = asteroidSize a * 100
+    radius = asteroidSize a * 70
 
 checkCollisionsForBulets :: [Asteroid] -> [Bullet] -> [Bullet]
 checkCollisionsForBulets [] b = b
@@ -378,14 +375,13 @@ checkCollisionsForBulets (a:as) b
   | (checkCollisions2 (asteroidPosition a) radius b) == b = checkCollisionsForBulets as b 
   | otherwise = checkCollisions2 (asteroidPosition a) radius b
   where
-    radius = asteroidSize a * 100
+    radius = asteroidSize a * 70
 
 checkCollisions2 :: Point -> Float -> [Bullet] -> [Bullet]
 checkCollisions2 _ _ [] = []
 checkCollisions2  pos rad (b:bs)
   | collision pos rad (bulletPosition b) (bulletSize b) = bs
   | otherwise = [b] ++ (checkCollisions2 pos rad bs)
-
 
 -- | Обновить состояние пуль
 updateBullets :: [Bullet] -> [Bullet]
@@ -408,6 +404,7 @@ updateSpaceship ship = ship {
     spaceshipPosition  = updateShipPosition ship
   , spaceshipVelocity  = updateShipVelocity ship
   , spaceshipDirection = (if newDir > 180 then (-1) else (if newDir < -180 then (1) else 0))*360 + newDir 
+  , fireReload = if (fireReload ship) == reloadTime then 0 else (fireReload ship) + 1 
   }
   where
     newDir = spaceshipDirection ship + spaceshipAngularV ship
@@ -472,7 +469,7 @@ updateAsteroids asteroids' a
         && abs y <= 2 * screenUp + radius
         where
         (x, y)  = asteroidPosition asteroid
-        radius  = asteroidSize asteroid * 100
+        radius  = asteroidSize asteroid * 70
 
 -- | Обновить астероид
 updateAsteroid :: Asteroid -> Asteroid 
@@ -505,7 +502,7 @@ spaceshipFaceAsteroids2 pos rad (a:as)
   = collision pos rad (asteroidPosition a) radius
     || spaceshipFaceAsteroids2 pos rad as
   where
-    radius = asteroidSize a * 100
+    radius = asteroidSize a * 70
 
 collision :: Point -> Float -> Point -> Float -> Bool
 collision (x1, y1) r1 (x2, y2) r2 = d <= (r1 + r2)
@@ -530,6 +527,10 @@ spaceshipFaceBullet _ _ = False
 -- | Количество астероидов
 asteroidsNumber :: Int
 asteroidsNumber = 100
+
+-- | Время перезарядки
+reloadTime :: Int
+reloadTime = 10
 
 -- | Ширина экрана.
 screenWidth :: Int
