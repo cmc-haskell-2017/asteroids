@@ -93,39 +93,6 @@ data Bullet = Bullet
   , bulletSize      :: Float  -- ^ Размер пули
   } deriving (Eq, Show)
 
-{-
-instance Random Asteroid where
-random g = (a, g1)
-  where
-    a = Asteroid
-        { asteroidPosition  = newP
-        , asteroidDirection = d
-        , asteroidVelocity  = rotateV (d * pi / 180) v
-        , asteroidSize      = s
-        }
-      where
-        (g1, g2) = split g
-        w = fromIntegral screenWidth
-        h = fromIntegral screenHeight
-        d = fst (randomR (0.0, 360.0) g)
-        v = (fst (randomR (0.5, 1.5) g1), fst (randomR (0.5, 1.5) g2))
-        s = fst (randomR (0.5, 1.0) g)
-        (x, y) = (fst (randomR (-w, w) g1), fst (randomR (-h, h) g2))
-        newX
-          | x < 0 && x > - w = x - w
-          | x > 0 && x <   w = x + w
-          | otherwise        = x
-        newY
-          | y < 0 && y > - h = y - h
-          | y > 0 && y <   h = y + h
-          | otherwise        = y
-        newP = (newX, newY)
-randomRs _ g = a : as
-  where
-    (a, g1) = random g
-    as      = randomRs (Asteroid, Asteroid) g1
--}
-
 -- | Бесконечный список позиций для астероидов
 positions :: StdGen -> [Point]
 positions g
@@ -249,10 +216,12 @@ drawUniverse images u = pictures
     gameOver = case drawTable (imageTable images) (table u) of
       Nothing     -> blank
       Just table' -> table'
-  
+
+-- | Отобразить список астероидов
 drawAsteroids :: Picture -> [Asteroid] -> Picture
 drawAsteroids image asteroids' = foldMap (drawAsteroid image) asteroids'
 
+-- | Отобразить астероид
 drawAsteroid :: Picture -> Asteroid -> Picture 
 drawAsteroid image asteroid
   = translate x y (resize (rotate (- asteroidDirection asteroid) image))
@@ -355,51 +324,37 @@ updateUniverse _ u
       , freshAsteroids = tail (freshAsteroids u)
       }
 
--- | Столкновение пуль и астероидов
---bulletsFaceAsteroids :: [Bullet] -> [Asteroid] -> Bool
---bulletsFaceAsteroids bs as = any (bulletFaceAsteroids as) bs
-
--- | Столкновение пули с астероидами
---bulletFaceAsteroids :: [Asteroid] -> Bullet -> Bool
---bulletFaceAsteroids as b = any (bulletFaceAsteroid b) as
-
--- | Столкновение пули с астероидом
---bulletFaceAsteroid :: Bullet -> Asteroid -> Bool
-
--- | Столкновение пули с астероидами
+-- | Столкновение пуль с астероидами
 bulletsFaceAsteroids :: Universe -> Universe
 bulletsFaceAsteroids u = 
   bulletsFaceAsteroids2 u (asteroids u) (bullets u)
 
+
 bulletsFaceAsteroids2 :: Universe -> [Asteroid] -> [Bullet] -> Universe
 bulletsFaceAsteroids2 u a b = u
-  { asteroids = checkCollisions a b [] 
-  , bullets = checkCollisionsForBulets a b
+  { asteroids = filter (checkCollisionsA b) a
+  , bullets = filter (checkCollisionsB a) b 
   }
 
-checkCollisions :: [Asteroid] -> [Bullet] -> [Asteroid] -> [Asteroid]
-checkCollisions [] _ newA = newA
-checkCollisions a [] _ = a
-checkCollisions (a:as) b newA 
-  | (checkCollisions2 (asteroidPosition a) radius b) /= b = checkCollisions as b newA 
-  | otherwise = checkCollisions as b (a:newA)
-  where
-    radius = asteroidSize a * 70
+-- | Астероид сталкивается с пулями?
+checkCollisionsA :: [Bullet] -> Asteroid -> Bool
+checkCollisionsA [] _ = True
+checkCollisionsA  (b:bs) a
+  | collision pos rad (bulletPosition b) (bulletSize b) = False
+  | otherwise = checkCollisionsA bs a
+  where 
+    pos = asteroidPosition a
+    rad = asteroidSize a * 70
 
-checkCollisionsForBulets :: [Asteroid] -> [Bullet] -> [Bullet]
-checkCollisionsForBulets [] b = b
-checkCollisionsForBulets _ [] = []
-checkCollisionsForBulets (a:as) b 
-  | (checkCollisions2 (asteroidPosition a) radius b) == b = checkCollisionsForBulets as b 
-  | otherwise = checkCollisions2 (asteroidPosition a) radius b
-  where
-    radius = asteroidSize a * 70
-
-checkCollisions2 :: Point -> Float -> [Bullet] -> [Bullet]
-checkCollisions2 _ _ [] = []
-checkCollisions2  pos rad (b:bs)
-  | collision pos rad (bulletPosition b) (bulletSize b) = bs
-  | otherwise = [b] ++ (checkCollisions2 pos rad bs)
+-- | Пуля сталкивается с астероидами?
+checkCollisionsB :: [Asteroid] -> Bullet -> Bool
+checkCollisionsB [] _ = True
+checkCollisionsB (b:bs) a
+  | collision pos rad (asteroidPosition b) (asteroidSize b*70) = False
+  | otherwise = checkCollisionsB bs a
+  where 
+   pos = bulletPosition a
+   rad = bulletSize a
 
 
 -- | Обновить состояние пуль
@@ -509,11 +464,9 @@ isGameOver u = spaceshipFaceAsteroids (spaceship u) (asteroids u)
 -- | Определение столкновения корабля с астероидами
 spaceshipFaceAsteroids :: Spaceship -> [Asteroid] -> Bool
 spaceshipFaceAsteroids ship as =
--- any (spaceshipFaceAsteroid ship) as
   spaceshipFaceAsteroids2 (spaceshipPosition ship) (spaceshipSize ship) as
 
 -- | Определение столкновения корабля с астероидом
---spaceShipFaceAsteroid :: Spaceship -> Asteroid -> Bool
 
 spaceshipFaceAsteroids2 :: Point -> Float -> [Asteroid] -> Bool
 spaceshipFaceAsteroids2 _ _ [] = False
