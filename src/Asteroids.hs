@@ -13,7 +13,7 @@ run images = do
   where
     display = InWindow "Asteroids" (screenWidth, screenHeight) (150, 150)
     bgColor = black   -- цвет фона
-    fps     = 600      -- кол-во кадров в секунду
+    fps     = 60      -- кол-во кадров в секунду
 
 -- | Загрузить изображения из файлов.
 loadImages :: IO Images
@@ -195,7 +195,7 @@ initBullet ship = Bullet
     , bulletVelocity  = rotateV 
       (spaceshipDirection ship * pi / 180) (0, 10)
     , bulletDirection = spaceshipDirection ship
-    , bulletSize      = 20
+    , bulletSize      = 15
     }
 
 -- | Инициализация заставки
@@ -324,51 +324,59 @@ updateUniverse :: Float -> Universe -> Universe
 updateUniverse _ u 
   | isGameOver u = u { table = Just initTable } -- resetUniverse g u
   | otherwise = bulletsFaceAsteroids u
-      { bullets        = updateBullets (if 
-                        (isfire (spaceship u)) && ((fireReload (spaceship u)) == reloadTime) 
-                        then fireSpaceship (spaceship u) (bullets u)
-                        else bullets u)
+      { bullets        = updateBullets newBullets
       , asteroids
         = updateAsteroids (asteroids u) (head (freshAsteroids u))
       , spaceship      = updateSpaceship (spaceship u)
       , background     = updateBackground u
       , freshAsteroids = tail (freshAsteroids u)
       }
+      where
+        newBullets
+          | isfire (spaceship u) && fireReload (spaceship u) == reloadTime
+            = fireSpaceship (spaceship u) (bullets u)
+          | otherwise = bullets u
 
 -- | Столкновение пуль с астероидами
 bulletsFaceAsteroids :: Universe -> Universe
-bulletsFaceAsteroids u = 
-  bulletsFaceAsteroids2 u (asteroids u) (bullets u)
-
-
-bulletsFaceAsteroids2 :: Universe -> [Asteroid] -> [Bullet] -> Universe
-bulletsFaceAsteroids2 u a b = u
-  { asteroids = filter (checkCollisionsA b) a 
+bulletsFaceAsteroids u = u
+  { asteroids = newA
   , bullets   = newB
-  , score     = score u + length (bullets u) - length (newB)
+  , score     = score u + length b - length newB
   }
   where
-    newB = filter (checkCollisionsB a) b
+    a    = asteroids u
+    b    = bullets u
+    newA = filter (not . asteroidFaceBullets b) a
+    newB = filter (not . bulletFaceAsteroids a) b
 
 -- | Астероид сталкивается с пулями?
-checkCollisionsA :: [Bullet] -> Asteroid -> Bool
-checkCollisionsA [] _ = True
-checkCollisionsA  (b:bs) a
-  | collision pos rad (bulletPosition b) (bulletSize b) = False
-  | otherwise = checkCollisionsA bs a
+asteroidFaceBullets :: [Bullet] -> Asteroid -> Bool
+asteroidFaceBullets [] _ = False
+asteroidFaceBullets bs a = any (asteroidFaceBullet a) bs
+
+-- | Астероид сталкивается с пулей?
+asteroidFaceBullet :: Asteroid -> Bullet -> Bool
+asteroidFaceBullet a b = collision aPos aRad bPos bRad
   where 
-    pos = asteroidPosition a
-    rad = asteroidSize a * 70
+    aPos = asteroidPosition a
+    aRad = asteroidSize a * 70
+    bPos = bulletPosition b
+    bRad = bulletSize b
 
 -- | Пуля сталкивается с астероидами?
-checkCollisionsB :: [Asteroid] -> Bullet -> Bool
-checkCollisionsB [] _ = True
-checkCollisionsB (b:bs) a
-  | collision pos rad (asteroidPosition b) (asteroidSize b*70) = False
-  | otherwise = checkCollisionsB bs a
+bulletFaceAsteroids :: [Asteroid] -> Bullet -> Bool
+bulletFaceAsteroids [] _ = False
+bulletFaceAsteroids as b = any (bulletFaceAsteroid b) as
+
+-- | Пуля сталкивается с астероидом?
+bulletFaceAsteroid :: Bullet -> Asteroid -> Bool
+bulletFaceAsteroid b a = collision aPos aRad bPos bRad
   where 
-   pos = bulletPosition a
-   rad = bulletSize a
+    aPos = asteroidPosition a
+    aRad = asteroidSize a * 70
+    bPos = bulletPosition b
+    bRad = bulletSize b
 
 -- | Обновить состояние пуль
 updateBullets :: [Bullet] -> [Bullet]
@@ -476,19 +484,18 @@ isGameOver u = spaceshipFaceAsteroids (spaceship u) (asteroids u)
 
 -- | Определение столкновения корабля с астероидами
 spaceshipFaceAsteroids :: Spaceship -> [Asteroid] -> Bool
-spaceshipFaceAsteroids ship as =
-  spaceshipFaceAsteroids2 (spaceshipPosition ship) (spaceshipSize ship) as
+spaceshipFaceAsteroids ship as = any (spaceshipFaceAsteroid ship) as
 
 -- | Определение столкновения корабля с астероидом
-
-spaceshipFaceAsteroids2 :: Point -> Float -> [Asteroid] -> Bool
-spaceshipFaceAsteroids2 _ _ [] = False
-spaceshipFaceAsteroids2 pos rad (a:as)
-  = collision pos rad (asteroidPosition a) radius
-    || spaceshipFaceAsteroids2 pos rad as
+spaceshipFaceAsteroid :: Spaceship -> Asteroid -> Bool
+spaceshipFaceAsteroid ship a = collision shipPos shipRad aPos aRad
   where
-    radius = asteroidSize a * 70
+    shipPos = spaceshipPosition ship
+    shipRad = spaceshipSize ship
+    aPos    = asteroidPosition a
+    aRad    = asteroidSize a * 70
 
+-- | Определение пересечения двух окружностей
 collision :: Point -> Float -> Point -> Float -> Bool
 collision (x1, y1) r1 (x2, y2) r2 = d <= (r1 + r2)
   where
@@ -498,12 +505,16 @@ collision (x1, y1) r1 (x2, y2) r2 = d <= (r1 + r2)
 
 -- | Определение столкновения с пулями
 spaceshipFaceBullets :: Spaceship -> [Bullet] -> Bool
-spaceshipFaceBullets _    [] = False
 spaceshipFaceBullets ship bs = any (spaceshipFaceBullet ship) bs
 
 -- | Определение столкновения с пулей
 spaceshipFaceBullet :: Spaceship -> Bullet -> Bool
-spaceshipFaceBullet _ _ = False
+spaceshipFaceBullet ship b = collision shipPos shipRad bPos bRad
+  where
+    shipPos = spaceshipPosition ship
+    shipRad = spaceshipSize ship
+    bPos    = bulletPosition b
+    bRad    = bulletSize b
 
 -- =========================================
 -- Константы, параметры игры
