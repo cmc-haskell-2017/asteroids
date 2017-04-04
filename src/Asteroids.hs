@@ -13,7 +13,7 @@ run images = do
   where
     display = InWindow "Asteroids" (screenWidth, screenHeight) (150, 150)
     bgColor = black   -- цвет фона
-    fps     = 60      -- кол-во кадров в секунду
+    fps     = 600      -- кол-во кадров в секунду
 
 -- | Загрузить изображения из файлов.
 loadImages :: IO Images
@@ -220,8 +220,8 @@ drawUniverse images u = pictures
 -- | Нарисовать счёт в левом верхнем углу экрана.
 drawScore :: Score -> Picture
 drawScore s = translate (-w) h (scale 10 10 (pictures
-  [ color white (polygon [ (0, 0), (0, -6), (10, -6), (10, 0) ])          -- белая рамка
-  , color black (polygon [ (0, 0), (0, -5.9), (9.9, -5.9), (9.9, 0) ])    -- чёрные внутренности
+  [ color white (polygon [ (0, 0), (0, -6), (15, -6), (15, 0) ])          -- белая рамка
+  , color black (polygon [ (0, 0), (0, -5.9), (14.9, -5.9), (14.9, 0) ])    -- чёрные внутренности
   , translate 4 (-4.5) (scale 0.03 0.03 (color red (text (show s))))  -- красный счёт
   ]))
   where
