@@ -18,8 +18,8 @@ run images = do
 -- | Загрузить изображения из файлов.
 loadImages :: IO Images
 loadImages = do
-  Just bullet     <- loadJuicyPNG "images/bullet.png"
-  Just asteroid   <- loadJuicyPNG "images/asteroid.png"
+  Just bullet      <- loadJuicyPNG "images/bullet.png"
+  Just asteroid    <- loadJuicyPNG "images/asteroid.png"
   Just background' <- loadJuicyPNG "images/background.png"
   Just spaceship'  <- loadJuicyPNG "images/spaceship.png"
   Just table'      <- loadJuicyPNG "images/table.png"
@@ -28,7 +28,7 @@ loadImages = do
     , imageAsteroid   = scale  1.0  1.0 asteroid
     , imageBackground = scale  1.5  1.5 background'
     , imageSpaceship  = scale  0.2  0.2 spaceship'
-    , imageTable      = scale  1.0 1.0  table'
+    , imageTable      = scale  1.0  1.0 table'
     }
 
 -- =========================================
@@ -52,12 +52,16 @@ data Universe = Universe
   , bullets        :: [Bullet]    -- ^ Пули
   , table          :: Maybe Table -- ^ Заставка
   , freshAsteroids :: [Asteroid]  -- ^ Бесконечный список "свежих" астероидов
+  , score          :: Score       -- ^ Счёт
   }
 
 -- | Заставка
 data Table = Table 
   { tablePosition :: Point -- ^ Положение фона
   } deriving (Eq, Show)  
+
+-- | Счёт.
+type Score = Int
 
 -- | Фон
 data Background = Background
@@ -82,10 +86,10 @@ data Spaceship = Spaceship
   , spaceshipAngularV   :: Float  -- ^ Угловая скорость
   , spaceshipSize       :: Float  -- ^ Размер корабля
   , isfire              :: Bool   -- ^ Ведётся ли огонь?
-  , fireReload          :: Int -- ^ Счётчик перезарядки 
+  , fireReload          :: Int    -- ^ Счётчик перезарядки 
   } deriving (Eq, Show)
 
--- Пуля
+-- | Пуля
 data Bullet = Bullet
   { bulletPosition  :: Point  -- ^ Положение пули
   , bulletVelocity  :: Vector -- ^ Скорость пули
@@ -155,6 +159,7 @@ initUniverse g  = Universe
   , background     = initBackground
   , table          = Nothing
   , freshAsteroids = drop asteroidsNumber (initAsteroids g)
+  , score          = 0
   }
   
 -- | Инициализация фона
@@ -195,11 +200,9 @@ initBullet ship = Bullet
 
 -- | Инициализация заставки
 initTable :: Table
-initTable = Table
-  { tablePosition = (0, 0)
-  } 
+initTable = Table { tablePosition = (0, 0) }
 
-  -- =========================================
+-- =========================================
 -- Отрисовка игровой вселенной
 -- =========================================
 
@@ -210,12 +213,20 @@ drawUniverse images u = pictures
   , drawSpaceship  (imageSpaceship images)  (spaceship u) 
   , drawBullets    (imageBullet images)     (bullets u)
   , drawAsteroids  (imageAsteroid images)   (asteroids u)
-  , gameOver
+  , drawTable      (imageTable images)      (table u)
+  , drawScore      (score u)
   ]
+
+-- | Нарисовать счёт в левом верхнем углу экрана.
+drawScore :: Score -> Picture
+drawScore s = translate (-w) h (scale 10 10 (pictures
+  [ color white (polygon [ (0, 0), (0, -6), (10, -6), (10, 0) ])          -- белая рамка
+  , color black (polygon [ (0, 0), (0, -5.9), (9.9, -5.9), (9.9, 0) ])    -- чёрные внутренности
+  , translate 4 (-4.5) (scale 0.03 0.03 (color red (text (show s))))  -- красный счёт
+  ]))
   where
-    gameOver = case drawTable (imageTable images) (table u) of
-      Nothing     -> blank
-      Just table' -> table'
+    w = fromIntegral screenWidth  / 2
+    h = fromIntegral screenHeight / 2
 
 -- | Отобразить список астероидов
 drawAsteroids :: Picture -> [Asteroid] -> Picture
@@ -256,9 +267,9 @@ drawBullet image bullet =
     (x, y) = bulletPosition bullet
 
 -- | Отобразить заставку 
-drawTable :: Picture -> Maybe Table -> Maybe Picture
-drawTable _     Nothing       = Nothing
-drawTable image (Just table') = Just (translate x y image)
+drawTable :: Picture -> Maybe Table -> Picture
+drawTable _     Nothing       = blank
+drawTable image (Just table') = translate x y image
   where
     (x, y) = tablePosition table'
 
@@ -332,9 +343,12 @@ bulletsFaceAsteroids u =
 
 bulletsFaceAsteroids2 :: Universe -> [Asteroid] -> [Bullet] -> Universe
 bulletsFaceAsteroids2 u a b = u
-  { asteroids = filter (checkCollisionsA b) a
-  , bullets = filter (checkCollisionsB a) b 
+  { asteroids = filter (checkCollisionsA b) a 
+  , bullets   = newB
+  , score     = score u + length (bullets u) - length (newB)
   }
+  where
+    newB = filter (checkCollisionsB a) b
 
 -- | Астероид сталкивается с пулями?
 checkCollisionsA :: [Bullet] -> Asteroid -> Bool
@@ -355,7 +369,6 @@ checkCollisionsB (b:bs) a
   where 
    pos = bulletPosition a
    rad = bulletSize a
-
 
 -- | Обновить состояние пуль
 updateBullets :: [Bullet] -> [Bullet]
