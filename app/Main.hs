@@ -1,6 +1,7 @@
 module Main where
 
-import Asteroids
+import Game
+import Images
 
 main :: IO ()
 main = do
