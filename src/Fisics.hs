@@ -45,8 +45,10 @@ bulletFaceAsteroid b a = collision aPos aRad bPos bRad
     bRad = bulletSize b
 
 -- | Определение столкновения корабля с астероидами
-spaceshipFaceAsteroids :: Spaceship -> [Asteroid] -> Bool
-spaceshipFaceAsteroids ship as = any (spaceshipFaceAsteroid ship) as
+spaceshipFaceAsteroids :: [Spaceship] -> [Asteroid] -> Bool
+spaceshipFaceAsteroids [] _ = False
+spaceshipFaceAsteroids (ship : ships) as 
+    = (any (spaceshipFaceAsteroid ship) as) || spaceshipFaceAsteroids ships as
 
 -- | Определение столкновения корабля с астероидом
 spaceshipFaceAsteroid :: Spaceship -> Asteroid -> Bool
@@ -58,8 +60,10 @@ spaceshipFaceAsteroid ship a = collision shipPos shipRad aPos aRad
     aRad    = asteroidSize a * 70
 
 -- | Определение столкновения с пулями
-spaceshipFaceBullets :: Spaceship -> [Bullet] -> Bool
-spaceshipFaceBullets ship bs = any (spaceshipFaceBullet ship) bs
+spaceshipFaceBullets :: [Spaceship] -> [Bullet] -> Bool
+spaceshipFaceBullets [] _ = False
+spaceshipFaceBullets (ship : ships) bs 
+    = (any (spaceshipFaceBullet ship) bs) || spaceshipFaceBullets ships bs
 
 -- | Определение столкновения с пулей
 spaceshipFaceBullet :: Spaceship -> Bullet -> Bool
@@ -72,9 +76,17 @@ spaceshipFaceBullet ship b = collision shipPos shipRad bPos bRad
 
 -- | Определение пересечения двух окружностей
 collision :: Point -> Float -> Point -> Float -> Bool
-collision (x1, y1) r1 (x2, y2) r2 = d <= (r1 + r2)
+collision p1 r1 p2 r2 = d <= (r1 + r2)
+  where
+    d  = distant p1 p2
+
+-- | Определение между объектами
+distant :: Point -> Point -> Float
+distant (x1, y1) (x2, y2) = sqrt(dx^2 + dy^2)
   where
     dx = x1 - x2
     dy = y1 - y2
-    d  = sqrt(dx^2 + dy^2)
 
+-- | Вектор из двух точек
+vector :: Point -> Point -> Vector
+vector (x1, y1) (x2, y2) = (x2 - x1, y2 - y1)

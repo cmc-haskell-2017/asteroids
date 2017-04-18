@@ -25,10 +25,14 @@ data Background = Background
   , backgroundVelocity :: Vector -- ^ Вектор скорости фона
   }
 
+-- | Режим корабля
+data Mode = Bot | Player deriving (Eq)
 
 -- | Космический корабль
 data Spaceship = Spaceship
-  { spaceshipPosition   :: Point  -- ^ Положение корабля
+  { spaceshipName       :: String -- ^ Имя корабля
+  , spaceshipMode       :: Mode    -- ^ Режим корабля (бот/игрок)
+  , spaceshipPosition   :: Point  -- ^ Положение корабля
   , spaceshipVelocity   :: Vector -- ^ Скорость корабля
   , spaceshipAccelerate :: Float  -- ^ Ускорение
   , spaceshipDirection  :: Float  -- ^ Направление корабля
@@ -50,7 +54,7 @@ data Bullet = Bullet
 -- | Игровая вселенная
 data Universe = Universe
   { asteroids      :: [Asteroid]  -- ^ Астероиды
-  , spaceship      :: Spaceship   -- ^ Космический корабль
+  , spaceships     :: [Spaceship]   -- ^ Космический корабль
   , background     :: Background  -- ^ Фон
   , bullets        :: [Bullet]    -- ^ Пули
   , table          :: Maybe Table -- ^ Заставка
@@ -66,3 +70,8 @@ data Asteroid = Asteroid
   , asteroidSize      :: Float  -- ^ Размер астероида
   }
 
+data Strategy = Strategy
+  { velocity :: Point  -- ^ Направление корабля для данной стратегии
+  , fire     :: Bool   -- ^ Необходим ли выстрел?
+  , power    :: Float  -- ^ Сила стратегии
+  }

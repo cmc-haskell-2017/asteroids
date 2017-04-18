@@ -7,7 +7,15 @@ module Config where
 
 -- | Количество астероидов
 asteroidsNumber :: Int
-asteroidsNumber = 100
+asteroidsNumber = 50
+
+-- | Количество кораблей
+spaceshipsNumber :: Int
+spaceshipsNumber = 2
+
+-- | Количество игроков
+playersNumber :: Int
+playersNumber = 0
 
 -- | Интервал позиций по оси абсцисс для астероидов
 xPositions :: (Float, Float)
@@ -39,7 +47,7 @@ damping = (0.98, 0.98)
 
 -- | Время перезарядки
 reloadTime :: Float
-reloadTime = 10.0
+reloadTime = 30.0
 
 -- | Ширина экрана.
 screenWidth :: Int

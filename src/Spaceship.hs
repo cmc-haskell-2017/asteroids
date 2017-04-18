@@ -5,12 +5,15 @@ import Graphics.Gloss.Geometry.Line()
 import Graphics.Gloss.Interface.Pure.Game
 import Config
 import Models
+import Fisics
 
 
 -- | Начальное состояние корабля
-initSpaceship :: Spaceship
-initSpaceship = Spaceship
-  { spaceshipPosition   = (0, 0)
+initSpaceship :: Mode -> Int -> String -> Spaceship
+initSpaceship mode n name = Spaceship
+  { spaceshipName       = name
+  , spaceshipMode       = mode
+  , spaceshipPosition   = (x, 0)
   , spaceshipVelocity   = (0, 0) 
   , spaceshipAccelerate = 0
   , spaceshipAngularV   = 0
@@ -19,6 +22,21 @@ initSpaceship = Spaceship
   , isfire              = False
   , fireReload          = 0
   }
+  where
+    x = (fromIntegral n) * (fromIntegral screenWidth)/fspaceshipsNumber - screenRight
+    fspaceshipsNumber = fromIntegral(spaceshipsNumber + 1)
+
+initSpaceships :: Int -> Int -> [Spaceship]
+initSpaceships _ 0 = []
+initSpaceships n m = [(initSpaceship Bot n ((show n) ++ "Player "))]
+  ++ (initSpaceships (n + 1) (m - 1))
+
+setPlayerMode :: Spaceship -> Spaceship
+setPlayerMode ship = ship {spaceshipMode = Player}
+
+setSpaceshipsMode :: [Spaceship] -> [Spaceship]
+setSpaceshipsMode ships = (map setPlayerMode (take playersNumber ships))
+  ++ (drop playersNumber ships) 
 
 -- | Инициализация пули
 initBullet :: Spaceship -> Bullet
@@ -30,10 +48,16 @@ initBullet ship = Bullet
     , bulletSize      = 15
 }
 
+drawSpaceships :: Picture -> [Spaceship] -> [Picture]
+drawSpaceships image spaceships' = map (drawSpaceship image) spaceships'
+
 -- | Отобразить корабль.
 drawSpaceship :: Picture -> Spaceship -> Picture
 drawSpaceship image spaceship'
-  = translate x y (rotate (- spaceshipDirection spaceship') image)
+  = translate x y (pictures 
+    [(rotate (- spaceshipDirection spaceship') image)
+    , translate (-30) (50) (scale 0.15 0.15 (color red (text (spaceshipName spaceship'))))
+    ])
   where
     (x, y) = spaceshipPosition spaceship'
 
@@ -50,16 +74,21 @@ drawBullet image bullet =
     (x, y) = bulletPosition bullet
 
 -- | Движение корабля
-moveShip :: Float -> Spaceship -> Spaceship
-moveShip a ship = ship { spaceshipAccelerate = a }
+moveShip :: Float -> [Spaceship] -> [Spaceship]
+moveShip a ships = (head ships) { spaceshipAccelerate = a } : (tail ships)
 
 -- | Поворот корабля
-turnShip :: Float -> Spaceship -> Spaceship
-turnShip a ship = ship { spaceshipAngularV = a }
+turnShip :: Float -> [Spaceship] -> [Spaceship]
+turnShip a ships = (head ships) { spaceshipAngularV = a } : (tail ships)
 
 -- | Выстрел корабля
-fireSpaceship :: Spaceship -> [Bullet] -> [Bullet]
-fireSpaceship ship bs = initBullet ship : bs
+fireSpaceships :: [Spaceship] -> [Bullet]
+fireSpaceships [] = []
+fireSpaceships (ship:ships) 
+  | fire' ship = (initBullet ship) : (fireSpaceships ships)
+  | otherwise = (fireSpaceships ships)
+  where
+    fire' ship' = isfire ship' && fireReload ship' == reloadTime
 
 -- | Обновить состояние пуль
 updateBullets :: Float -> [Bullet] -> [Bullet]
@@ -78,8 +107,12 @@ updateBullet t bullet = bullet
 
 
 -- | Обновить состояние корабля.
-updateSpaceship :: Float -> Spaceship -> Spaceship
-updateSpaceship t ship = ship
+updateSpaceship :: Float -> [Bullet] -> [Asteroid] -> Spaceship -> Spaceship
+updateSpaceship t bullets' asteroids' ship
+  | spaceshipFaceAsteroids [ship] asteroids' 
+   || (spaceshipFaceBullets [ship] bullets' && False) 
+    = initSpaceship (spaceshipMode ship) number (spaceshipName ship)
+  | otherwise = ship
   { spaceshipPosition  = updateShipPosition t ship
   , spaceshipVelocity  = updateShipVelocity t ship
   , spaceshipDirection = newDir
@@ -94,6 +127,11 @@ updateSpaceship t ship = ship
     newReload
       | fireReload ship == reloadTime = 0
       | otherwise = fireReload ship + t
+    number  = read [(head (spaceshipName ship))]
+
+updateSpaceships :: Float -> [Bullet] -> [Asteroid] -> [Spaceship] -> [Spaceship]
+updateSpaceships t bullets' asteroids' ships 
+  = map (updateSpaceship t bullets' asteroids') ships
 
 -- | Обновление положения корабля
 updateShipPosition :: Float -> Spaceship -> Point
@@ -111,11 +149,11 @@ checkBoards x y z
     
 -- | Обновление скорости корабля
 updateShipVelocity :: Float -> Spaceship -> Vector
-updateShipVelocity t ship = velocity + mulSV t acceleration
+updateShipVelocity t ship = velocity' + mulSV t acceleration
   where
     acceleration = mulSV (spaceshipAccelerate ship)
       (unitVectorAtAngle ((90 + spaceshipDirection ship) * pi / 180))
-    velocity = damping * cross * spaceshipVelocity ship
+    velocity' = damping * cross * spaceshipVelocity ship
       where
         cross
           | crossX && crossY = (-1, -1)
