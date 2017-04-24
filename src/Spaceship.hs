@@ -9,10 +9,11 @@ import Fisics
 
 
 -- | Начальное состояние корабля
-initSpaceship :: Mode -> Int -> String -> Spaceship
-initSpaceship mode n name = Spaceship
-  { spaceshipName       = name
+initSpaceship :: Mode -> Int -> Int -> Spaceship
+initSpaceship mode n id' = Spaceship
+  { spaceshipID         = id'
   , spaceshipMode       = mode
+  , lastAction          = mempty
   , spaceshipPosition   = (x, 0)
   , spaceshipVelocity   = (0, 0) 
   , spaceshipAccelerate = 0
@@ -26,14 +27,17 @@ initSpaceship mode n name = Spaceship
     x = (fromIntegral n) * (fromIntegral screenWidth)/fspaceshipsNumber - screenRight
     fspaceshipsNumber = fromIntegral(spaceshipsNumber + 1)
 
+-- | Создание списка кораблей
 initSpaceships :: Int -> Int -> [Spaceship]
 initSpaceships _ 0 = []
-initSpaceships n m = [(initSpaceship Bot n ((show n) ++ "Player "))]
+initSpaceships n m = [(initSpaceship Bot n n)]
   ++ (initSpaceships (n + 1) (m - 1))
 
+-- | Отдать корабль под управление игрока
 setPlayerMode :: Spaceship -> Spaceship
 setPlayerMode ship = ship {spaceshipMode = Player}
 
+-- | Установка кораблей, управляемых игроками
 setSpaceshipsMode :: [Spaceship] -> [Spaceship]
 setSpaceshipsMode ships = (map setPlayerMode (take playersNumber ships))
   ++ (drop playersNumber ships) 
@@ -48,6 +52,7 @@ initBullet ship = Bullet
     , bulletSize      = 15
 }
 
+-- | Отрисовка списка кораблей
 drawSpaceships :: Picture -> [Spaceship] -> [Picture]
 drawSpaceships image spaceships' = map (drawSpaceship image) spaceships'
 
@@ -56,10 +61,11 @@ drawSpaceship :: Picture -> Spaceship -> Picture
 drawSpaceship image spaceship'
   = translate x y (pictures 
     [(rotate (- spaceshipDirection spaceship') image)
-    , translate (-30) (50) (scale 0.15 0.15 (color red (text (spaceshipName spaceship'))))
+    , translate (-30) (50) (scale 0.15 0.15 (color red (text name)))
     ])
   where
     (x, y) = spaceshipPosition spaceship'
+    name = "Player " ++ show (spaceshipID spaceship')
 
 -- | Отобразить пули.
 drawBullets :: Picture -> [Bullet] -> Picture
@@ -111,7 +117,7 @@ updateSpaceship :: Float -> [Bullet] -> [Asteroid] -> Spaceship -> Spaceship
 updateSpaceship t bullets' asteroids' ship
   | spaceshipFaceAsteroids [ship] asteroids' 
    || (spaceshipFaceBullets [ship] bullets' && False) 
-    = initSpaceship (spaceshipMode ship) number (spaceshipName ship)
+    = initSpaceship (spaceshipMode ship) number number
   | otherwise = ship
   { spaceshipPosition  = updateShipPosition t ship
   , spaceshipVelocity  = updateShipVelocity t ship
@@ -121,14 +127,16 @@ updateSpaceship t bullets' asteroids' ship
   where
     shipDir = spaceshipDirection ship + t * spaceshipAngularV ship
     newDir
-      | shipDir >  180 = shipDir - 360
-      | shipDir < -180 = shipDir + 360
+      | shipDir >  360 = shipDir - 360
+      | shipDir <    0 = shipDir + 360
       | otherwise      = shipDir
     newReload
+      | fireReload ship == reloadTime && isfire ship == False = reloadTime
       | fireReload ship == reloadTime = 0
       | otherwise = fireReload ship + t
-    number  = read [(head (spaceshipName ship))]
+    number  = spaceshipID ship
 
+-- | Обновление состояния списка кораблей
 updateSpaceships :: Float -> [Bullet] -> [Asteroid] -> [Spaceship] -> [Spaceship]
 updateSpaceships t bullets' asteroids' ships 
   = map (updateSpaceship t bullets' asteroids') ships
@@ -163,3 +171,43 @@ updateShipVelocity t ship = velocity' + mulSV t acceleration
           where
             crossX = abs (fst(updateShipPosition t ship)) == screenRight
             crossY = abs (snd(updateShipPosition t ship)) == screenUp
+
+-- | Создание действия корабля
+initShipAction :: Int -> Maybe RotateAction -> Maybe EngineAction -> Bool -> ShipAction
+initShipAction i r e b = ShipAction {
+                           shipID = i
+                         , rotateAction = r
+                         , engineAction = e
+                         , fireAction = b
+                         }
+
+-- | Обработка действий кораблей
+handleShipsAction :: [ShipAction] -> Universe -> Universe
+handleShipsAction act u = u {spaceships = map (doActions act) (spaceships u)}
+
+-- | Обработка действий корабля
+doActions :: [ShipAction] -> Spaceship -> Spaceship
+doActions [] ship = ship
+doActions (act:acts) ship 
+   | (shipID act) == (spaceshipID ship) = doAction act ship
+   | otherwise = doActions acts ship
+
+-- | Обработка действия корабля
+doAction :: ShipAction -> Spaceship -> Spaceship
+doAction act ship = ship {
+    spaceshipAccelerate = acc
+  , spaceshipAngularV = ang
+  , isfire = (fireAction act)
+  , lastAction = act
+  }
+  where
+    ang
+      | (rotateAction act) == Just ToLeft  = 3
+      | (rotateAction act) == Just ToRight = -3
+      | (rotateAction act) == Nothing      = 0
+      | otherwise                          = 0
+    acc
+      | (engineAction act) == Just Forward = 0.1
+      | (engineAction act) == Just Back    = -0.1
+      | (engineAction act) == Nothing      = 0 
+      | otherwise                          = 0

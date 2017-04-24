@@ -9,8 +9,6 @@ import Spaceship
 import Asteroids
 import Items
 import Config
-import Fisics
-import AI
 
 run :: Images -> IO ()
 run images = do
@@ -32,7 +30,7 @@ drawUniverse images u = pictures
   , drawBullets    (imageBullet images)     (bullets u)
   , drawAsteroids  (imageAsteroid images)   (asteroids u)
   , drawTable      (imageTable images)      (table u)
-  , drawScore      (score u)
+  , drawScore      (score u) 
   ] 
   ++ drawSpaceships  (imageSpaceship images)  (spaceships u))
 
@@ -42,57 +40,50 @@ drawUniverse images u = pictures
 
 -- | Обработчик событий игры.
 handleUniverse :: StdGen -> Event -> Universe -> Universe
-handleUniverse _ (EventKey (SpecialKey KeyUp) Down _ _)    u
-  = u { spaceships = moveShip 0.1 (spaceships u) }
-handleUniverse _ (EventKey (SpecialKey KeyDown) Down _ _)  u
-  = u { spaceships = moveShip (-0.1) (spaceships u) }
-handleUniverse _ (EventKey (SpecialKey KeyUp) Up _ _)      u
-  = u { spaceships = moveShip 0 (spaceships u) }
-handleUniverse _ (EventKey (SpecialKey KeyDown) Up _ _)    u
-  = u { spaceships = moveShip 0 (spaceships u) }
-handleUniverse _ (EventKey (SpecialKey KeyLeft) Down _ _)  u
-  = u { spaceships = turnShip 5 (spaceships u) }
-handleUniverse _ (EventKey (SpecialKey KeyRight) Down _ _) u
-  = u { spaceships = turnShip (-5) (spaceships u) }
-handleUniverse _ (EventKey (SpecialKey KeyLeft) Up _ _)    u
-  = u { spaceships = turnShip 0 (spaceships u) }
-handleUniverse _ (EventKey (SpecialKey KeyRight) Up _ _)   u
-  = u { spaceships = turnShip 0 (spaceships u) }
-handleUniverse _ (EventKey (SpecialKey KeySpace) Down _ _) u
-  = u { spaceships = (head(spaceships u)){isfire = True} : (tail(spaceships u))}
-handleUniverse _ (EventKey (SpecialKey KeySpace) Up _ _) u
-  = u { spaceships = (head(spaceships u)){isfire = False} : (tail(spaceships u))}
-handleUniverse g (EventKey (SpecialKey KeyEnter) Down _ _) u
-  = resetUniverse g u
-handleUniverse _ _ u = u
+handleUniverse g e u = handlePlayerAction g e u
 
--- | Обновить состояние игровой вселенной.
-updateUniverse :: Float -> Universe -> Universe
-updateUniverse dt u = botsActions (bulletsFaceAsteroids u
-      { bullets        = updateBullets t newBullets
-      , asteroids      = updateAsteroids t newAsteroids
-      , spaceships      = updateSpaceships t (bullets u) (asteroids u) (spaceships u)
-      , background     = updateBackground t u
-      , freshAsteroids = tail (freshAsteroids u)
-      })
-      where
-        t = 60 * dt
-        newAsteroids
-          | length (asteroids u) < asteroidsNumber
-            = head (freshAsteroids u) : asteroids u
-          | otherwise = asteroids u
-        newBullets
-          | or (map (\ship -> isfire ship && fireReload ship == reloadTime) (spaceships u))
-            = (fireSpaceships (spaceships u)) ++ (bullets u)
-          | otherwise = bullets u
+-- | Обработка нажатий игрока
+handlePlayerAction :: StdGen -> Event -> Universe -> Universe
+handlePlayerAction  _ (EventKey (SpecialKey KeyUp) Down _ _)    u
+    = handleShipsAction [newShipAction playerID Nothing (Just Forward) False u] u
+handlePlayerAction _ (EventKey (SpecialKey KeyDown) Down _ _)  u
+    = handleShipsAction [newShipAction playerID Nothing (Just Back) False u] u
+handlePlayerAction _ (EventKey (SpecialKey KeyUp) Up _ _)      u
+    = handleShipsAction [nullAct 1 (newShipAction playerID Nothing Nothing False u)] u
+handlePlayerAction _ (EventKey (SpecialKey KeyDown) Up _ _)    u
+    = handleShipsAction [nullAct 1 (newShipAction playerID Nothing Nothing False u)] u
+handlePlayerAction _ (EventKey (SpecialKey KeyLeft) Down _ _)  u
+    = handleShipsAction [newShipAction playerID (Just ToLeft) Nothing False u] u
+handlePlayerAction _ (EventKey (SpecialKey KeyRight) Down _ _) u
+    = handleShipsAction [newShipAction playerID (Just ToRight) Nothing False u] u
+handlePlayerAction _ (EventKey (SpecialKey KeyLeft) Up _ _)    u
+    = handleShipsAction [nullAct 2 (newShipAction playerID Nothing Nothing False u)] u
+handlePlayerAction _ (EventKey (SpecialKey KeyRight) Up _ _)   u
+    = handleShipsAction [nullAct 2 (newShipAction playerID Nothing Nothing False u)] u
+handlePlayerAction _ (EventKey (SpecialKey KeySpace) Down _ _) u
+    = handleShipsAction [newShipAction playerID Nothing Nothing True u] u
+handlePlayerAction _ (EventKey (SpecialKey KeySpace) Up _ _) u
+    = handleShipsAction [nullAct 3 (newShipAction playerID Nothing Nothing False u)] u
+handlePlayerAction g (EventKey (SpecialKey KeyEnter) Down _ _) u
+    = resetUniverse g u
+handlePlayerAction _ _ u = u
 
+-- | Новое действие игрока после нажатия
+newShipAction :: Int -> Maybe RotateAction -> Maybe EngineAction -> Bool -> Universe-> ShipAction
+newShipAction i r e b u = mappend
+                          (initShipAction i r e b) 
+                          (lastAction (findShip i (spaceships u)))
 
--- | Обработка искусственного интелекта
-botsActions :: Universe -> Universe
-botsActions u = u { spaceships = map (botAction u) (spaceships u) }
+-- | Удаление влияния действия после отпускания кнопки
+nullAct :: Int -> ShipAction -> ShipAction
+nullAct 1 act = act { engineAction = Nothing }
+nullAct 2 act = act { rotateAction = Nothing }
+nullAct 3 act = act { fireAction = False }
+nullAct _ _   = mempty
 
--- | Действие бота
-botAction :: Universe -> Spaceship -> Spaceship
-botAction u ship
-   | (spaceshipMode ship) == Bot = analyseUniverse u ship
-   | otherwise = ship 
+-- | Поиск корабля с нужным ID
+findShip :: Int -> [Spaceship] -> Spaceship
+findShip _ []           = initSpaceship Bot 0 0
+findShip i (ship:ships)
+  | (spaceshipID ship) == i = ship
+  | otherwise = findShip i ships

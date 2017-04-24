@@ -7,7 +7,7 @@ module Config where
 
 -- | Количество астероидов
 asteroidsNumber :: Int
-asteroidsNumber = 50
+asteroidsNumber = 100
 
 -- | Количество кораблей
 spaceshipsNumber :: Int
@@ -16,6 +16,10 @@ spaceshipsNumber = 2
 -- | Количество игроков
 playersNumber :: Int
 playersNumber = 0
+
+-- | ID корабля игрока
+playerID :: Int
+playerID = 1
 
 -- | Интервал позиций по оси абсцисс для астероидов
 xPositions :: (Float, Float)

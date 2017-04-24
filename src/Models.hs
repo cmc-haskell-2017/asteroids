@@ -30,16 +30,17 @@ data Mode = Bot | Player deriving (Eq)
 
 -- | Космический корабль
 data Spaceship = Spaceship
-  { spaceshipName       :: String -- ^ Имя корабля
-  , spaceshipMode       :: Mode    -- ^ Режим корабля (бот/игрок)
-  , spaceshipPosition   :: Point  -- ^ Положение корабля
-  , spaceshipVelocity   :: Vector -- ^ Скорость корабля
-  , spaceshipAccelerate :: Float  -- ^ Ускорение
-  , spaceshipDirection  :: Float  -- ^ Направление корабля
-  , spaceshipAngularV   :: Float  -- ^ Угловая скорость
-  , spaceshipSize       :: Float  -- ^ Размер корабля
-  , isfire              :: Bool   -- ^ Ведётся ли огонь?
-  , fireReload          :: Float    -- ^ Счётчик перезарядки 
+  { spaceshipID         :: Int        -- ^ Имя корабля
+  , spaceshipMode       :: Mode       -- ^ Режим корабля (бот/игрок)
+  , lastAction          :: ShipAction -- ^ Последнее действие корабля
+  , spaceshipPosition   :: Point      -- ^ Положение корабля
+  , spaceshipVelocity   :: Vector     -- ^ Скорость корабля
+  , spaceshipAccelerate :: Float      -- ^ Ускорение
+  , spaceshipDirection  :: Float      -- ^ Направление корабля
+  , spaceshipAngularV   :: Float      -- ^ Угловая скорость
+  , spaceshipSize       :: Float      -- ^ Размер корабля
+  , isfire              :: Bool       -- ^ Ведётся ли огонь?
+  , fireReload          :: Float      -- ^ Счётчик перезарядки 
   }
 
 -- | Пуля
@@ -54,7 +55,7 @@ data Bullet = Bullet
 -- | Игровая вселенная
 data Universe = Universe
   { asteroids      :: [Asteroid]  -- ^ Астероиды
-  , spaceships     :: [Spaceship]   -- ^ Космический корабль
+  , spaceships     :: [Spaceship] -- ^ Космический корабль
   , background     :: Background  -- ^ Фон
   , bullets        :: [Bullet]    -- ^ Пули
   , table          :: Maybe Table -- ^ Заставка
@@ -70,8 +71,65 @@ data Asteroid = Asteroid
   , asteroidSize      :: Float  -- ^ Размер астероида
   }
 
-data Strategy = Strategy
-  { velocity :: Point  -- ^ Направление корабля для данной стратегии
-  , fire     :: Bool   -- ^ Необходим ли выстрел?
-  , power    :: Float  -- ^ Сила стратегии
+
+-- | Поворот корабля
+data RotateAction = ToLeft | ToRight deriving(Eq)
+
+-- | Направление ускорения корабля
+data EngineAction = Forward | Back deriving(Eq)
+
+-- | Действие корабля
+data ShipAction = ShipAction
+  { shipID       :: Int
+  , rotateAction :: Maybe RotateAction
+  , engineAction :: Maybe EngineAction
+  , fireAction   :: Bool
   }
+
+-- | Тактика
+data Tactic = OutTarget | AttackTarget Point deriving(Eq)
+
+-- | Стратегия
+data Strategy = Strategy
+  { tactic :: Tactic
+  , strShipID :: Int
+  }
+
+-- | Моноид для стратегий
+instance Monoid Strategy where
+   mempty = Strategy{ tactic = OutTarget, strShipID = 0}
+   mappend f g = Strategy { 
+     strShipID = (strShipID f)
+   , tactic = tw (tactic f) (tactic g)
+   }
+
+-- | Сложение двух тактик
+tw :: Tactic -> Tactic -> Tactic
+tw OutTarget f = f
+tw f OutTarget = f
+tw f g
+  | f == g = f
+  | otherwise = OutTarget
+
+-- | Моноид для действий корабля
+instance Monoid ShipAction where
+    mempty = ShipAction {
+        shipID = 0
+      , rotateAction = Nothing
+      , engineAction = Nothing
+      , fireAction   = False
+      }
+    mappend f g = ShipAction {
+        shipID = (shipID f)
+      , rotateAction = rw (rotateAction f) (rotateAction g)
+      , engineAction = rw (engineAction f) (engineAction g)
+      , fireAction   = (fireAction f) || (fireAction g)
+      }
+    
+-- | Сложение двух поворотов или направлений
+rw :: Eq a => Maybe a -> Maybe a -> Maybe a
+rw Nothing g  = g
+rw f Nothing  = f
+rw f g
+  | f == g  = f
+  | otherwise = Nothing

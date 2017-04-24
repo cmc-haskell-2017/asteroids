@@ -8,6 +8,8 @@ import Spaceship
 import Items
 import Config
 import Models
+import AI
+import Fisics
 
 -- | Инициализация игровой вселенной
 initUniverse :: StdGen -> Universe
@@ -31,6 +33,30 @@ updateBackground t u = Background
   }
   where
     newPos = backgroundPosition (background u) + mulSV t (backgroundVelocity (background u))
+
+-- | Обновить состояние игровой вселенной.
+updateUniverse :: Float -> Universe -> Universe
+updateUniverse dt u = handleBotsActions (bulletsFaceAsteroids u
+      { bullets        = updateBullets t newBullets
+      , asteroids      = updateAsteroids t newAsteroids
+      , spaceships      = updateSpaceships t (bullets u) (asteroids u) (spaceships u)
+      , background     = updateBackground t u
+      , freshAsteroids = tail (freshAsteroids u)
+      })
+      where
+        t = 60 * dt
+        newAsteroids
+          | length (asteroids u) < asteroidsNumber
+            = head (freshAsteroids u) : asteroids u
+          | otherwise = asteroids u
+        newBullets
+          | or (map (\ship -> isfire ship && fireReload ship == reloadTime) (spaceships u))
+            = (fireSpaceships (spaceships u)) ++ (bullets u)
+          | otherwise = bullets u
+
+-- | Обработка искусственного интелекта
+handleBotsActions :: Universe -> Universe
+handleBotsActions u = handleShipsAction (map (botAction u) (spaceships u)) u
 
 -- | Сбросить игру.
 resetUniverse :: StdGen -> Universe -> Universe
