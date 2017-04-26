@@ -116,7 +116,7 @@ updateBullet t bullet = bullet
 updateSpaceship :: Float -> [Bullet] -> [Asteroid] -> Spaceship -> Spaceship
 updateSpaceship t bullets' asteroids' ship
   | spaceshipFaceAsteroids [ship] asteroids' 
-   || (spaceshipFaceBullets [ship] bullets' && False) 
+   || (spaceshipFaceBullets [ship] bullets') 
     = initSpaceship (spaceshipMode ship) number number
   | otherwise = ship
   { spaceshipPosition  = updateShipPosition t ship

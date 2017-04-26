@@ -86,30 +86,6 @@ data ShipAction = ShipAction
   , fireAction   :: Bool
   }
 
--- | Тактика
-data Tactic = OutTarget | AttackTarget Point deriving(Eq)
-
--- | Стратегия
-data Strategy = Strategy
-  { tactic :: Tactic
-  , strShipID :: Int
-  }
-
--- | Моноид для стратегий
-instance Monoid Strategy where
-   mempty = Strategy{ tactic = OutTarget, strShipID = 0}
-   mappend f g = Strategy { 
-     strShipID = (strShipID f)
-   , tactic = tw (tactic f) (tactic g)
-   }
-
--- | Сложение двух тактик
-tw :: Tactic -> Tactic -> Tactic
-tw OutTarget f = f
-tw f OutTarget = f
-tw f g
-  | f == g = f
-  | otherwise = OutTarget
 
 -- | Моноид для действий корабля
 instance Monoid ShipAction where
