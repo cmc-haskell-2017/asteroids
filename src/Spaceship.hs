@@ -116,7 +116,7 @@ updateBullet t bullet = bullet
 updateSpaceship :: Float -> [Bullet] -> [Asteroid] -> Spaceship -> Spaceship
 updateSpaceship t bullets' asteroids' ship
   | spaceshipFaceAsteroids [ship] asteroids' 
-   || (spaceshipFaceBullets [ship] bullets' && False) 
+   || (spaceshipFaceBullets [ship] bullets') 
     = initSpaceship (spaceshipMode ship) number number
   | otherwise = ship
   { spaceshipPosition  = updateShipPosition t ship
@@ -182,15 +182,15 @@ initShipAction i r e b = ShipAction {
                          }
 
 -- | Обработка действий кораблей
-handleShipsAction :: [ShipAction] -> Universe -> Universe
+handleShipsAction :: Actions -> Universe -> Universe
 handleShipsAction act u = u {spaceships = map (doActions act) (spaceships u)}
 
 -- | Обработка действий корабля
-doActions :: [ShipAction] -> Spaceship -> Spaceship
-doActions [] ship = ship
-doActions (act:acts) ship 
+doActions :: Actions -> Spaceship -> Spaceship
+doActions (Actions []) ship = ship
+doActions (Actions (act:acts)) ship 
    | (shipID act) == (spaceshipID ship) = doAction act ship
-   | otherwise = doActions acts ship
+   | otherwise = doActions (Actions acts) ship
 
 -- | Обработка действия корабля
 doAction :: ShipAction -> Spaceship -> Spaceship
