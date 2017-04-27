@@ -3,6 +3,7 @@ module Fisics where
 import Graphics.Gloss.Interface.Pure.Game
 import Models
 
+
 -- | Столкновение пуль с астероидами
 bulletsFaceAsteroids :: Universe -> Universe
 bulletsFaceAsteroids u = u
@@ -43,6 +44,12 @@ bulletFaceAsteroid b a = collision aPos aRad bPos bRad
     aRad = asteroidSize a * 70
     bPos = bulletPosition b
     bRad = bulletSize b
+
+-- | Пуля сталкивается с астероидами?
+bulletFaceSpaceships :: [Spaceship] -> Bullet -> Bool
+bulletFaceSpaceships [] _ = False
+bulletFaceSpaceships (sh:shs) b 
+  = (spaceshipFaceBullet sh b) || (bulletFaceSpaceships shs b)
 
 -- | Определение столкновения корабля с астероидами
 spaceshipFaceAsteroids :: [Spaceship] -> [Asteroid] -> Bool

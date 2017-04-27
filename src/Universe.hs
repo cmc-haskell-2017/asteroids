@@ -36,13 +36,13 @@ updateBackground t u = Background
 
 -- | Обновить состояние игровой вселенной.
 updateUniverse :: Float -> Universe -> Universe
-updateUniverse dt u = handleBotsActions (bulletsFaceAsteroids u
+updateUniverse dt u = handleBotsActions (bulletsFaceSpaceships (bulletsFaceAsteroids u
       { bullets        = updateBullets t newBullets
       , asteroids      = updateAsteroids t newAsteroids
       , spaceships      = updateSpaceships t (bullets u) (asteroids u) (spaceships u)
       , background     = updateBackground t u
       , freshAsteroids = tail (freshAsteroids u)
-      })
+      }))
       where
         t = 60 * dt
         newAsteroids
@@ -62,10 +62,6 @@ handleBotsActions u = handleShipsAction (map (botAction u) (spaceships u)) u
 resetUniverse :: StdGen -> Universe -> Universe
 resetUniverse g _ = initUniverse g
 
--- | Конец игры?
-isGameOver :: Universe -> Bool
-isGameOver _ = False -- spaceshipFaceAsteroids (spaceships u) (asteroids u)
-  -- || spaceshipFaceBullets (spaceships u) (bullets u)
 
 
 

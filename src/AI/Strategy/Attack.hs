@@ -7,7 +7,7 @@ import Graphics.Gloss.Interface.Pure.Game
 import AI.Strategy.Calculations
 
 getAttackTarget :: [Spaceship] -> Point -> Point
-getAttackTarget [] _ = (2*screenUp, 2*screenUp)
+getAttackTarget [] _ = (8*screenUp, 8*screenUp)
 getAttackTarget (sh:shs) pos 
   | (dist1 < dist2) && (spaceshipPosition sh /= pos) = spaceshipPosition sh
   | otherwise = getAttackTarget shs pos
@@ -33,8 +33,8 @@ attackAction p ship = ShipAction {
  -- | Определение направления поворота при стратегии ухода
 rotateAttack :: Point -> Spaceship -> Maybe RotateAction
 rotateAttack p ship
-  | (ang > 0.1 || ang > pi - 0.1) && angDir > 0 = Just ToLeft
-  | (ang > 0.1 || ang > pi - 0.1) && angDir < 0 = Just ToRight
+  | (ang > 0.01 || ang > pi - 0.01) && angDir > 0 = Just ToLeft
+  | (ang > 0.01 || ang > pi - 0.01) && angDir < 0 = Just ToRight
   | otherwise         = Nothing
   where
     ang    = divangAttack p ship
@@ -52,7 +52,7 @@ engineAttack p ship
 -- | Определение необходимости огня при стратегии ухода
 fireAttack :: Point -> Spaceship -> Bool
 fireAttack p ship
-  | divang' < pi/32 = True
+  | divang' < pi/16 = True
   | otherwise       = False
   where
     divang'   = angleVV dir enemydir

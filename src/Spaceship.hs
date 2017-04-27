@@ -114,11 +114,7 @@ updateBullet t bullet = bullet
 
 -- | Обновить состояние корабля.
 updateSpaceship :: Float -> [Bullet] -> [Asteroid] -> Spaceship -> Spaceship
-updateSpaceship t bullets' asteroids' ship
-  | spaceshipFaceAsteroids [ship] asteroids' 
-   || (spaceshipFaceBullets [ship] bullets') 
-    = initSpaceship (spaceshipMode ship) number number
-  | otherwise = ship
+updateSpaceship t bullets' asteroids' ship = ship
   { spaceshipPosition  = updateShipPosition t ship
   , spaceshipVelocity  = updateShipVelocity t ship
   , spaceshipDirection = newDir
@@ -134,7 +130,6 @@ updateSpaceship t bullets' asteroids' ship
       | fireReload ship == reloadTime && isfire ship == False = reloadTime
       | fireReload ship == reloadTime = 0
       | otherwise = fireReload ship + t
-    number  = spaceshipID ship
 
 -- | Обновление состояния списка кораблей
 updateSpaceships :: Float -> [Bullet] -> [Asteroid] -> [Spaceship] -> [Spaceship]
@@ -171,6 +166,30 @@ updateShipVelocity t ship = velocity' + mulSV t acceleration
           where
             crossX = abs (fst(updateShipPosition t ship)) == screenRight
             crossY = abs (snd(updateShipPosition t ship)) == screenUp
+
+-- | Столкновение пуль с астероидами
+bulletsFaceSpaceships :: Universe -> Universe
+bulletsFaceSpaceships u = u {
+    bullets    = newB
+  , score      = 0
+  , spaceships = newS
+  }
+  where
+    s    = spaceships u
+    b    = bullets u
+    newB = filter (not . bulletFaceSpaceships s) b
+    newS = map (checkSpaceshipsCollisions u) s
+
+checkSpaceshipsCollisions :: Universe -> Spaceship -> Spaceship
+checkSpaceshipsCollisions u ship
+  | spaceshipFaceAsteroids [ship] asteroids' 
+    || (spaceshipFaceBullets [ship] bullets') 
+    = initSpaceship (spaceshipMode ship) number number
+  | otherwise = ship
+  where
+    asteroids' = asteroids u
+    bullets'   = bullets u
+    number     = spaceshipID ship
 
 -- | Создание действия корабля
 initShipAction :: Int -> Maybe RotateAction -> Maybe EngineAction -> Bool -> ShipAction

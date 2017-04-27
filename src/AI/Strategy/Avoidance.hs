@@ -14,7 +14,7 @@ avoidanceHeuristic u s
   where
     nearAst = nearAsteroidDist s (asteroids u)
     boards  = (abs (fst (spaceshipPosition s))) > screenRight/3
-      && (abs (snd (spaceshipPosition s))) > screenUp/3
+      || (abs (snd (spaceshipPosition s))) > screenUp/3
 
 
 avoidanceAction :: Universe ->  Spaceship -> ShipAction
