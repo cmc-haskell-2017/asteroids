@@ -1,6 +1,12 @@
+{-# LANGUAGE DeriveGeneric #-}
 module Models where
 
+import Data.ByteString.Lazy.Internal()
+import Data.Binary
+import GHC.Generics
 import Graphics.Gloss.Interface.Pure.Game
+
+import Network.WebSockets
 
 -- | Изображения объектов.
 data Images = Images
@@ -14,7 +20,9 @@ data Images = Images
 -- | Заставка
 data Table = Table 
   { tablePosition :: Point -- ^ Положение фона
-  }  
+  } deriving (Generic)
+
+instance Binary Table
 
 -- | Счёт.
 type Score = Int
@@ -23,10 +31,14 @@ type Score = Int
 data Background = Background
   { backgroundPosition :: Point  -- ^ Положение фона
   , backgroundVelocity :: Vector -- ^ Вектор скорости фона
-  }
+  } deriving (Generic)
+
+instance Binary Background
 
 -- | Режим корабля
-data Mode = Bot | Player deriving (Eq)
+data Mode = Bot | Player deriving (Eq, Generic)
+
+instance Binary Mode
 
 -- | Космический корабль
 data Spaceship = Spaceship
@@ -41,7 +53,9 @@ data Spaceship = Spaceship
   , spaceshipSize       :: Float      -- ^ Размер корабля
   , isfire              :: Bool       -- ^ Ведётся ли огонь?
   , fireReload          :: Float      -- ^ Счётчик перезарядки 
-  }
+  } deriving (Generic)
+
+instance Binary Spaceship
 
 -- | Пуля
 data Bullet = Bullet
@@ -49,8 +63,9 @@ data Bullet = Bullet
   , bulletVelocity  :: Vector -- ^ Скорость пули
   , bulletDirection :: Float  -- ^ Направление пули
   , bulletSize      :: Float  -- ^ Размер пули
-  }
+  } deriving (Generic)
 
+instance Binary Bullet
 
 -- | Игровая вселенная
 data Universe = Universe
@@ -61,7 +76,13 @@ data Universe = Universe
   , table          :: Maybe Table -- ^ Заставка
   , freshAsteroids :: [Asteroid]  -- ^ Бесконечный список "свежих" астероидов
   , score          :: Score       -- ^ Счёт
-  }
+  } deriving (Generic)
+
+instance Binary Universe
+
+instance WebSocketsData Universe where
+  fromLazyByteString = decode
+  toLazyByteString   = encode
 
 -- | Астероид
 data Asteroid = Asteroid
@@ -69,14 +90,19 @@ data Asteroid = Asteroid
   , asteroidDirection :: Float  -- ^ Направление астероида
   , asteroidVelocity  :: Vector -- ^ Скорость астероида
   , asteroidSize      :: Float  -- ^ Размер астероида
-  }
+  } deriving (Generic)
 
+instance Binary Asteroid
 
 -- | Поворот корабля
-data RotateAction = ToLeft | ToRight deriving(Eq)
+data RotateAction = ToLeft | ToRight deriving(Eq, Generic)
+
+instance Binary RotateAction
 
 -- | Направление ускорения корабля
-data EngineAction = Forward | Back deriving(Eq)
+data EngineAction = Forward | Back deriving(Eq, Generic)
+
+instance Binary EngineAction
 
 -- | Действие корабля
 data ShipAction = ShipAction
@@ -84,8 +110,17 @@ data ShipAction = ShipAction
   , rotateAction :: Maybe RotateAction
   , engineAction :: Maybe EngineAction
   , fireAction   :: Bool
-  }
+  } deriving (Generic)
 
+instance Binary ShipAction 
+
+newtype Actions = Actions [ShipAction] deriving (Generic)
+
+instance Binary Actions
+
+instance WebSocketsData Actions where
+  fromLazyByteString = decode
+  toLazyByteString   = encode
 
 -- | Моноид для действий корабля
 instance Monoid ShipAction where

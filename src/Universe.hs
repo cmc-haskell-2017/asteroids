@@ -56,7 +56,7 @@ updateUniverse dt u = handleBotsActions (bulletsFaceSpaceships (bulletsFaceAster
 
 -- | Обработка искусственного интелекта
 handleBotsActions :: Universe -> Universe
-handleBotsActions u = handleShipsAction (map (botAction u) (spaceships u)) u
+handleBotsActions u = handleShipsAction (Actions $ map (botAction u) (spaceships u)) u
 
 -- | Сбросить игру.
 resetUniverse :: StdGen -> Universe -> Universe
