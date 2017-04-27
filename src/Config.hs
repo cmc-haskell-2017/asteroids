@@ -7,7 +7,7 @@ module Config where
 
 -- | Количество астероидов
 asteroidsNumber :: Int
-asteroidsNumber = 100
+asteroidsNumber = 10
 
 -- | Количество кораблей
 spaceshipsNumber :: Int
@@ -15,7 +15,7 @@ spaceshipsNumber = 2
 
 -- | Количество игроков
 playersNumber :: Int
-playersNumber = 0
+playersNumber = 1
 
 -- | ID корабля игрока
 playerID :: Int
