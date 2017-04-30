@@ -7,7 +7,7 @@ import Graphics.Gloss.Interface.Pure.Game
 import AI.Strategy.Calculations
 
 getAttackTarget :: [Spaceship] -> Point -> Point
-getAttackTarget [] _ = (8*screenUp, 8*screenUp)
+getAttackTarget [] _ = (800*screenUp, 800*screenUp)
 getAttackTarget (sh:shs) pos 
   | (dist1 < dist2) && (spaceshipPosition sh /= pos) = spaceshipPosition sh
   | otherwise = getAttackTarget shs pos

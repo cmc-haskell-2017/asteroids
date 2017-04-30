@@ -39,7 +39,7 @@ updateUniverse :: Float -> Universe -> Universe
 updateUniverse dt u = handleBotsActions (bulletsFaceSpaceships (bulletsFaceAsteroids u
       { bullets        = updateBullets t newBullets
       , asteroids      = updateAsteroids t newAsteroids
-      , spaceships      = updateSpaceships t (bullets u) (asteroids u) (spaceships u)
+      , spaceships      = updateSpaceships t (spaceships u)
       , background     = updateBackground t u
       , freshAsteroids = tail (freshAsteroids u)
       }))
