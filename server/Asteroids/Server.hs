@@ -86,7 +86,8 @@ broadcastUpdate universe Config{..} = do
   clients <- readTVarIO configClients
   mapM_ (forkIO . sendUpdate) (Map.toList clients)
   where
-    sendUpdate (ident, conn) = sendBinaryData conn universe `catch` handleClosedConnection ident
+    sendUpdate (ident, conn) = sendBinaryData conn (f universe) `catch` handleClosedConnection ident
+    f u = u { freshAsteroids = [] }
 
     handleClosedConnection :: PlayerID -> ConnectionException -> IO ()
     handleClosedConnection ident _ = do
