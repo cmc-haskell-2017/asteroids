@@ -1,5 +1,6 @@
 module Spaceship where
 
+import System.Random
 import Graphics.Gloss.Data.Vector
 import Graphics.Gloss.Geometry.Line()
 import Graphics.Gloss.Interface.Pure.Game
@@ -7,14 +8,13 @@ import Config
 import Models
 import Fisics
 
-
 -- | Начальное состояние корабля
-initSpaceship :: Mode -> Int -> Int -> Spaceship
-initSpaceship mode n id' = Spaceship
-  { spaceshipID         = id'
+initSpaceship :: Mode -> Point -> Int -> Spaceship
+initSpaceship mode pos ident = Spaceship
+  { spaceshipID         = ident
   , spaceshipMode       = mode
   , lastAction          = mempty
-  , spaceshipPosition   = (x, 0)
+  , spaceshipPosition   = pos
   , spaceshipVelocity   = (0, 0) 
   , spaceshipAccelerate = 0
   , spaceshipAngularV   = 0
@@ -23,15 +23,16 @@ initSpaceship mode n id' = Spaceship
   , isfire              = False
   , fireReload          = 0
   }
-  where
-    x = (fromIntegral n) * (fromIntegral screenWidth)/fspaceshipsNumber - screenRight
-    fspaceshipsNumber = fromIntegral(spaceshipsNumber + 1)
 
 -- | Создание списка кораблей
-initSpaceships :: Int -> Int -> [Spaceship]
-initSpaceships _ 0 = []
-initSpaceships n m = [(initSpaceship Bot n n)]
-  ++ (initSpaceships (n + 1) (m - 1))
+initSpaceships :: StdGen -> Int -> Int -> [Spaceship]
+initSpaceships _ _ 0 = []
+initSpaceships g ident num = [(initSpaceship Bot pos ident)]
+  ++ (initSpaceships g'' (ident + 1) (num - 1))
+  where
+    (x, g')  = randomR xShipPositions g
+    (y, g'') = randomR yShipPositions g'
+    pos      = (x,y)
 
 -- | Отдать корабль под управление игрока
 setPlayerMode :: Spaceship -> Spaceship
@@ -188,12 +189,16 @@ checkSpaceshipsCollisions :: Universe -> Spaceship -> Spaceship
 checkSpaceshipsCollisions u ship
   | spaceshipFaceAsteroids [ship] asteroids' 
     || (spaceshipFaceBullets [ship] bullets') 
-    = initSpaceship (spaceshipMode ship) number number
+    = initSpaceship (spaceshipMode ship) pos ident
   | otherwise = ship
   where
+    g          = mkStdGen ident
+    (x,g')     = randomR xShipPositions g
+    (y,_)      = randomR yShipPositions g'
+    pos        = (x,y)
     asteroids' = asteroids u
     bullets'   = bullets u
-    number     = spaceshipID ship
+    ident      = spaceshipID ship
 
 -- | Создание действия корабля
 initShipAction :: Int -> Maybe RotateAction -> Maybe EngineAction -> Bool -> ShipAction

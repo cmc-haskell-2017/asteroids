@@ -33,6 +33,18 @@ yPositions = (- height, height)
   where
     height = fromIntegral screenHeight
 
+-- | Интервал позиций по оси абсцисс для кораблей
+xShipPositions :: (Float, Float)
+xShipPositions = (- width, width)
+  where
+    width = fromIntegral screenWidth / 2
+
+-- | Интервал позиций по оси ординат для кораблей
+yShipPositions :: (Float, Float)
+yShipPositions = (- height, height)
+  where
+    height = fromIntegral screenHeight / 2
+
 -- | Интервал скоростей для астероидов
 velocities :: (Float, Float)
 velocities = (0.0, 2.0)

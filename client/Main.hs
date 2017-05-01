@@ -23,8 +23,8 @@ data GameState = GameState
 
 main :: IO ()
 main = do
-   images <- loadImages
-   runIO images
+  images <- loadImages
+  runIO images
 
 handleGame :: Event -> GameState -> IO GameState
 handleGame (EventKey (SpecialKey KeyEsc) Down _ _) g = const exitSuccess g
@@ -73,7 +73,6 @@ handleGame _ g = return g
 handleUpdates :: GameState -> IO ()
 handleUpdates GameState{..} = forever $ do
   universe <- receiveData gameConnection
-  putStrLn "update"
   atomically $ writeTVar gameUniverse universe
 
 drawGame :: Images -> GameState -> IO Picture
@@ -87,9 +86,9 @@ runIO images = do
   g        <- newStdGen
   universe <- atomically $ newTVar (initUniverse g)
   runClient "localhost" 8000 "/connect" $ \conn -> do
-      let gs = GameState universe conn
-      _ <- forkIO (handleUpdates gs)
-      playIO display bgColor fps gs (drawGame images) handleGame updateGame
+    let gs = GameState universe conn
+    _ <- forkIO (handleUpdates gs)
+    playIO display bgColor fps gs (drawGame images) handleGame updateGame
   where
     winOffset = (150, 150)
     display   = InWindow "Asteroids" (screenWidth, screenHeight) winOffset

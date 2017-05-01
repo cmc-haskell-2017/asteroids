@@ -57,13 +57,12 @@ server config = websocketsOr defaultConnectionOptions wsApp backupApp
     backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
 
 addClient :: Client -> Config -> IO PlayerID
-addClient client Config{..} = do
-  atomically $ do
-    ident:ids <- readTVar configIDs
-    writeTVar configIDs ids
-    modifyTVar configClients (Map.insert ident client)
-    --modifyTVar configUniverse spawnPlayer
-    return ident
+addClient client Config{..} = atomically $ do
+  ident:ids <- readTVar configIDs
+  writeTVar configIDs ids
+  modifyTVar configClients (Map.insert ident client)
+  modifyTVar configUniverse id --spawnPlayer
+  return ident
 
 handleActions :: Connection -> Config -> IO ()
 handleActions conn Config{..} = forever $ do
@@ -75,7 +74,7 @@ periodicUpdates :: Int -> Config -> IO ()
 periodicUpdates ms cfg@Config{..} = forever $ do
   threadDelay ms
   universe <- atomically $ do
-    universe <- updateUniverse dt <$> readTVar configUniverse
+    universe <- (updateUniverse dt) <$> readTVar configUniverse
     writeTVar configUniverse universe
     return universe
   broadcastUpdate universe cfg
@@ -94,4 +93,4 @@ broadcastUpdate universe Config{..} = do
       putStrLn ("Player " ++ show ident ++ " disconected.")
       atomically $ do
         modifyTVar configClients (Map.delete ident)
-        --modifyTVar configUniverse (kickPlayer ident)
+        modifyTVar configUniverse id --(kickPlayer ident)

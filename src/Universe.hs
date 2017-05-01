@@ -16,7 +16,7 @@ initUniverse :: StdGen -> Universe
 initUniverse g  = Universe
   { bullets        = []
   , asteroids      = take asteroidsNumber (initAsteroids g)
-  , spaceships     = setSpaceshipsMode (initSpaceships 1 spaceshipsNumber)
+  , spaceships     = setSpaceshipsMode (initSpaceships g 1 spaceshipsNumber)
   , background     = initBackground
   , table          = Nothing
   , freshAsteroids = drop asteroidsNumber (initAsteroids g)
@@ -39,7 +39,7 @@ updateUniverse :: Float -> Universe -> Universe
 updateUniverse dt u = handleBotsActions (bulletsFaceSpaceships (bulletsFaceAsteroids u
       { bullets        = updateBullets t newBullets
       , asteroids      = updateAsteroids t newAsteroids
-      , spaceships      = updateSpaceships t (spaceships u)
+      , spaceships     = updateSpaceships t (spaceships u)
       , background     = updateBackground t u
       , freshAsteroids = tail (freshAsteroids u)
       }))
