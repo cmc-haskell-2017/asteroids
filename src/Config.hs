@@ -15,7 +15,7 @@ spaceshipsNumber = 3
 
 -- | Количество игроков
 playersNumber :: Int
-playersNumber = 1
+playersNumber = 0
 
 -- | ID корабля игрока
 playerID :: Int

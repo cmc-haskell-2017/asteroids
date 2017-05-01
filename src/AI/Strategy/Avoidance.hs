@@ -98,7 +98,7 @@ boardProtect ship = (bx, by)
 
 -- | Расстояние до ближайшего астероида
 nearAsteroidDist :: Spaceship -> [Asteroid] -> Float
-nearAsteroidDist _ []        = screenRight*20
+nearAsteroidDist _ []        = screenRight*10
 nearAsteroidDist ship (a:as) = min dist (nearAsteroidDist ship as)
   where
     dist = (distant (spaceshipPosition ship) (asteroidPosition a)) - (asteroidSize a)

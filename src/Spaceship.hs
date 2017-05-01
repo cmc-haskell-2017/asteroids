@@ -113,8 +113,8 @@ updateBullet t bullet = bullet
 
 
 -- | Обновить состояние корабля.
-updateSpaceship :: Float -> [Bullet] -> [Asteroid] -> Spaceship -> Spaceship
-updateSpaceship t bullets' asteroids' ship = ship
+updateSpaceship :: Float -> Spaceship -> Spaceship
+updateSpaceship t ship = ship
   { spaceshipPosition  = updateShipPosition t ship
   , spaceshipVelocity  = updateShipVelocity t ship
   , spaceshipDirection = newDir
@@ -132,9 +132,9 @@ updateSpaceship t bullets' asteroids' ship = ship
       | otherwise = fireReload ship + t
 
 -- | Обновление состояния списка кораблей
-updateSpaceships :: Float -> [Bullet] -> [Asteroid] -> [Spaceship] -> [Spaceship]
-updateSpaceships t bullets' asteroids' ships 
-  = map (updateSpaceship t bullets' asteroids') ships
+updateSpaceships :: Float -> [Spaceship] -> [Spaceship]
+updateSpaceships t ships 
+  = map (updateSpaceship t) ships
 
 -- | Обновление положения корабля
 updateShipPosition :: Float -> Spaceship -> Point
@@ -171,7 +171,7 @@ updateShipVelocity t ship = velocity' + mulSV t acceleration
 bulletsFaceSpaceships :: Universe -> Universe
 bulletsFaceSpaceships u = u {
     bullets    = newB
-  , score      = 0
+  , score      = newScore
   , spaceships = newS
   }
   where
@@ -179,6 +179,10 @@ bulletsFaceSpaceships u = u {
     b    = bullets u
     newB = filter (not . bulletFaceSpaceships s) b
     newS = map (checkSpaceshipsCollisions u) s
+    newScore 
+       | spaceshipFaceAsteroids s (asteroids u) 
+         || (spaceshipFaceBullets s b) = 0
+       | otherwise = score u
 
 checkSpaceshipsCollisions :: Universe -> Spaceship -> Spaceship
 checkSpaceshipsCollisions u ship
