@@ -8,17 +8,6 @@ import Config
 import Images()
 import Models
 
--- | Бесконечный список векторов
-vectors :: (Float, Float) -> (Float, Float) -> StdGen -> [Vector]
-vectors ran1 ran2 g
-  = zipWith (\ x y -> (x, y)) (randomRs ran1 g1) (randomRs ran2 g2)
-  where
-    (g1, g2) = split g
-
--- | Бесконечный список чисел
-floats :: (Float, Float) -> StdGen -> [Float]
-floats range g = randomRs range g
-
 -- | Бесконечный список астероидов
 asteroidList :: [Point] -> [Float] -> [Vector] -> [Float] -> [Asteroid]
 asteroidList (p : pos) (d : dir) (v : vel) (s : siz)

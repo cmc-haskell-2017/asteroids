@@ -87,7 +87,10 @@ broadcastUpdate universe Config{..} = do
   mapM_ (forkIO . sendUpdate) (Map.toList clients)
   where
     sendUpdate (ident, conn) = sendBinaryData conn (f universe) `catch` handleClosedConnection ident
-    f u = u { freshAsteroids = [] }
+    f u = u
+      { freshAsteroids = []
+      , freshPositions = []
+      }
 
     handleClosedConnection :: PlayerID -> ConnectionException -> IO ()
     handleClosedConnection ident _ = do

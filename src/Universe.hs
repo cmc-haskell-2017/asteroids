@@ -19,6 +19,7 @@ initUniverse g  = Universe
   , spaceships     = setSpaceshipsMode (initSpaceships g 1 spaceshipsNumber)
   , background     = initBackground
   , table          = Nothing
+  , freshPositions = initShipPositions g
   , freshAsteroids = drop asteroidsNumber (initAsteroids g)
   , score          = 0
   }
@@ -41,6 +42,7 @@ updateUniverse dt u = handleBotsActions (bulletsFaceSpaceships (bulletsFaceAster
       , asteroids      = updateAsteroids t newAsteroids
       , spaceships     = updateSpaceships t (spaceships u)
       , background     = updateBackground t u
+      , freshPositions = tail (freshPositions u)
       , freshAsteroids = tail (freshAsteroids u)
       }))
       where

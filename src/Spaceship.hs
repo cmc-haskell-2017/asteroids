@@ -24,6 +24,10 @@ initSpaceship mode pos ident = Spaceship
   , fireReload          = 0
   }
 
+-- | Создание бесконечного списка позиций для кораблей
+initShipPositions :: StdGen -> [Point]
+initShipPositions = vectors xShipPositions yShipPositions
+
 -- | Создание списка кораблей
 initSpaceships :: StdGen -> Int -> Int -> [Spaceship]
 initSpaceships _ _ 0 = []
@@ -192,10 +196,7 @@ checkSpaceshipsCollisions u ship
     = initSpaceship (spaceshipMode ship) pos ident
   | otherwise = ship
   where
-    g          = mkStdGen ident
-    (x,g')     = randomR xShipPositions g
-    (y,_)      = randomR yShipPositions g'
-    pos        = (x,y)
+    pos        = head $ freshPositions u
     asteroids' = asteroids u
     bullets'   = bullets u
     ident      = spaceshipID ship

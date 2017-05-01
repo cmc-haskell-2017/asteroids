@@ -74,6 +74,7 @@ data Universe = Universe
   , background     :: Background  -- ^ Фон
   , bullets        :: [Bullet]    -- ^ Пули
   , table          :: Maybe Table -- ^ Заставка
+  , freshPositions :: [Point]     -- ^ Бесконечный список "свежих" позиций для кораблей
   , freshAsteroids :: [Asteroid]  -- ^ Бесконечный список "свежих" астероидов
   , score          :: Score       -- ^ Счёт
   } deriving (Generic)
