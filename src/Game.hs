@@ -1,8 +1,10 @@
 module Game where
 
+import Control.Concurrent.STM
 import System.Random
+import System.Exit
 import Graphics.Gloss.Geometry.Line()
-import Graphics.Gloss.Interface.Pure.Game
+import Graphics.Gloss.Interface.IO.Game
 import Universe
 import Models
 import Spaceship
@@ -13,11 +15,26 @@ import Config
 run :: Images -> IO ()
 run images = do
   g <- newStdGen
-  play display bgColor fps (initUniverse g) (drawUniverse images) (handleUniverse g) updateUniverse
+  initWorld <- atomically $ newTVar (initUniverse g)
+  playIO display bgColor fps initWorld drawWorld (handleWorld g) updateWorld
   where
     display = InWindow "Asteroids" (screenWidth, screenHeight) (150, 150)
     bgColor = black   -- цвет фона
     fps     = 60      -- кол-во кадров в секунду
+
+    drawWorld w = do
+      u <- readTVarIO w
+      return (drawUniverse images u)
+
+    handleWorld _ (EventKey (SpecialKey KeyEsc) Down _ _) _ = exitSuccess
+    handleWorld g e w = atomically $ do
+      u <- readTVar w
+      writeTVar w (handleUniverse g e u)
+      return w
+
+    updateWorld dt w = do
+      atomically $ modifyTVar w (updateUniverse dt)
+      return w
 
 -- =========================================
 -- Отрисовка игровой вселенной

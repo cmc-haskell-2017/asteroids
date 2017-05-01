@@ -7,7 +7,7 @@ module Config where
 
 -- | Количество астероидов
 asteroidsNumber :: Int
-asteroidsNumber = 50
+asteroidsNumber = 150
 
 -- | Количество кораблей
 spaceshipsNumber :: Int

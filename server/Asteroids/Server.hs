@@ -8,7 +8,7 @@ import Control.Concurrent (forkIO, threadDelay)
 import Control.Concurrent.STM
 import Control.Exception (catch)
 import Control.Monad (forever)
-import Control.Monad.Random (evalRand, newStdGen)
+import Control.Monad.Random (newStdGen)
 import Data.Map (Map)
 import qualified Data.Map as Map
 
@@ -20,7 +20,7 @@ import Servant
 
 import Universe
 import Models
-import Game
+import Game ()
 import Spaceship
 
 type Client = Connection
@@ -30,7 +30,7 @@ type PlayerID = Int
 data Config = Config
   { configUniverse :: TVar Universe
   , configClients  :: TVar (Map PlayerID Client)
-  , configIDs    :: TVar [PlayerID]
+  , configIDs      :: TVar [PlayerID]
   }
 
 mkDefaultConfig :: IO Config
@@ -47,25 +47,26 @@ type AsteroidsAPI = "connect" :> Raw
 server :: Config -> Server AsteroidsAPI
 server config = websocketsOr defaultConnectionOptions wsApp backupApp
   where
-    backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
     wsApp :: ServerApp
     wsApp pending_conn = do
-      conn <- acceptRequest pending_conn
-      id   <- addClient conn config
-      putStrLn $ "Player " ++ show id ++ " joined!"
-      handleActions id conn config
+      conn  <- acceptRequest pending_conn
+      ident <- addClient conn config
+      putStrLn $ "Player " ++ show ident ++ " joined!"
+      handleActions conn config
+
+    backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
 
 addClient :: Client -> Config -> IO PlayerID
 addClient client Config{..} = do
   atomically $ do
-    id:ids <- readTVar configIDs
+    ident:ids <- readTVar configIDs
     writeTVar configIDs ids
-    modifyTVar configClients (Map.insert id client)
+    modifyTVar configClients (Map.insert ident client)
     --modifyTVar configUniverse spawnPlayer
-    return id
+    return ident
 
-handleActions :: PlayerID -> Connection -> Config -> IO ()
-handleActions id conn cfg@Config{..} = forever $ do
+handleActions :: Connection -> Config -> IO ()
+handleActions conn Config{..} = forever $ do
   action <- receiveData conn
   atomically $ do
     modifyTVar configUniverse (handleShipsAction action)
@@ -79,18 +80,18 @@ periodicUpdates ms cfg@Config{..} = forever $ do
     return universe
   broadcastUpdate universe cfg
   where
-    dt = fromIntegral ms / 1000000 -- not ok
+    dt = fromIntegral ms / 1000000
 
 broadcastUpdate :: Universe -> Config -> IO ()
-broadcastUpdate universe cfg@Config{..} = do
+broadcastUpdate universe Config{..} = do
   clients <- readTVarIO configClients
   mapM_ (forkIO . sendUpdate) (Map.toList clients)
   where
-    sendUpdate (id, conn) = sendBinaryData conn universe `catch` handleClosedConnection id
+    sendUpdate (ident, conn) = sendBinaryData conn universe `catch` handleClosedConnection ident
 
     handleClosedConnection :: PlayerID -> ConnectionException -> IO ()
-    handleClosedConnection id _ = do
-      putStrLn ("Player " ++ show id ++ " disconected.")
+    handleClosedConnection ident _ = do
+      putStrLn ("Player " ++ show ident ++ " disconected.")
       atomically $ do
-        modifyTVar configClients (Map.delete id)
-        --modifyTVar configUniverse (kickPlayer id)
+        modifyTVar configClients (Map.delete ident)
+        --modifyTVar configUniverse (kickPlayer ident)
