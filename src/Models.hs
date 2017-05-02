@@ -27,6 +27,9 @@ instance Binary Table
 -- | Счёт.
 type Score = Int
 
+-- | Идентификатор игрока
+type PlayerID = Int
+
 -- | Фон
 data Background = Background
   { backgroundPosition :: Point  -- ^ Положение фона
@@ -115,11 +118,7 @@ data ShipAction = ShipAction
 
 instance Binary ShipAction 
 
-newtype Actions = Actions [ShipAction] deriving (Generic)
-
-instance Binary Actions
-
-instance WebSocketsData Actions where
+instance WebSocketsData ShipAction where
   fromLazyByteString = decode
   toLazyByteString   = encode
 

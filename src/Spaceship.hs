@@ -9,7 +9,7 @@ import Models
 import Fisics
 
 -- | Начальное состояние корабля
-initSpaceship :: Mode -> Point -> Int -> Spaceship
+initSpaceship :: Mode -> Point -> PlayerID -> Spaceship
 initSpaceship mode pos ident = Spaceship
   { spaceshipID         = ident
   , spaceshipMode       = mode
@@ -29,7 +29,7 @@ initShipPositions :: StdGen -> [Point]
 initShipPositions = vectors xShipPositions yShipPositions
 
 -- | Создание списка кораблей
-initSpaceships :: StdGen -> Int -> Int -> [Spaceship]
+initSpaceships :: StdGen -> Int -> PlayerID -> [Spaceship]
 initSpaceships _ _ 0 = []
 initSpaceships g ident num = [(initSpaceship Bot pos ident)]
   ++ (initSpaceships g'' (ident + 1) (num - 1))
@@ -211,15 +211,15 @@ initShipAction i r e b = ShipAction {
                          }
 
 -- | Обработка действий кораблей
-handleShipsAction :: Actions -> Universe -> Universe
+handleShipsAction :: [ShipAction] -> Universe -> Universe
 handleShipsAction act u = u {spaceships = map (doActions act) (spaceships u)}
 
 -- | Обработка действий корабля
-doActions :: Actions -> Spaceship -> Spaceship
-doActions (Actions []) ship = ship
-doActions (Actions (act:acts)) ship 
+doActions :: [ShipAction] -> Spaceship -> Spaceship
+doActions [] ship = ship
+doActions (act:acts) ship 
    | (shipID act) == (spaceshipID ship) = doAction act ship
-   | otherwise = doActions (Actions acts) ship
+   | otherwise = doActions acts ship
 
 -- | Обработка действия корабля
 doAction :: ShipAction -> Spaceship -> Spaceship

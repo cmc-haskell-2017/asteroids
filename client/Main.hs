@@ -30,43 +30,43 @@ handleGame :: Event -> GameState -> IO GameState
 handleGame (EventKey (SpecialKey KeyEsc) Down _ _) g = const exitSuccess g
 handleGame (EventKey (SpecialKey KeyUp) Down _ _) g@GameState{..} = do
   u <- readTVarIO gameUniverse
-  _ <- forkIO $ sendBinaryData gameConnection (Actions [newShipAction playerID Nothing (Just Forward) False u])
+  _ <- forkIO $ sendBinaryData gameConnection (newShipAction playerID Nothing (Just Forward) False u)
   return g
 handleGame (EventKey (SpecialKey KeyDown) Down _ _) g@GameState{..} = do
   u <- readTVarIO gameUniverse
-  _ <- forkIO $ sendBinaryData gameConnection (Actions [newShipAction playerID Nothing (Just Back) False u])
+  _ <- forkIO $ sendBinaryData gameConnection (newShipAction playerID Nothing (Just Back) False u)
   return g
 handleGame (EventKey (SpecialKey KeyUp) Up _ _) g@GameState{..} = do
   u <- readTVarIO gameUniverse
-  _ <- forkIO $ sendBinaryData gameConnection (Actions [nullAct 1 (newShipAction playerID Nothing Nothing False u)])
+  _ <- forkIO $ sendBinaryData gameConnection (nullAct 1 (newShipAction playerID Nothing Nothing False u))
   return g
 handleGame (EventKey (SpecialKey KeyDown) Up _ _) g@GameState{..} = do
   u <- readTVarIO gameUniverse
-  _ <- forkIO $ sendBinaryData gameConnection (Actions [nullAct 1 (newShipAction playerID Nothing Nothing False u)])
+  _ <- forkIO $ sendBinaryData gameConnection (nullAct 1 (newShipAction playerID Nothing Nothing False u))
   return g
 handleGame (EventKey (SpecialKey KeyLeft) Down _ _) g@GameState{..} = do
   u <- readTVarIO gameUniverse
-  _ <- forkIO $ sendBinaryData gameConnection (Actions [newShipAction playerID (Just ToLeft) Nothing False u])
+  _ <- forkIO $ sendBinaryData gameConnection (newShipAction playerID (Just ToLeft) Nothing False u)
   return g
 handleGame (EventKey (SpecialKey KeyRight) Down _ _) g@GameState{..} = do
   u <- readTVarIO gameUniverse
-  _ <- forkIO $ sendBinaryData gameConnection (Actions [newShipAction playerID (Just ToRight) Nothing False u])
+  _ <- forkIO $ sendBinaryData gameConnection (newShipAction playerID (Just ToRight) Nothing False u)
   return g
 handleGame (EventKey (SpecialKey KeyLeft) Up _ _) g@GameState{..} = do
   u <- readTVarIO gameUniverse
-  _ <- forkIO $ sendBinaryData gameConnection (Actions [nullAct 2 (newShipAction playerID Nothing Nothing False u)])
+  _ <- forkIO $ sendBinaryData gameConnection (nullAct 2 (newShipAction playerID Nothing Nothing False u))
   return g
 handleGame (EventKey (SpecialKey KeyRight) Up _ _) g@GameState{..} = do
   u <- readTVarIO gameUniverse
-  _ <- forkIO $ sendBinaryData gameConnection (Actions [nullAct 2 (newShipAction playerID Nothing Nothing False u)])
+  _ <- forkIO $ sendBinaryData gameConnection (nullAct 2 (newShipAction playerID Nothing Nothing False u))
   return g
 handleGame (EventKey (SpecialKey KeySpace) Down _ _) g@GameState{..} = do
   u <- readTVarIO gameUniverse
-  _ <- forkIO $ sendBinaryData gameConnection (Actions [newShipAction playerID Nothing Nothing True u])
+  _ <- forkIO $ sendBinaryData gameConnection (newShipAction playerID Nothing Nothing True u)
   return g
 handleGame (EventKey (SpecialKey KeySpace) Up _ _) g@GameState{..} = do
   u <- readTVarIO gameUniverse
-  _ <- forkIO $ sendBinaryData gameConnection (Actions [nullAct 3 (newShipAction playerID Nothing Nothing False u)])
+  _ <- forkIO $ sendBinaryData gameConnection (nullAct 3 (newShipAction playerID Nothing Nothing False u))
   return g
 handleGame _ g = return g
 

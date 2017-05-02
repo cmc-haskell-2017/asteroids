@@ -25,8 +25,6 @@ import Spaceship
 
 type Client = Connection
 
-type PlayerID = Int
-
 data Config = Config
   { configUniverse :: TVar Universe
   , configClients  :: TVar (Map PlayerID Client)
@@ -52,7 +50,7 @@ server config = websocketsOr defaultConnectionOptions wsApp backupApp
       conn  <- acceptRequest pending_conn
       ident <- addClient conn config
       putStrLn $ "Player " ++ show ident ++ " joined!"
-      handleActions conn config
+      handleActions ident conn config
 
     backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
 
@@ -61,14 +59,26 @@ addClient client Config{..} = atomically $ do
   ident:ids <- readTVar configIDs
   writeTVar configIDs ids
   modifyTVar configClients (Map.insert ident client)
-  modifyTVar configUniverse id --spawnPlayer
+  modifyTVar configUniverse (spawnPlayer ident)
   return ident
 
-handleActions :: Connection -> Config -> IO ()
-handleActions conn Config{..} = forever $ do
+spawnPlayer :: PlayerID -> Universe -> Universe
+spawnPlayer ident u = u { spaceships = map addPlayer $ spaceships u }
+  where
+    addPlayer ship
+      | spaceshipID ship == ident = initSpaceship Player pos ident
+      | otherwise                 = ship
+    pos = head $ freshPositions u
+
+handleActions :: PlayerID -> Connection -> Config -> IO ()
+handleActions ident conn Config{..} = forever $ do
   action <- receiveData conn
   atomically $ do
-    modifyTVar configUniverse (handleShipsAction action)
+    modifyTVar configUniverse (handleShipsAction [setID action])
+    where
+
+      setID :: ShipAction -> ShipAction
+      setID act = act { shipID = ident }
 
 periodicUpdates :: Int -> Config -> IO ()
 periodicUpdates ms cfg@Config{..} = forever $ do
