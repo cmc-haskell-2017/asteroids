@@ -4,6 +4,8 @@
 {-# LANGUAGE TypeOperators #-}
 module Asteroids.Server where
 
+import System.Random ()
+
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Concurrent.STM
 import Control.Exception (catch)
@@ -22,6 +24,7 @@ import Universe
 import Models
 import Game ()
 import Spaceship
+import Config
 
 type Client = Connection
 
@@ -35,7 +38,7 @@ mkDefaultConfig :: IO Config
 mkDefaultConfig = do
   g   <- newStdGen
   cfg <- atomically $ Config
-    <$> newTVar (initUniverse g)
+    <$> newTVar (emptyUniverse g)
     <*> newTVar Map.empty
     <*> newTVar [1..]
   return cfg
@@ -63,9 +66,12 @@ addClient client Config{..} = atomically $ do
   return ident
 
 spawnPlayer :: PlayerID -> Universe -> Universe
-spawnPlayer ident u = u { spaceships = map addPlayer $ spaceships u }
+spawnPlayer ident u = u { spaceships = addPlayer (spaceships u) }
   where
-    addPlayer ship
+    addPlayer ships
+      | ident > botsNumber = initSpaceship Player pos ident : ships
+      | otherwise = map changeMod ships
+    changeMod ship
       | spaceshipID ship == ident = initSpaceship Player pos ident
       | otherwise                 = ship
     pos = head $ freshPositions u
@@ -107,4 +113,14 @@ broadcastUpdate universe Config{..} = do
       putStrLn ("Player " ++ show ident ++ " disconected.")
       atomically $ do
         modifyTVar configClients (Map.delete ident)
-        modifyTVar configUniverse id --(kickPlayer ident)
+        modifyTVar configUniverse (kickPlayer ident)
+
+kickPlayer :: PlayerID -> Universe -> Universe
+kickPlayer ident u = u
+  { spaceships = addBot (filter isConnected $ spaceships u) }
+  where
+    addBot ships
+      | length (spaceships u) > botsNumber = ships
+      | otherwise = initSpaceship Bot pos ident : ships 
+    isConnected ship = ident /= spaceshipID ship
+    pos = head $ freshPositions u

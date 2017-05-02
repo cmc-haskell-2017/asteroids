@@ -45,7 +45,7 @@ instance Binary Mode
 
 -- | Космический корабль
 data Spaceship = Spaceship
-  { spaceshipID         :: Int        -- ^ Имя корабля
+  { spaceshipID         :: PlayerID   -- ^ Имя корабля
   , spaceshipMode       :: Mode       -- ^ Режим корабля (бот/игрок)
   , lastAction          :: ShipAction -- ^ Последнее действие корабля
   , spaceshipPosition   :: Point      -- ^ Положение корабля
@@ -110,7 +110,7 @@ instance Binary EngineAction
 
 -- | Действие корабля
 data ShipAction = ShipAction
-  { shipID       :: Int
+  { shipID       :: PlayerID
   , rotateAction :: Maybe RotateAction
   , engineAction :: Maybe EngineAction
   , fireAction   :: Bool

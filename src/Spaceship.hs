@@ -38,15 +38,6 @@ initSpaceships g ident num = [(initSpaceship Bot pos ident)]
     (y, g'') = randomR yShipPositions g'
     pos      = (x,y)
 
--- | Отдать корабль под управление игрока
-setPlayerMode :: Spaceship -> Spaceship
-setPlayerMode ship = ship {spaceshipMode = Player}
-
--- | Установка кораблей, управляемых игроками
-setSpaceshipsMode :: [Spaceship] -> [Spaceship]
-setSpaceshipsMode ships = (map setPlayerMode (take playersNumber ships))
-  ++ (drop playersNumber ships) 
-
 -- | Инициализация пули
 initBullet :: Spaceship -> Bullet
 initBullet ship = Bullet

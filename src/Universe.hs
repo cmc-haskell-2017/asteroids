@@ -11,18 +11,23 @@ import Models
 import AI
 import Fisics
 
--- | Инициализация игровой вселенной
-initUniverse :: StdGen -> Universe
-initUniverse g  = Universe
+-- | Инициализация игровой вселенной без игроков (только с ботами)
+emptyUniverse :: StdGen -> Universe
+emptyUniverse g = Universe
   { bullets        = []
   , asteroids      = take asteroidsNumber (initAsteroids g)
-  , spaceships     = setSpaceshipsMode (initSpaceships g 1 spaceshipsNumber)
+  , spaceships     = initSpaceships g 1 botsNumber
   , background     = initBackground
   , table          = Nothing
   , freshPositions = initShipPositions g
   , freshAsteroids = drop asteroidsNumber (initAsteroids g)
   , score          = 0
   }
+
+-- | Инициализация игровой вселенной
+initUniverse :: StdGen -> Universe
+initUniverse g  = (emptyUniverse g)
+  { spaceships = initSpaceship Player (0,0) 1 : initSpaceships g 2 botsNumber }
 
 -- | Обновить фон
 updateBackground :: Float -> Universe -> Background

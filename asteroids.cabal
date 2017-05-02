@@ -70,6 +70,7 @@ executable asteroids-server
                      , servant
                      , servant-server
                      , asteroids
+                     , random
                      , stm
                      , wai
                      , wai-websockets

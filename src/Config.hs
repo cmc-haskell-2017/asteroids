@@ -2,6 +2,7 @@ module Config where
 
 import System.Random
 import Graphics.Gloss.Data.Vector
+import Models
 
 -- =========================================
 -- Константы, параметры игры
@@ -22,16 +23,12 @@ floats range g = randomRs range g
 asteroidsNumber :: Int
 asteroidsNumber = 100
 
--- | Количество кораблей
-spaceshipsNumber :: Int
-spaceshipsNumber = 3
-
--- | Количество игроков
-playersNumber :: Int
-playersNumber = 0
+-- | Количество ботов
+botsNumber :: Int
+botsNumber = 2
 
 -- | ID корабля игрока
-playerID :: Int
+playerID :: PlayerID
 playerID = 1
 
 -- | Интервал позиций по оси абсцисс для астероидов
