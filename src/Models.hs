@@ -74,6 +74,7 @@ instance Binary Bullet
 data Universe = Universe
   { asteroids      :: [Asteroid]  -- ^ Астероиды
   , spaceships     :: [Spaceship] -- ^ Космический корабль
+  , playerID       :: PlayerID    -- ^ Идентификатор игрока
   , background     :: Background  -- ^ Фон
   , bullets        :: [Bullet]    -- ^ Пули
   , table          :: Maybe Table -- ^ Заставка

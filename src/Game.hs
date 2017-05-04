@@ -62,25 +62,25 @@ handleUniverse g e u = handlePlayerAction g e u
 -- | Обработка нажатий игрока
 handlePlayerAction :: StdGen -> Event -> Universe -> Universe
 handlePlayerAction  _ (EventKey (SpecialKey KeyUp) Down _ _)    u
-    = handleShipsAction [newShipAction playerID Nothing (Just Forward) False u] u
+    = handleShipsAction [newShipAction (playerID u) Nothing (Just Forward) False u] u
 handlePlayerAction _ (EventKey (SpecialKey KeyDown) Down _ _)  u
-    = handleShipsAction [newShipAction playerID Nothing (Just Back) False u] u
+    = handleShipsAction [newShipAction (playerID u) Nothing (Just Back) False u] u
 handlePlayerAction _ (EventKey (SpecialKey KeyUp) Up _ _)      u
-    = handleShipsAction [nullAct 1 (newShipAction playerID Nothing Nothing False u)] u
+    = handleShipsAction [nullAct 1 (newShipAction (playerID u) Nothing Nothing False u)] u
 handlePlayerAction _ (EventKey (SpecialKey KeyDown) Up _ _)    u
-    = handleShipsAction [nullAct 1 (newShipAction playerID Nothing Nothing False u)] u
+    = handleShipsAction [nullAct 1 (newShipAction (playerID u) Nothing Nothing False u)] u
 handlePlayerAction _ (EventKey (SpecialKey KeyLeft) Down _ _)  u
-    = handleShipsAction [newShipAction playerID (Just ToLeft) Nothing False u] u
+    = handleShipsAction [newShipAction (playerID u) (Just ToLeft) Nothing False u] u
 handlePlayerAction _ (EventKey (SpecialKey KeyRight) Down _ _) u
-    = handleShipsAction [newShipAction playerID (Just ToRight) Nothing False u] u
+    = handleShipsAction [newShipAction (playerID u) (Just ToRight) Nothing False u] u
 handlePlayerAction _ (EventKey (SpecialKey KeyLeft) Up _ _)    u
-    = handleShipsAction [nullAct 2 (newShipAction playerID Nothing Nothing False u)] u
+    = handleShipsAction [nullAct 2 (newShipAction (playerID u) Nothing Nothing False u)] u
 handlePlayerAction _ (EventKey (SpecialKey KeyRight) Up _ _)   u
-    = handleShipsAction [nullAct 2 (newShipAction playerID Nothing Nothing False u)] u
+    = handleShipsAction [nullAct 2 (newShipAction (playerID u) Nothing Nothing False u)] u
 handlePlayerAction _ (EventKey (SpecialKey KeySpace) Down _ _) u
-    = handleShipsAction [newShipAction playerID Nothing Nothing True u] u
+    = handleShipsAction [newShipAction (playerID u) Nothing Nothing True u] u
 handlePlayerAction _ (EventKey (SpecialKey KeySpace) Up _ _) u
-    = handleShipsAction [nullAct 3 (newShipAction playerID Nothing Nothing False u)] u
+    = handleShipsAction [nullAct 3 (newShipAction (playerID u) Nothing Nothing False u)] u
 handlePlayerAction g (EventKey (SpecialKey KeyEnter) Down _ _) u
     = resetUniverse g u
 handlePlayerAction _ _ u = u
