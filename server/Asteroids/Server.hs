@@ -69,10 +69,10 @@ spawnPlayer :: PlayerID -> Universe -> Universe
 spawnPlayer ident u = u { spaceships = addPlayer (spaceships u) }
   where
     addPlayer ships
-      | ident > botsNumber = initSpaceship Player pos ident : ships
+      | ident > botsNumber = initSpaceship Player pos ident 1 : ships
       | otherwise = map changeMod ships
     changeMod ship
-      | spaceshipID ship == ident = initSpaceship Player pos ident
+      | spaceshipID ship == ident = initSpaceship Player pos ident 1
       | otherwise                 = ship
     pos = head $ freshPositions u
 
@@ -122,6 +122,6 @@ kickPlayer ident u = u
   where
     addBot ships
       | length (spaceships u) > botsNumber = ships
-      | otherwise = initSpaceship Bot pos ident : ships 
+      | otherwise = initSpaceship Bot pos ident 2 : ships 
     isConnected ship = ident /= spaceshipID ship
     pos = head $ freshPositions u
