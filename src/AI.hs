@@ -22,7 +22,7 @@ getStrategy u ship = mconcat [
     ]
     where
         mS a = makeStrategy a u ship
-        gT   = getAttackTarget (spaceships u) (spaceshipPosition ship)
+        gT   = getAttackTarget (spaceships u) ship
 
 makeStrategy :: Tactic -> Universe -> Spaceship -> Strategy
 makeStrategy t u s = Strategy {

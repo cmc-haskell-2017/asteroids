@@ -6,14 +6,16 @@ import Graphics.Gloss.Data.Vector
 import Graphics.Gloss.Interface.Pure.Game
 import AI.Strategy.Calculations
 
-getAttackTarget :: [Spaceship] -> Point -> Point
+getAttackTarget :: [Spaceship] -> Spaceship -> Point
 getAttackTarget [] _ = (800*screenUp, 800*screenUp)
-getAttackTarget (sh:shs) pos 
-  | (dist1 < dist2) && (spaceshipPosition sh /= pos) = spaceshipPosition sh
-  | otherwise = getAttackTarget shs pos
+getAttackTarget (sh:shs) ship 
+  | (dist1 < dist2) && (spaceshipPosition sh /= pos) && (enemy) = spaceshipPosition sh
+  | otherwise = getAttackTarget shs ship
   where
+    pos   = spaceshipPosition ship
     dist1 = distant pos (spaceshipPosition sh)
-    dist2 = distant (getAttackTarget shs pos) pos
+    dist2 = distant (getAttackTarget shs ship) pos
+    enemy = group sh /= (group ship)
 
 attackTargetHeuristic :: Point -> Spaceship -> Float
 attackTargetHeuristic p s

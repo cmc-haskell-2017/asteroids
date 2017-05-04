@@ -100,7 +100,7 @@ nullAct _ _   = mempty
 
 -- | Поиск корабля с нужным ID
 findShip :: Int -> [Spaceship] -> Spaceship
-findShip _ []           = initSpaceship Bot 0 0
+findShip _ []           = initSpaceship Bot 0 0 2
 findShip i (ship:ships)
   | (spaceshipID ship) == i = ship
   | otherwise = findShip i ships

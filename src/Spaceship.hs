@@ -32,7 +32,7 @@ initShipPositions = vectors xShipPositions yShipPositions
 -- | Создание списка кораблей
 initSpaceships :: StdGen -> Int -> PlayerID -> [Spaceship]
 initSpaceships _ _ 0 = []
-initSpaceships g ident num = [(initSpaceship Bot pos ident)]
+initSpaceships g ident num = [(initSpaceship Bot pos ident 2)]
   ++ (initSpaceships g'' (ident + 1) (num - 1))
   where
     (x, g')  = randomR xShipPositions g
@@ -185,7 +185,7 @@ checkSpaceshipsCollisions :: Universe -> Spaceship -> Spaceship
 checkSpaceshipsCollisions u ship
   | spaceshipFaceAsteroids [ship] asteroids' 
     || (spaceshipFaceBullets [ship] bullets') 
-    = initSpaceship (spaceshipMode ship) pos ident
+    = initSpaceship (spaceshipMode ship) pos ident (group ship)
   | otherwise = ship
   where
     pos        = freshPositions u !! ident
