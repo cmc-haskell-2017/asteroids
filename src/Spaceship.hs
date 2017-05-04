@@ -91,7 +91,7 @@ fireSpaceships (ship:ships)
   | fire' ship = (initBullet ship) : (fireSpaceships ships)
   | otherwise = (fireSpaceships ships)
   where
-    fire' ship' = isfire ship' && fireReload ship' == reloadTime
+    fire' ship' = isfire ship' && fireReload ship' >= reloadTime
 
 -- | Обновить состояние пуль
 updateBullets :: Float -> [Bullet] -> [Bullet]

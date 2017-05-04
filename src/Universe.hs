@@ -59,10 +59,7 @@ updateUniverse dt u = handleBotsActions (bulletsFaceSpaceships (bulletsFaceAster
           | length (asteroids u) < asteroidsNumber
             = head (freshAsteroids u) : asteroids u
           | otherwise = asteroids u
-        newBullets
-          | or (map (\ship -> isfire ship && fireReload ship == reloadTime) (spaceships u))
-            = (fireSpaceships (spaceships u)) ++ (bullets u)
-          | otherwise = bullets u
+        newBullets = (fireSpaceships (spaceships u)) ++ (bullets u)
 
 -- | Обработка искусственного интелекта
 handleBotsActions :: Universe -> Universe

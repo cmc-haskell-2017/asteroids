@@ -4,8 +4,6 @@
 {-# LANGUAGE TypeOperators #-}
 module Asteroids.Server where
 
-import System.Random ()
-
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Concurrent.STM
 import Control.Exception (catch)
@@ -22,7 +20,6 @@ import Servant
 
 import Universe
 import Models
-import Game ()
 import Spaceship
 import Config
 
@@ -95,7 +92,7 @@ periodicUpdates ms cfg@Config{..} = forever $ do
     return universe
   broadcastUpdate universe cfg
   where
-    dt = fromIntegral ms / 1000000
+    dt = fromIntegral ms / 500000
 
 broadcastUpdate :: Universe -> Config -> IO ()
 broadcastUpdate universe Config{..} = do
