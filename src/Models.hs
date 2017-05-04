@@ -48,6 +48,7 @@ data Spaceship = Spaceship
   { spaceshipID         :: PlayerID   -- ^ Имя корабля
   , spaceshipMode       :: Mode       -- ^ Режим корабля (бот/игрок)
   , lastAction          :: ShipAction -- ^ Последнее действие корабля
+  , group               :: Int        -- ^ Группа, за которую играет корабль
   , spaceshipPosition   :: Point      -- ^ Положение корабля
   , spaceshipVelocity   :: Vector     -- ^ Скорость корабля
   , spaceshipAccelerate :: Float      -- ^ Ускорение

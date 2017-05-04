@@ -9,11 +9,12 @@ import Models
 import Fisics
 
 -- | Начальное состояние корабля
-initSpaceship :: Mode -> Point -> PlayerID -> Spaceship
-initSpaceship mode pos ident = Spaceship
+initSpaceship :: Mode -> Point -> PlayerID -> Int -> Spaceship
+initSpaceship mode pos ident gr = Spaceship
   { spaceshipID         = ident
   , spaceshipMode       = mode
   , lastAction          = mempty
+  , group               = gr
   , spaceshipPosition   = pos
   , spaceshipVelocity   = (0, 0) 
   , spaceshipAccelerate = 0
