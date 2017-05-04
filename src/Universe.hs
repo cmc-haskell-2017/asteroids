@@ -17,6 +17,7 @@ emptyUniverse g = Universe
   { bullets        = []
   , asteroids      = take asteroidsNumber (initAsteroids g)
   , spaceships     = initSpaceships g 1 botsNumber
+  , playerID       = 0
   , background     = initBackground
   , table          = Nothing
   , freshPositions = initShipPositions g
@@ -27,7 +28,9 @@ emptyUniverse g = Universe
 -- | Инициализация игровой вселенной
 initUniverse :: StdGen -> Universe
 initUniverse g  = (emptyUniverse g)
-  { spaceships = initSpaceship Player (0,0) 1 : initSpaceships g 2 botsNumber }
+  { spaceships = initSpaceship Player (0,0) 1 : initSpaceships g 2 botsNumber
+  , playerID   = 1
+  }
 
 -- | Обновить фон
 updateBackground :: Float -> Universe -> Background

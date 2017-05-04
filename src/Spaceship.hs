@@ -188,7 +188,7 @@ checkSpaceshipsCollisions u ship
     = initSpaceship (spaceshipMode ship) pos ident
   | otherwise = ship
   where
-    pos        = head $ freshPositions u
+    pos        = freshPositions u !! ident
     asteroids' = asteroids u
     bullets'   = bullets u
     ident      = spaceshipID ship
