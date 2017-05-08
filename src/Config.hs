@@ -22,6 +22,10 @@ floats range g = randomRs range g
 asteroidsNumber :: Int
 asteroidsNumber = 100
 
+-- | Количество бонусов
+bonusesNumber :: Int
+bonusesNumber = 50
+
 -- | Количество ботов
 botsNumber :: Int
 botsNumber = 2

@@ -17,6 +17,20 @@ bulletsFaceAsteroids u = u
     newA = filter (not . asteroidFaceBullets b) a
     newB = filter (not . bulletFaceAsteroids a) b
 
+-- | Столкновение бонусов с кораблями
+bonusesFaceSpaceships :: Universe -> Universe
+bonusesFaceSpaceships u = u
+  { bonuses = newBo
+  , spaceships = newS
+  }
+  where
+    s     = spaceships u
+    bo    = bonuses u
+    newBo = filter (not . bonusFaceSpaceships s) bo
+    newS 
+      | spaceshipFaceBonuses s bo = activBonus s bo
+      | otherwise = s
+
 -- | Астероид сталкивается с пулями?
 asteroidFaceBullets :: [Bullet] -> Asteroid -> Bool
 asteroidFaceBullets [] _ = False
@@ -80,6 +94,51 @@ spaceshipFaceBullet ship b = collision shipPos shipRad bPos bRad
     shipRad = spaceshipSize ship
     bPos    = bulletPosition b
     bRad    = bulletSize b
+
+activBonus :: [Spaceship] -> [Bonus] -> [Spaceship]
+activBonus [] _ = []
+activBonus ships bonuses' = map (actBonus bonuses') ships
+
+actBonus :: [Bonus] -> Spaceship -> Spaceship
+actBonus bonuses ship 
+  | shipFaceBonuses bonuses ship = ship { shipLife = limit }
+  | otherwise = ship { shipLife = isAlive } 
+  where
+    isAlive 
+      | shipLife ship <= 0 = 0
+      | otherwise = shipLife ship - 0.1
+    limit
+      | shipLife ship + 50 < 100 = shipLife ship + 50
+      | otherwise = 100
+
+bonusFaceSpaceships :: [Spaceship] -> Bonus -> Bool
+bonusFaceSpaceships [] _ = False
+bonusFaceSpaceships ships b = any (spaceshipFaceBonuss b) ships 
+
+shipFaceBonuses :: [Bonus] -> Spaceship -> Bool
+shipFaceBonuses [] _ = False
+shipFaceBonuses bs ship = any (spaceshipFaceBonus ship) bs
+
+spaceshipFaceBonuses :: [Spaceship] -> [Bonus] -> Bool
+spaceshipFaceBonuses [] _ = False
+spaceshipFaceBonuses (ship : ships) bs =
+  (any (spaceshipFaceBonus ship) bs) || spaceshipFaceBonuses ships bs
+
+spaceshipFaceBonus :: Spaceship -> Bonus -> Bool
+spaceshipFaceBonus ship b = collision shipPos shipRad bPos bRad
+  where
+    shipPos = spaceshipPosition ship
+    shipRad = spaceshipSize ship
+    bPos    = bonusPosition b
+    bRad    = bonusSize b * 50
+
+spaceshipFaceBonuss :: Bonus -> Spaceship -> Bool
+spaceshipFaceBonuss b ship = collision shipPos shipRad bPos bRad
+  where
+    shipPos = spaceshipPosition ship
+    shipRad = spaceshipSize ship
+    bPos    = bonusPosition b
+    bRad    = bonusSize b * 50    
 
 -- | Определение пересечения двух окружностей
 collision :: Point -> Float -> Point -> Float -> Bool

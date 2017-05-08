@@ -24,6 +24,7 @@ library
                    Universe 
                    Fisics 
                    Models 
+                   Bonuses
                    AI 
                    AI.Models
                    AI.Strategy

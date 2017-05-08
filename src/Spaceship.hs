@@ -21,6 +21,7 @@ initSpaceship mode pos ident gr = Spaceship
   , spaceshipAngularV   = 0
   , spaceshipDirection  = 0 
   , spaceshipSize       = 40
+  , shipLife            = 100
   , isfire              = False
   , fireReload          = 0
   }
@@ -58,11 +59,13 @@ drawSpaceship :: Picture -> Spaceship -> Picture
 drawSpaceship image spaceship'
   = translate x y (pictures 
     [(rotate (- spaceshipDirection spaceship') image)
-    , translate (-30) (50) (scale 0.15 0.15 (color red (text name)))
+    , translate (-30) (50) (scale 0.15 0.15 (color red (text name1)))
+    , translate (-30) (75) (scale 0.15 0.15 (color blue (text name2)))
     ])
   where
     (x, y) = spaceshipPosition spaceship'
-    name = "Player " ++ show (spaceshipID spaceship')
+    name1 = "Player " ++ show (spaceshipID spaceship')
+    name2 = "Life "   ++ show (shipLife spaceship')
 
 -- | Отобразить пули.
 drawBullets :: Picture -> [Bullet] -> Picture
@@ -115,6 +118,7 @@ updateSpaceship t ship = ship
   { spaceshipPosition  = updateShipPosition t ship
   , spaceshipVelocity  = updateShipVelocity t ship
   , spaceshipDirection = newDir
+  , shipLife           = isAlive
   , fireReload         = newReload
   }
   where
@@ -127,6 +131,9 @@ updateSpaceship t ship = ship
       | fireReload ship == reloadTime && isfire ship == False = reloadTime
       | fireReload ship == reloadTime = 0
       | otherwise = fireReload ship + t
+    isAlive
+      | shipLife ship <= 0 = 0
+      | otherwise = shipLife ship - 0.1
 
 -- | Обновление состояния списка кораблей
 updateSpaceships :: Float -> [Spaceship] -> [Spaceship]
@@ -149,7 +156,9 @@ checkBoards x y z
     
 -- | Обновление скорости корабля
 updateShipVelocity :: Float -> Spaceship -> Vector
-updateShipVelocity t ship = velocity' + mulSV t acceleration
+updateShipVelocity t ship 
+  | shipLife ship == 0 = 0
+  | otherwise = velocity' + mulSV t acceleration
   where
     acceleration = mulSV (spaceshipAccelerate ship)
       (unitVectorAtAngle ((90 + spaceshipDirection ship) * pi / 180))

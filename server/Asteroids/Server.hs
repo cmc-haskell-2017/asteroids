@@ -103,6 +103,7 @@ broadcastUpdate universe Config{..} = do
     f ident u = u
       { playerID       = ident
       , freshAsteroids = []
+      , freshBonuses   = []
       , freshPositions = []
       }
 

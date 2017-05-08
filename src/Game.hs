@@ -9,6 +9,7 @@ import Universe
 import Models
 import Spaceship
 import Asteroids
+import Bonuses
 import Items
 import Config
 
@@ -48,6 +49,7 @@ drawUniverse images u = pictures
   , drawAsteroids  (imageAsteroid images)   (asteroids u)
   , drawTable      (imageTable images)      (table u)
   , drawScore      (score u) 
+  , drawBonuses    (imageBonus images)      (bonuses u)
   ] 
   ++ drawSpaceships  (imageSpaceship images)  (spaceships u))
 

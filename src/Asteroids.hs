@@ -44,7 +44,6 @@ initAsteroids g = asteroidList (vectors xPositions yPositions g)
                                (vectors velocities velocities g)
                                (floats sizes g)
 
-
 -- | Отобразить список астероидов
 drawAsteroids :: Picture -> [Asteroid] -> Picture
 drawAsteroids image asteroids' = foldMap (drawAsteroid image) asteroids'
@@ -75,4 +74,3 @@ updateAsteroid t asteroid = asteroid
   { asteroidPosition = newPosition }
   where
     newPosition = asteroidPosition asteroid + mulSV t (asteroidVelocity asteroid)
-

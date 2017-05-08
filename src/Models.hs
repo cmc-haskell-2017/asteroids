@@ -15,6 +15,7 @@ data Images = Images
   , imageBackground :: Picture -- ^ Фон.
   , imageSpaceship  :: Picture -- ^ Корабль.
   , imageTable      :: Picture -- ^ Заставка
+  , imageBonus      :: Picture -- ^ Бонус
   }
 
 -- | Заставка
@@ -55,6 +56,7 @@ data Spaceship = Spaceship
   , spaceshipDirection  :: Float      -- ^ Направление корабля
   , spaceshipAngularV   :: Float      -- ^ Угловая скорость
   , spaceshipSize       :: Float      -- ^ Размер корабля
+  , shipLife            :: Float      -- ^ Кол-ва топлива у корабля
   , isfire              :: Bool       -- ^ Ведётся ли огонь?
   , fireReload          :: Float      -- ^ Счётчик перезарядки 
   } deriving (Generic)
@@ -75,12 +77,14 @@ instance Binary Bullet
 data Universe = Universe
   { asteroids      :: [Asteroid]  -- ^ Астероиды
   , spaceships     :: [Spaceship] -- ^ Космический корабль
+  , bonuses        :: [Bonus]     -- ^ Бонусы
   , playerID       :: PlayerID    -- ^ Идентификатор игрока
   , background     :: Background  -- ^ Фон
   , bullets        :: [Bullet]    -- ^ Пули
   , table          :: Maybe Table -- ^ Заставка
   , freshPositions :: [Point]     -- ^ Бесконечный список "свежих" позиций для кораблей
   , freshAsteroids :: [Asteroid]  -- ^ Бесконечный список "свежих" астероидов
+  , freshBonuses   :: [Bonus]     -- ^ Бесконечный список "свежих" бонусов
   , score          :: Score       -- ^ Счёт
   } deriving (Generic)
 
@@ -99,6 +103,16 @@ data Asteroid = Asteroid
   } deriving (Generic)
 
 instance Binary Asteroid
+
+-- | Бонус
+data Bonus = Bonus
+  { bonusPosition  :: Point  -- ^ Положение бонуса
+  , bonusDirection :: Float  -- ^ Направление бонуса
+  , bonusVelocity  :: Vector -- ^ Скорость бонуса
+  , bonusSize      :: Float  -- ^ Размер бонуса
+  } deriving (Generic)
+
+instance Binary Bonus
 
 -- | Поворот корабля
 data RotateAction = ToLeft | ToRight deriving(Eq, Generic)

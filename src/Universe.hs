@@ -4,6 +4,7 @@ import System.Random
 import Graphics.Gloss.Geometry.Line()
 import Graphics.Gloss.Data.Vector
 import Asteroids
+import Bonuses
 import Spaceship
 import Items
 import Config
@@ -16,18 +17,20 @@ emptyUniverse :: StdGen -> Universe
 emptyUniverse g = Universe
   { bullets        = []
   , asteroids      = take asteroidsNumber (initAsteroids g)
+  , bonuses        = take bonusesNumber   (initBonuses g)
   , spaceships     = initSpaceships g 1 botsNumber
   , playerID       = 0
   , background     = initBackground
   , table          = Nothing
   , freshPositions = initShipPositions g
   , freshAsteroids = drop asteroidsNumber (initAsteroids g)
+  , freshBonuses   = drop bonusesNumber   (initBonuses g)
   , score          = 0
   }
 
 -- | Инициализация игровой вселенной
 initUniverse :: StdGen -> Universe
-initUniverse g  = (emptyUniverse g)
+initUniverse g = (emptyUniverse g)
   { spaceships = initSpaceship Player (0,0) 1 1: initSpaceships g 2 botsNumber
   , playerID   = 1
   }
@@ -45,20 +48,26 @@ updateBackground t u = Background
 
 -- | Обновить состояние игровой вселенной.
 updateUniverse :: Float -> Universe -> Universe
-updateUniverse dt u = handleBotsActions (bulletsFaceSpaceships (bulletsFaceAsteroids u
+updateUniverse dt u = handleBotsActions (bulletsFaceSpaceships (bulletsFaceAsteroids (bonusesFaceSpaceships u
       { bullets        = updateBullets t newBullets
       , asteroids      = updateAsteroids t newAsteroids
+      , bonuses        = updateBonuses t newBonuses
       , spaceships     = updateSpaceships t (spaceships u)
       , background     = updateBackground t u
       , freshPositions = tail (freshPositions u)
-      , freshAsteroids = tail (freshAsteroids u)
-      }))
+      , freshAsteroids = tail (freshAsteroids u) 
+      , freshBonuses   = tail (freshBonuses u)
+      })))
       where
         t = 60 * dt
         newAsteroids
           | length (asteroids u) < asteroidsNumber
             = head (freshAsteroids u) : asteroids u
           | otherwise = asteroids u
+        newBonuses 
+          | length (bonuses u) < bonusesNumber
+            = head (freshBonuses u) : bonuses u
+          | otherwise = bonuses u
         newBullets = (fireSpaceships (spaceships u)) ++ (bullets u)
 
 -- | Обработка искусственного интелекта
