@@ -49,7 +49,7 @@ drawUniverse images u = pictures
   , drawAsteroids  (imageAsteroid images)   (asteroids u)
   , drawTable      (imageTable images)      (table u)
   , drawScore      (score u) 
-  , drawBonuses    (imageBonus images)      (bonuses u)
+  , drawBonuses    (imageBonus1 images) (imageBonus2 images)  (imageBonus3 images) (bonuses u)
   ] 
   ++ drawSpaceships  (imageSpaceship images)  (spaceships u))
 

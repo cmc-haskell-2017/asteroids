@@ -15,7 +15,9 @@ data Images = Images
   , imageBackground :: Picture -- ^ Фон.
   , imageSpaceship  :: Picture -- ^ Корабль.
   , imageTable      :: Picture -- ^ Заставка
-  , imageBonus      :: Picture -- ^ Бонус
+  , imageBonus1     :: Picture -- ^ Бонус-топливо
+  , imageBonus2     :: Picture -- ^ Бонус-замедление
+  , imageBonus3     :: Picture -- ^ Бонус-ускорение
   }
 
 -- | Заставка
@@ -59,6 +61,7 @@ data Spaceship = Spaceship
   , shipLife            :: Float      -- ^ Кол-ва топлива у корабля
   , isfire              :: Bool       -- ^ Ведётся ли огонь?
   , fireReload          :: Float      -- ^ Счётчик перезарядки 
+  , bonIndex            :: (Int, Float) -- ^ Номер действующего индекса
   } deriving (Generic)
 
 instance Binary Spaceship
@@ -106,7 +109,8 @@ instance Binary Asteroid
 
 -- | Бонус
 data Bonus = Bonus
-  { bonusPosition  :: Point  -- ^ Положение бонуса
+  { bonusNumber    :: Int    -- ^ Номер бонуса
+  , bonusPosition  :: Point  -- ^ Положение бонуса
   , bonusDirection :: Float  -- ^ Направление бонуса
   , bonusVelocity  :: Vector -- ^ Скорость бонуса
   , bonusSize      :: Float  -- ^ Размер бонуса
