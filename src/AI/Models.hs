@@ -3,7 +3,7 @@ module AI.Models where
 import Graphics.Gloss.Interface.Pure.Game
 
 -- | Тактика
-data Tactic = Avoidance | AttackTarget Point deriving(Eq)
+data Tactic = Avoidance | AttackTarget Point | BonusTarget Point  deriving(Eq)
 
 -- | Стратегия
 data Strategy = Strategy

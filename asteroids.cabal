@@ -30,7 +30,8 @@ library
                    AI.Strategy
                    AI.Strategy.Calculations
                    AI.Strategy.Avoidance
-                   AI.Strategy.Attack  
+                   AI.Strategy.Attack
+                   AI.Strategy.Bonus  
   build-depends:       base >= 4.7 && < 5, random, gloss, gloss-juicy
                      , bytestring
                      , binary

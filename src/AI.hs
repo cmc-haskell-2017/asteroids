@@ -18,11 +18,13 @@ analyseUniverse u ship = strategyToAction (tactic (getStrategy u ship)) u ship
 getStrategy :: Universe -> Spaceship -> Strategy
 getStrategy u ship = mconcat [
       mS Avoidance
-    , mS (AttackTarget gT)
+    , mS (AttackTarget gA)
+    , mS (BonusTarget gB)
     ]
     where
         mS a = makeStrategy a u ship
-        gT   = getAttackTarget (spaceships u) ship
+        gA   = getAttackTarget (spaceships u) ship
+        gB   = getBonusTarget (bonuses u) ship
 
 makeStrategy :: Tactic -> Universe -> Spaceship -> Strategy
 makeStrategy t u s = Strategy {
@@ -34,8 +36,10 @@ makeStrategy t u s = Strategy {
 getHeuristic :: Tactic -> Universe -> Spaceship -> Float
 getHeuristic Avoidance u s    = avoidanceHeuristic u s
 getHeuristic (AttackTarget p) _ s = attackTargetHeuristic p s
+getHeuristic (BonusTarget p) _ s = bonusTargetHeuristic p s
 
 -- | Стратегия в действие
 strategyToAction :: Tactic -> Universe -> Spaceship -> ShipAction
 strategyToAction Avoidance u ship    = avoidanceAction u ship
 strategyToAction (AttackTarget p) _ ship = attackAction p ship
+strategyToAction (BonusTarget p) _ ship = bonusAction p ship

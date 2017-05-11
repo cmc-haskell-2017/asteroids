@@ -29,6 +29,12 @@ visible as = abs x <= screenRight + radius
       (x, y)  = asteroidPosition as
       radius  = asteroidSize as * 70
 
+-- | Проверка, что бонус на экране видим
+visibleBonus :: Bonus -> Bool
+visibleBonus b = abs x <= screenRight && abs y <= screenUp
+    where
+      (x, y)  = bonusPosition b
+
 -- | Определение между объектами
 distant :: Point -> Point -> Float
 distant (x1, y1) (x2, y2) = sqrt(dx^2 + dy^2)
