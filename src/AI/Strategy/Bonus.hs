@@ -9,7 +9,7 @@ import AI.Strategy.Calculations
 
 getBonusTarget :: [Bonus] -> Spaceship -> Point
 getBonusTarget [] _ = (800*screenUp, 800*screenUp)
-getBonusTarget bs ship = minimumBy f (map bonusPosition (filter (not . visibleBonus) bs))
+getBonusTarget bs ship = minimumBy f (map bonusPosition  bs)
   where
     pos = spaceshipPosition ship
     f pos1 pos2 = compare (distant pos1 pos) (distant pos2 pos)
@@ -36,8 +36,8 @@ rotateBonus p ship
   | (ang > 0.01 || ang > pi - 0.01) && angDir < 0 = Just ToRight
   | otherwise         = Nothing
   where
-    ang    = divangBonus p ship
-    angDir = angleDir (norm $ shipDir ship) (norm p)
+    ang       = divangBonus p ship
+    angDir    = angleDir (norm $ shipDir ship) (norm $ vector (spaceshipPosition ship) p)
 
 -- | Определение ускорения при стратегии ухода
 engineBonus :: Point -> Spaceship -> Maybe EngineAction
@@ -48,6 +48,9 @@ engineBonus p ship
   where
     ang    = divangBonus p ship
 
--- | Основной вектор-цель, с направлением которого должно совпасть направление корабля
+-- | Основной угол между направлением корабля и направлением на бонус-цель
 divangBonus :: Point -> Spaceship -> Float
-divangBonus p ship = angleVV (norm p) (norm $ shipDir ship)
+divangBonus p ship = angleVV dir (norm enemydir)
+   where
+    dir       = (unitVectorAtAngle ((90 + (spaceshipDirection ship)) * pi / 180))
+    enemydir  = vector (spaceshipPosition ship) p

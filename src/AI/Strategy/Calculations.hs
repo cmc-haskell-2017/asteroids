@@ -30,8 +30,8 @@ visible as = abs x <= screenRight + radius
       radius  = asteroidSize as * 70
 
 -- | Проверка, что бонус на экране видим
-visibleBonus :: Bonus -> Bool
-visibleBonus b = abs x <= screenRight && abs y <= screenUp
+visibleGoodBonus :: Bonus -> Bool
+visibleGoodBonus b = abs x <= screenRight && abs y <= screenUp && (bonusNumber b) == 1
     where
       (x, y)  = bonusPosition b
 

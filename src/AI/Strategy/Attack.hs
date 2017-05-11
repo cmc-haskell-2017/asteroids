@@ -35,21 +35,20 @@ attackAction p ship = ShipAction {
  -- | Определение направления поворота при стратегии ухода
 rotateAttack :: Point -> Spaceship -> Maybe RotateAction
 rotateAttack p ship
-  | (ang > 0.1 && ang < pi - 0.1) && angDir > 0 = Just ToRight
-  | (ang > 0.1 && ang < pi - 0.1) && angDir < 0 = Just ToLeft
+  | (ang > 0.1 && ang <= pi) && angDir > 0 = Just ToLeft
+  | (ang > 0.1 && ang < pi) && angDir < 0 = Just ToRight
   | otherwise         = Nothing
   where
-    ang    = divangAttack (0,0) ship
-    angDir = angleDir (norm $ shipDir ship) (norm p)
+    ang       = divangAttack p ship
+    angDir    = angleDir (norm $ shipDir ship) (norm $ vector (spaceshipPosition ship) p)
 
 -- | Определение ускорения при стратегии ухода
 engineAttack :: Point -> Spaceship -> Maybe EngineAction
 engineAttack p ship
   | ang < 0.1    = Just Forward
-  | ang > pi-0.1 = Just Back
   | otherwise    = Nothing
   where
-    ang    = divangAttack p ship
+    ang   = divangAttack p ship
 
 -- | Определение необходимости огня при стратегии ухода
 fireAttack :: Point -> Spaceship -> Bool
@@ -57,10 +56,11 @@ fireAttack p ship
   | divang' < pi/16 = True
   | otherwise       = False
   where
-    divang'   = angleVV dir enemydir
+    divang'   = divangAttack p ship
+
+-- | Основной угол между направлением корабля и направлением на цель
+divangAttack :: Point -> Spaceship -> Float
+divangAttack p ship = angleVV dir (norm enemydir)
+   where
     dir       = (unitVectorAtAngle ((90 + (spaceshipDirection ship)) * pi / 180))
     enemydir  = vector (spaceshipPosition ship) p
-
--- | Основной вектор-цель, с направлением которого должно совпасть направление корабля
-divangAttack :: Point -> Spaceship -> Float
-divangAttack p ship = angleVV (norm  p) (norm $ shipDir ship)
