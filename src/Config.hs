@@ -34,6 +34,7 @@ bonusesNumber = 50
 botsNumber :: Int
 botsNumber = 0
 
+
 -- | Интервал позиций по оси абсцисс для астероидов
 xPositions :: (Float, Float)
 xPositions = (- width, width)
