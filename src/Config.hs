@@ -28,12 +28,11 @@ asteroidsNumber = 0
 
 -- | Количество бонусов
 bonusesNumber :: Int
-bonusesNumber = 50
+bonusesNumber = 10
 
 -- | Количество ботов
 botsNumber :: Int
-botsNumber = 0
-
+botsNumber = 2
 
 -- | Интервал позиций по оси абсцисс для астероидов
 xPositions :: (Float, Float)

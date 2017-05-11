@@ -140,7 +140,8 @@ updateSpaceship t ship = ship
       | otherwise = fireReload ship + 1
     isAlive
       | shipLife ship <= 0 = 0
-      | otherwise = shipLife ship - 0.02
+      | spaceshipAccelerate ship /= 0 = shipLife ship - 0.1
+      | otherwise = shipLife ship - 0.001
     overORnot
       | snd (bonIndex ship) <= 0 = (0, 0)
       | otherwise = (fst (bonIndex ship), snd (bonIndex ship) - 0.1)

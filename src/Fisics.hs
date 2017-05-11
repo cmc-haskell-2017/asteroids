@@ -102,8 +102,7 @@ activBonus ships bonuses' = map (actBonus bonuses') ships
 actBonus :: [Bonus] -> Spaceship -> Spaceship
 actBonus bonuses ship 
   | shipFaceBonuses bonuses ship && whichBonusIs bonuses == 1 
-      = ship { shipLife = limit 
-             }
+      = ship { shipLife = limit }
   | shipFaceBonuses bonuses ship && ((whichBonusIs bonuses == 2) || (whichBonusIs bonuses == 3))
       = ship { shipLife = isAlive
              , bonIndex = (whichBonusIs bonuses, 20)
@@ -112,7 +111,8 @@ actBonus bonuses ship
   where
     isAlive 
       | shipLife ship <= 0 = 0
-      | otherwise = shipLife ship - 0.02
+      | spaceshipAccelerate ship /= 0 = shipLife ship - 0.1
+      | otherwise = shipLife ship - 0.001
     limit
       | shipLife ship + 50 < 100 = shipLife ship + 50
       | otherwise = 100
