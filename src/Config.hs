@@ -20,15 +20,15 @@ floats range g = randomRs range g
 
 -- | Количество астероидов
 asteroidsNumber :: Int
-asteroidsNumber = 100
+asteroidsNumber = 50
 
 -- | Количество бонусов
 bonusesNumber :: Int
-bonusesNumber = 50
+bonusesNumber = 20
 
 -- | Количество ботов
 botsNumber :: Int
-botsNumber = 5
+botsNumber = 1
 
 -- | Интервал позиций по оси абсцисс для астероидов
 xPositions :: (Float, Float)

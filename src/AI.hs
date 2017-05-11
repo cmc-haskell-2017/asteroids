@@ -17,9 +17,9 @@ analyseUniverse u ship = strategyToAction (tactic (getStrategy u ship)) u ship
 -- | Вычисление стратегии
 getStrategy :: Universe -> Spaceship -> Strategy
 getStrategy u ship = mconcat [
-      mS Avoidance
-    , mS (AttackTarget gA)
-    , mS (BonusTarget gB)
+    --   mS Avoidance
+    mS (AttackTarget gA)
+    -- , mS (BonusTarget gB)
     ]
     where
         mS a = makeStrategy a u ship

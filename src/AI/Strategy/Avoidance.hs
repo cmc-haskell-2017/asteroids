@@ -28,8 +28,8 @@ avoidanceAction u ship = ShipAction {
  -- | Определение направления поворота при стратегии ухода
 rotateAvoidance :: Universe -> Spaceship -> Maybe RotateAction
 rotateAvoidance u ship
-  | (ang > 0.1 || ang > pi - 0.1) && angDir > 0 = Just ToRight
-  | (ang > 0.1 || ang > pi - 0.1) && angDir < 0 = Just ToLeft
+  | (ang > 0.1 && ang < pi - 0.1) && angDir > 0 = Just ToRight
+  | (ang > 0.1 && ang < pi - 0.1) && angDir < 0 = Just ToLeft
   | otherwise         = Nothing
   where
     ang    = divangAvoidance u ship
