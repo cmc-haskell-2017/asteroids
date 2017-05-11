@@ -37,7 +37,7 @@ mkDefaultConfig = do
   cfg <- atomically $ Config
     <$> newTVar (emptyUniverse g)
     <*> newTVar Map.empty
-    <*> newTVar [3..]
+    <*> newTVar [1..]
   return cfg
 
 type AsteroidsAPI = "connect" :> Raw

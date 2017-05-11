@@ -32,7 +32,7 @@ bonusesNumber = 50
 
 -- | Количество ботов
 botsNumber :: Int
-botsNumber = 0
+botsNumber = 2
 
 
 -- | Интервал позиций по оси абсцисс для астероидов
