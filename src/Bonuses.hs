@@ -9,16 +9,17 @@ import Images()
 import Models
 
 -- | Бесконечный список бонусов
-bonusList :: [Point] -> [Float] -> [Vector] -> [Bonus]
-bonusList (p : pos) (d : dir) (v : vel)
-  = initBonus p d v : bonusList pos dir vel
-bonusList _ _ _ = []
+bonusList :: [Int] -> [Point] -> [Float] -> [Vector] -> [Bonus]
+bonusList (n : num) (p : pos) (d : dir) (v : vel)
+  = initBonus n p d v : bonusList num pos dir vel
+bonusList _ _ _ _ = []
 
 -- | Инициализация бонуса
-initBonus :: Point -> Float -> Vector -> Bonus
-initBonus pos dir vel
+initBonus :: Int -> Point -> Float -> Vector -> Bonus
+initBonus num pos dir vel
   = Bonus
-    { bonusPosition  = newPos
+    { bonusNumber    = num
+    , bonusPosition  = newPos
     , bonusDirection = dir
     , bonusVelocity  = rotateV (dir * pi / 180) vel
     , bonusSize      = 1
@@ -39,18 +40,21 @@ initBonus pos dir vel
 
 -- | Инициализация бонусов
 initBonuses :: StdGen -> [Bonus]
-initBonuses g = bonusList (vectors xPositions yPositions g)
+initBonuses g = bonusList (ints numbers g)
+                          (vectors xPositions yPositions g)
                           (floats directions g)
                           (vectors velocities velocities g)
 
 -- | Отобразить список бонусов
-drawBonuses :: Picture -> [Bonus] -> Picture
-drawBonuses image bonuses' = foldMap (drawBonus image) bonuses'
+drawBonuses :: Picture -> Picture -> Picture -> [Bonus] -> Picture
+drawBonuses image1 image2 image3 bonuses' = foldMap (drawBonus image1 image2 image3) bonuses'
 
 -- | Отобразить бонус
-drawBonus :: Picture -> Bonus -> Picture 
-drawBonus image bonus
-  = translate x y (resize (rotate (- bonusDirection bonus) image))
+drawBonus :: Picture -> Picture -> Picture -> Bonus -> Picture 
+drawBonus image1 image2 image3 bonus
+  | bonusNumber bonus == 1 = translate x y (resize (rotate (- bonusDirection bonus) image1))
+  | bonusNumber bonus == 2 = translate x y (resize (rotate (- bonusDirection bonus) image2))
+  | otherwise = translate x y (resize (rotate (- bonusDirection bonus) image3))
   where
     size   = bonusSize bonus
     resize = scale size size

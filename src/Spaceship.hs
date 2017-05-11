@@ -24,6 +24,7 @@ initSpaceship mode pos ident gr = Spaceship
   , shipLife            = 100
   , isfire              = False
   , fireReload          = 0
+  , bonIndex            = (0, 0)
   }
 
 -- | Создание бесконечного списка позиций для кораблей
@@ -59,13 +60,15 @@ drawSpaceship :: Picture -> Spaceship -> Picture
 drawSpaceship image spaceship'
   = translate x y (pictures 
     [(rotate (- spaceshipDirection spaceship') image)
-    , translate (-30) (50) (scale 0.15 0.15 (color red (text name1)))
-    , translate (-30) (75) (scale 0.15 0.15 (color blue (text name2)))
+    , translate (-30) (50)  (scale 0.15 0.15 (color red (text name1)))
+    , translate (-30) (75)  (scale 0.15 0.15 (color blue (text name2)))
+    , translate (-30) (100) (scale 0.15 0.15 (color white (text name3)))
     ])
   where
     (x, y) = spaceshipPosition spaceship'
     name1 = "Player " ++ show (spaceshipID spaceship')
-    name2 = "Life "   ++ show (shipLife spaceship')
+    name2 = "Fuel "   ++ show (shipLife spaceship')
+    name3 = "Bonus " ++ show (fst (bonIndex spaceship')) ++ " : " ++ show (snd (bonIndex spaceship'))
 
 -- | Отобразить пули.
 drawBullets :: Picture -> [Bullet] -> Picture
@@ -120,9 +123,13 @@ updateSpaceship t ship = ship
   , spaceshipDirection = newDir
   , shipLife           = isAlive
   , fireReload         = newReload
+  , bonIndex           = overORnot 
   }
   where
-    shipDir = spaceshipDirection ship + t * spaceshipAngularV ship
+    shipDir 
+      | fst (bonIndex ship) == 2 = spaceshipDirection ship + 0.1 * t * spaceshipAngularV ship
+      | fst (bonIndex ship) == 3 = spaceshipDirection ship + 1.5 * t * spaceshipAngularV ship
+      | otherwise = spaceshipDirection ship + t * spaceshipAngularV ship
     newDir
       | shipDir >  360 = shipDir - 360
       | shipDir <    0 = shipDir + 360
@@ -133,7 +140,11 @@ updateSpaceship t ship = ship
       | otherwise = fireReload ship + 1
     isAlive
       | shipLife ship <= 0 = 0
-      | otherwise = shipLife ship - 0.1
+      | spaceshipAccelerate ship /= 0 = shipLife ship - 0.1
+      | otherwise = shipLife ship - 0.001
+    overORnot
+      | snd (bonIndex ship) <= 0 = (0, 0)
+      | otherwise = (fst (bonIndex ship), snd (bonIndex ship) - 0.1)
 
 -- | Обновление состояния списка кораблей
 updateSpaceships :: Float -> [Spaceship] -> [Spaceship]
@@ -160,8 +171,13 @@ updateShipVelocity t ship
   | shipLife ship == 0 = 0
   | otherwise = velocity' + mulSV t acceleration
   where
-    acceleration = mulSV (spaceshipAccelerate ship)
-      (unitVectorAtAngle ((90 + spaceshipDirection ship) * pi / 180))
+    acceleration 
+      | fst (bonIndex ship) == 2 = mulSV (0.1 * (spaceshipAccelerate ship))
+                  (unitVectorAtAngle ((90 + spaceshipDirection ship) * pi / 180))
+      | fst (bonIndex ship) == 3 = mulSV (5.0 * (spaceshipAccelerate ship))
+                  (unitVectorAtAngle ((90 + spaceshipDirection ship) * pi / 180))
+      | otherwise = mulSV (spaceshipAccelerate ship)
+                  (unitVectorAtAngle ((90 + spaceshipDirection ship) * pi / 180))
     velocity' = damping * cross * spaceshipVelocity ship
       where
         cross

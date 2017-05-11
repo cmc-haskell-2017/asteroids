@@ -28,7 +28,7 @@ bonusesFaceSpaceships u = u
     bo    = bonuses u
     newBo = filter (not . bonusFaceSpaceships s) bo
     newS 
-      | spaceshipFaceBonuses s bo = activBonus s bo
+      | spaceshipFaceBonuses s bo = activBonus s (filter (bonusFaceSpaceships s) bo)
       | otherwise = s
 
 -- | Астероид сталкивается с пулями?
@@ -101,15 +101,34 @@ activBonus ships bonuses' = map (actBonus bonuses') ships
 
 actBonus :: [Bonus] -> Spaceship -> Spaceship
 actBonus bonuses ship 
-  | shipFaceBonuses bonuses ship = ship { shipLife = limit }
+  | shipFaceBonuses bonuses ship && whichBonusIs bonuses == 1 
+      = ship { shipLife = limit }
+  | shipFaceBonuses bonuses ship && ((whichBonusIs bonuses == 2) || (whichBonusIs bonuses == 3))
+      = ship { shipLife = isAlive
+             , bonIndex = (whichBonusIs bonuses, 20)
+             }
   | otherwise = ship { shipLife = isAlive } 
   where
     isAlive 
       | shipLife ship <= 0 = 0
-      | otherwise = shipLife ship - 0.1
+      | spaceshipAccelerate ship /= 0 = shipLife ship - 0.1
+      | otherwise = shipLife ship - 0.001
     limit
       | shipLife ship + 50 < 100 = shipLife ship + 50
       | otherwise = 100
+
+whichBonusIs :: [Bonus] -> Int
+whichBonusIs [] = 0
+whichBonusIs bonuses 
+  | any (check 2) bonuses = 2
+  | any (check 3) bonuses = 3
+  | otherwise = 1
+
+check :: Int -> Bonus -> Bool
+check num bonus = bonusNumber bonus == num
+
+unitVectorAtAnglee :: Float -> Vector
+unitVectorAtAnglee r = (cos r, sin r)
 
 bonusFaceSpaceships :: [Spaceship] -> Bonus -> Bool
 bonusFaceSpaceships [] _ = False

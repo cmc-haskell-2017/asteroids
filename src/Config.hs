@@ -18,6 +18,10 @@ vectors ran1 ran2 g
 floats :: (Float, Float) -> StdGen -> [Float]
 floats range g = randomRs range g
 
+-- | Бесконечный список чисел
+ints :: (Int, Int) -> StdGen -> [Int]
+ints range g = randomRs range g
+
 -- | Количество астероидов
 asteroidsNumber :: Int
 asteroidsNumber = 50
@@ -29,6 +33,7 @@ bonusesNumber = 20
 -- | Количество ботов
 botsNumber :: Int
 botsNumber = 1
+
 
 -- | Интервал позиций по оси абсцисс для астероидов
 xPositions :: (Float, Float)
@@ -53,6 +58,10 @@ yShipPositions :: (Float, Float)
 yShipPositions = (- height, height)
   where
     height = fromIntegral screenHeight / 2
+
+-- | Интвервал номеров для бонусов
+numbers :: (Int,Int)
+numbers = (1,3)
 
 -- | Интервал скоростей для астероидов
 velocities :: (Float, Float)
