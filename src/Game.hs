@@ -85,8 +85,6 @@ handlePlayerAction _ (EventKey (SpecialKey KeySpace) Up _ _) u
     = handleShipsAction [nullAct 3 (newShipAction (playerID u) Nothing Nothing False u)] u
 handlePlayerAction g (EventKey (SpecialKey KeyEnter) Down _ _) u
     = resetUniverse g u
-handlePlayerAction g (EventKey (SpecialKey KeyTab) Down _ _) u
-    = handleShipsAction drawTable u
 handlePlayerAction _ _ u = u
 
 -- | Новое действие игрока после нажатия
