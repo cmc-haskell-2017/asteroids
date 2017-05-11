@@ -37,7 +37,7 @@ mkDefaultConfig = do
   cfg <- atomically $ Config
     <$> newTVar (emptyUniverse g)
     <*> newTVar Map.empty
-    <*> newTVar [1..]
+    <*> newTVar [3..]
   return cfg
 
 type AsteroidsAPI = "connect" :> Raw
@@ -92,7 +92,7 @@ periodicUpdates ms cfg@Config{..} = forever $ do
     return universe
   broadcastUpdate universe cfg
   where
-    dt = fromIntegral ms / 500000
+    dt = fromIntegral ms / 1000000
 
 broadcastUpdate :: Universe -> Config -> IO ()
 broadcastUpdate universe Config{..} = do

@@ -130,7 +130,7 @@ updateSpaceship t ship = ship
     newReload
       | fireReload ship == reloadTime && isfire ship == False = reloadTime
       | fireReload ship == reloadTime = 0
-      | otherwise = fireReload ship + t
+      | otherwise = fireReload ship + 1
     isAlive
       | shipLife ship <= 0 = 0
       | otherwise = shipLife ship - 0.1
