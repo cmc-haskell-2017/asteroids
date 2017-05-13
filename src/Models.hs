@@ -14,16 +14,16 @@ data Images = Images
   , imageAsteroid   :: Picture -- ^ Aстероид.
   , imageBackground :: Picture -- ^ Фон.
   , imageSpaceship  :: Picture -- ^ Корабль.
-  , imageTable      :: Picture -- ^ Заставка
+--  , imageTable      :: Picture -- ^ Заставка
   , imageBonus1     :: Picture -- ^ Бонус-топливо
   , imageBonus2     :: Picture -- ^ Бонус-замедление
   , imageBonus3     :: Picture -- ^ Бонус-ускорение
   , imageBonus4     :: Picture -- ^ Бонус-оружие
   }
 
--- | Заставка
+-- | Статистика
 data Table = Table 
-  { tablePosition :: Point -- ^ Положение фона
+  { tablePosition :: Point -- ^ Положение фона статистики
   } deriving (Generic)
 
 instance Binary Table

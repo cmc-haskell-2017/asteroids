@@ -1,5 +1,6 @@
 module AI.Strategy.Bonus where
 
+import Data.List (minimumBy)
 import Models
 import Config
 import Graphics.Gloss.Data.Vector
@@ -8,18 +9,15 @@ import AI.Strategy.Calculations
 
 getBonusTarget :: [Bonus] -> Spaceship -> Point
 getBonusTarget [] _ = (800*screenUp, 800*screenUp)
-getBonusTarget (b:bs) ship 
-  | (dist1 < dist2) && (visibleBonus b) = bonusPosition b
-  | otherwise = getBonusTarget bs ship
+getBonusTarget bs ship = minimumBy f (map bonusPosition  bs)
   where
-    pos   = spaceshipPosition ship
-    dist1 = distant pos (bonusPosition b)
-    dist2 = distant (getBonusTarget bs ship) pos
+    pos = spaceshipPosition ship
+    f pos1 pos2 = compare (distant pos1 pos) (distant pos2 pos)
 
 bonusTargetHeuristic :: Point -> Spaceship -> Float
 bonusTargetHeuristic p s
   | shipLife s < 20 = 0.98
-  | otherwise = 50/nearLife 
+  | otherwise = 20/nearLife 
   where
     nearLife = distant p (spaceshipPosition s)
 
@@ -38,8 +36,8 @@ rotateBonus p ship
   | (ang > 0.01 || ang > pi - 0.01) && angDir < 0 = Just ToRight
   | otherwise         = Nothing
   where
-    ang    = divangBonus p ship
-    angDir = angleDir (norm $ shipDir ship) (norm p)
+    ang       = divangBonus p ship
+    angDir    = angleDir (norm $ shipDir ship) (norm $ vector (spaceshipPosition ship) p)
 
 -- | Определение ускорения при стратегии ухода
 engineBonus :: Point -> Spaceship -> Maybe EngineAction
@@ -50,6 +48,9 @@ engineBonus p ship
   where
     ang    = divangBonus p ship
 
--- | Основной вектор-цель, с направлением которого должно совпасть направление корабля
+-- | Основной угол между направлением корабля и направлением на бонус-цель
 divangBonus :: Point -> Spaceship -> Float
-divangBonus p ship = angleVV (norm p) (norm $ shipDir ship)
+divangBonus p ship = angleVV dir (norm enemydir)
+   where
+    dir       = (unitVectorAtAngle ((90 + (spaceshipDirection ship)) * pi / 180))
+    enemydir  = vector (spaceshipPosition ship) p

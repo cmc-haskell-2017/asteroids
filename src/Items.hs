@@ -13,33 +13,28 @@ initBackground = Background
    , backgroundVelocity = (0, 0)
    }
 
--- | Инициализация заставки
-initTable :: Table
-initTable = Table { tablePosition = (0, 0) }
-
--- | Нарисовать счёт в левом верхнем углу экрана.
-drawScore :: Score -> Picture
-drawScore s = translate (-w) h (scale 10 10 (pictures
-  [ color white (polygon [ (0, 0), (0, -6), (15, -6), (15, 0) ])          -- белая рамка
-  , color black (polygon [ (0, 0), (0, -5.9), (14.9, -5.9), (14.9, 0) ])    -- чёрные внутренности
-  , translate 4 (-4.5) (scale 0.03 0.03 (color red (text (show s))))  -- красный счёт
-  ]))
-  where
-    w = screenRight
-    h = screenUp
-
 -- | Отобразить фон.
 drawBackground :: Picture -> Background -> Picture
 drawBackground image background' = translate x y image
   where
     (x, y) = backgroundPosition background'
 
--- | Отобразить заставку 
-drawTable :: Picture -> Maybe Table -> Maybe Picture
-drawTable _ Nothing          = Nothing
-drawTable image (Just table) = Just (translate x y image)
-  where
-      (x, y) = tablePosition table
+-- | Инициализация статистики
+initTable :: Table
+initTable = Table { tablePosition = (0, 0) }
+
+-- | Отобразить статистику 
+drawTable :: Score -> Maybe Table -> Maybe Picture
+drawTable _ Nothing = Nothing
+drawTable s (Just table) 
+  = Just (translate (-w) h (scale 10 10 (pictures
+            [ color white (polygon [ (50, -15.5), (50, -55.5), (90, -55.5), (90, -15.5) ]) -- белая рамка
+            , color green (polygon [ (51, -16.5), (51, -54.5), (89, -54.5), (89, -16.5) ]) -- чёрные внутренности
+            , translate 70 (-35.5) (scale 0.03 0.03 (color red (text (show s)))) -- красный счёт
+          ])))
+            where
+              w = screenRight
+              h = screenUp
 
 drawMaybe :: Maybe Picture -> Picture
 drawMaybe Nothing = blank

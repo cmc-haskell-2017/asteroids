@@ -24,7 +24,7 @@ getStrategy u ship = mconcat [
     where
         mS a = makeStrategy a u ship
         gA   = getAttackTarget (spaceships u) ship
-        gB   = getBonusTarget (bonuses u) ship
+        gB   = getBonusTarget (filter (visibleGoodBonus) (bonuses u)) ship
 
 makeStrategy :: Tactic -> Universe -> Spaceship -> Strategy
 makeStrategy t u s = Strategy {
