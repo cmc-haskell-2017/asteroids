@@ -47,9 +47,9 @@ drawUniverse images u = pictures
   ([ drawBackground (imageBackground images) (background u) 
   , drawBullets    (imageBullet images)     (bullets u)
   , drawAsteroids  (imageAsteroid images)   (asteroids u)
-  , drawTable      (imageTable images)      (table u)
+  , drawMaybe (drawTable      (imageTable images) (table u))
   , drawScore      (score u) 
-  , drawBonuses    (imageBonus1 images) (imageBonus2 images)  (imageBonus3 images) (bonuses u)
+  , drawBonuses    (imageBonus1 images) (imageBonus2 images)  (imageBonus3 images) (imageBonus4 images) (bonuses u)
   ] 
   ++ drawSpaceships  (imageSpaceship images)  (spaceships u))
 
@@ -85,8 +85,8 @@ handlePlayerAction _ (EventKey (SpecialKey KeySpace) Up _ _) u
     = handleShipsAction [nullAct 3 (newShipAction (playerID u) Nothing Nothing False u)] u
 handlePlayerAction g (EventKey (SpecialKey KeyEnter) Down _ _) u
     = resetUniverse g u
-handlePlayerAction g (EventKey (SpecialKey KeyTab) Down _ _) u
-    = handleShipsAction drawTable u
+handlePlayerAction _ (EventKey (SpecialKey KeyTab) Down _ _) u
+    = u { table = Just initTable }
 handlePlayerAction _ _ u = u
 
 -- | Новое действие игрока после нажатия

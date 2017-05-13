@@ -46,15 +46,16 @@ initBonuses g = bonusList (ints numbers g)
                           (vectors velocities velocities g)
 
 -- | Отобразить список бонусов
-drawBonuses :: Picture -> Picture -> Picture -> [Bonus] -> Picture
-drawBonuses image1 image2 image3 bonuses' = foldMap (drawBonus image1 image2 image3) bonuses'
+drawBonuses :: Picture -> Picture -> Picture -> Picture -> [Bonus] -> Picture
+drawBonuses image1 image2 image3 image4 bonuses' = foldMap (drawBonus image1 image2 image3 image4) bonuses'
 
 -- | Отобразить бонус
-drawBonus :: Picture -> Picture -> Picture -> Bonus -> Picture 
-drawBonus image1 image2 image3 bonus
+drawBonus :: Picture -> Picture -> Picture -> Picture -> Bonus -> Picture 
+drawBonus image1 image2 image3 image4 bonus
   | bonusNumber bonus == 1 = translate x y (resize (rotate (- bonusDirection bonus) image1))
   | bonusNumber bonus == 2 = translate x y (resize (rotate (- bonusDirection bonus) image2))
-  | otherwise = translate x y (resize (rotate (- bonusDirection bonus) image3))
+  | bonusNumber bonus == 3 = translate x y (resize (rotate (- bonusDirection bonus) image3))
+  | otherwise = translate x y (resize (rotate (- bonusDirection bonus) image4))
   where
     size   = bonusSize bonus
     resize = scale size size

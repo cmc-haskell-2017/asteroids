@@ -135,8 +135,11 @@ updateSpaceship t ship = ship
       | shipDir <    0 = shipDir + 360
       | otherwise      = shipDir
     newReload
-      | fireReload ship == reloadTime && isfire ship == False = reloadTime
-      | fireReload ship == reloadTime = 0
+      | fst (bonIndex ship) == 4 && isfire ship == False = reloadTime
+      | fst (bonIndex ship) == 4 && fireReload ship >= reloadTime = 0
+      | fst (bonIndex ship) == 4 = fireReload ship + 5
+      | fst (bonIndex ship) /= 4 && fireReload ship >= reloadTime && isfire ship == False = reloadTime
+      | fst (bonIndex ship) /= 4 && fireReload ship >= reloadTime = 0
       | otherwise = fireReload ship + 1
     isAlive
       | shipLife ship <= 0 = 0

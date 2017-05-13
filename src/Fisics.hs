@@ -103,7 +103,7 @@ actBonus :: [Bonus] -> Spaceship -> Spaceship
 actBonus bonuses ship 
   | shipFaceBonuses bonuses ship && whichBonusIs bonuses == 1 
       = ship { shipLife = limit }
-  | shipFaceBonuses bonuses ship && ((whichBonusIs bonuses == 2) || (whichBonusIs bonuses == 3))
+  | shipFaceBonuses bonuses ship && (whichBonusIs bonuses >= 2) 
       = ship { shipLife = isAlive
              , bonIndex = (whichBonusIs bonuses, 20)
              }
@@ -120,6 +120,7 @@ actBonus bonuses ship
 whichBonusIs :: [Bonus] -> Int
 whichBonusIs [] = 0
 whichBonusIs bonuses 
+  | any (check 4) bonuses = 4
   | any (check 2) bonuses = 2
   | any (check 3) bonuses = 3
   | otherwise = 1

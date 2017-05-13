@@ -85,7 +85,7 @@ runIO :: Images -> IO ()
 runIO images = do
   g        <- newStdGen
   universe <- atomically $ newTVar (emptyUniverse g)
-  runClient "localhost" 8000 "/connect" $ \conn -> do
+  runClient "127.0.0.1" 8000 "/connect" $ \conn -> do
     let gs = GameState universe conn
     _ <- forkIO (handleUpdates gs)
     playIO display bgColor fps gs (drawGame images) handleGame updateGame

@@ -35,11 +35,15 @@ drawBackground image background' = translate x y image
     (x, y) = backgroundPosition background'
 
 -- | Отобразить заставку 
-drawTable :: Picture -> Maybe Table -> Picture
-drawTable _     Nothing       = blank
-drawTable image (Just table') = translate x y image
+drawTable :: Picture -> Maybe Table -> Maybe Picture
+drawTable _ Nothing          = Nothing
+drawTable image (Just table) = Just (translate x y image)
   where
-    (x, y) = tablePosition table'
+      (x, y) = tablePosition table
+
+drawMaybe :: Maybe Picture -> Picture
+drawMaybe Nothing = blank
+drawMaybe (Just pic) = pic
 
 
 

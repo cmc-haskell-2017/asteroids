@@ -31,7 +31,7 @@ emptyUniverse g = Universe
 -- | Инициализация игровой вселенной
 initUniverse :: StdGen -> Universe
 initUniverse g = (emptyUniverse g)
-  { spaceships = initSpaceship Player (0,0) 1 1: initSpaceships g 2 botsNumber
+  { spaceships = initSpaceship Player (0,0) 1 1 : initSpaceships g 2 botsNumber
   , playerID   = 1
   }
 

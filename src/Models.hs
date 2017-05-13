@@ -18,6 +18,7 @@ data Images = Images
   , imageBonus1     :: Picture -- ^ Бонус-топливо
   , imageBonus2     :: Picture -- ^ Бонус-замедление
   , imageBonus3     :: Picture -- ^ Бонус-ускорение
+  , imageBonus4     :: Picture -- ^ Бонус-оружие
   }
 
 -- | Заставка
