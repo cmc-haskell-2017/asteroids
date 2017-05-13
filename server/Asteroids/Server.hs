@@ -37,7 +37,7 @@ mkDefaultConfig = do
   cfg <- atomically $ Config
     <$> newTVar (emptyUniverse g)
     <*> newTVar Map.empty
-    <*> newTVar [1..]
+    <*> newTVar [(botsNumber + 1)..]
   return cfg
 
 type AsteroidsAPI = "connect" :> Raw
@@ -119,7 +119,7 @@ kickPlayer ident u = u
   { spaceships = addBot (filter isConnected $ spaceships u) }
   where
     addBot ships
-      | length (spaceships u) > botsNumber = ships
+      | length ships >= botsNumber = ships
       | otherwise = initSpaceship Bot pos ident 2 : ships 
     isConnected ship = ident /= spaceshipID ship
     pos = head $ freshPositions u
