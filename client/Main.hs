@@ -12,12 +12,14 @@ import System.Exit (exitSuccess)
 
 import Universe
 import Images
+import Items
 import Game
 import Config
 import Models
 
 data GameState = GameState
   { gameUniverse    :: TVar Universe
+  , isShowTable     :: Bool
   , gameConnection  :: Connection
   }
 
@@ -68,6 +70,10 @@ handleGame (EventKey (SpecialKey KeySpace) Up _ _) g@GameState{..} = do
   u <- readTVarIO gameUniverse
   _ <- forkIO $ sendBinaryData gameConnection (nullAct 3 (newShipAction (playerID u) Nothing Nothing False u))
   return g
+handleGame (EventKey (SpecialKey KeyTab) Down _ _) g@GameState{..}
+  = return g { isShowTable = True }
+handleGame (EventKey (SpecialKey KeyTab) Up _ _) g@GameState{..} =
+  return g { isShowTable = False }
 handleGame _ g = return g
 
 handleUpdates :: GameState -> IO ()
@@ -79,7 +85,17 @@ drawGame :: Images -> GameState -> IO Picture
 drawGame images GameState{..} = drawUniverse images <$> readTVarIO gameUniverse
 
 updateGame :: Float -> GameState -> IO GameState
-updateGame _ gs = return gs
+updateGame _ g@GameState{..} = do
+  atomically $ do
+    modifyTVar gameUniverse showStat
+  return g
+  where
+    showStat u
+      | isShowTable = u
+        { tableback = Just initTableBack
+        , table     = Just initTableBack
+        }
+      | otherwise = u
 
 runIO :: Images -> IO ()
 runIO images = do
@@ -88,7 +104,7 @@ runIO images = do
   putStrLn "Input IP-adress"
   ipAddr   <- getLine
   runClient ipAddr 8000 "/connect" $ \conn -> do
-    let gs = GameState universe conn
+    let gs = GameState universe False conn
     _ <- forkIO (handleUpdates gs)
     playIO display bgColor fps gs (drawGame images) handleGame updateGame
   where
