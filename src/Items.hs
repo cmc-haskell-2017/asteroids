@@ -39,9 +39,9 @@ drawTableBack :: Maybe Table -> Maybe Picture
 drawTableBack Nothing = Nothing
 drawTableBack (Just tableback)
   = Just (translate (-w) h (scale 10 10 (pictures
-            [ translate 56 (-20.5) (scale 0.02 0.02 (color black (text name)))
-            , translate 38 (-23.5) (scale 0.01 0.01 (color black (text headers)))
-            , translate 38 (-24.5) (scale 0.01 0.01 (color black (text metr)))
+            [ translate 56 (-20.5) (scale 0.02 0.02 (color white (text name)))
+            , translate 38 (-23.5) (scale 0.01 0.01 (color white (text headers)))
+            , translate 38 (-24.5) (scale 0.01 0.01 (color white (text metr)))
           ])))
             where
               w = screenRight
@@ -55,12 +55,12 @@ drawTable :: Maybe Table -> Float -> Score -> Maybe Picture
 drawTable Nothing _ _  = Nothing
 drawTable (Just table) shift score
   = Just (translate (-w) h (scale 10 10 (pictures
-            [ translate 38 (-shift) (scale 0.015 0.015 (color black (text name))) 
-            , translate 52 (-shift) (scale 0.015 0.015 (color black (text name1)))
-            , translate 61 (-shift) (scale 0.015 0.015 (color black (text name2)))
-            , translate 70 (-shift) (scale 0.015 0.015 (color black (text name3)))
-            , translate 78 (-shift) (scale 0.015 0.015 (color black (text name4)))
-            , translate 88 (-shift) (scale 0.015 0.015 (color black (text name5))) 
+            [ translate 38 (-shift) (scale 0.015 0.015 (color white (text name))) 
+            , translate 52 (-shift) (scale 0.015 0.015 (color white (text name1)))
+            , translate 61 (-shift) (scale 0.015 0.015 (color white (text name2)))
+            , translate 70 (-shift) (scale 0.015 0.015 (color white (text name3)))
+            , translate 78 (-shift) (scale 0.015 0.015 (color white (text name4)))
+            , translate 88 (-shift) (scale 0.015 0.015 (color white (text name5))) 
             ])))
             where
               w = screenRight
