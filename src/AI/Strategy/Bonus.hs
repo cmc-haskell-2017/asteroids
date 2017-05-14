@@ -19,7 +19,7 @@ getBonusTarget b ship = minimumBy f (map bonusPosition  b)
 -- | Эвристика стратегии Взять бонус
 bonusTargetHeuristic :: Point -> Spaceship -> Float
 bonusTargetHeuristic p s
-  | shipLife s < 20 = 0.98
+  | shipLife s < 20 = critBs
   | otherwise = bs/nearLife 
   where
     nearLife = distant p (spaceshipPosition s)

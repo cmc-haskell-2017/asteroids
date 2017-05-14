@@ -22,7 +22,7 @@ getAttackTarget (sh:shs) ship
 -- | Эвристика стратегии Атака цели
 attackTargetHeuristic :: Point -> Spaceship -> Float
 attackTargetHeuristic p s
-  | nearEnemy < 5*at = 0.99
+  | nearEnemy < 5*at = critAt
   | otherwise        = at/nearEnemy 
   where
     nearEnemy = distant p (spaceshipPosition s)

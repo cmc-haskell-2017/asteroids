@@ -10,7 +10,7 @@ import AI.Strategy.Config
 -- | Эвристика стратегии Уворот от астероида
 avoidanceHeuristic :: Universe -> Spaceship -> Float
 avoidanceHeuristic u s
-  | nearAst < 300 + av = 1
+  | nearAst < 300 + av = critAv
   | boards             = av
   | otherwise          = av/nearAst 
   where
