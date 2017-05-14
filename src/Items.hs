@@ -19,24 +19,29 @@ drawBackground image background' = translate x y image
   where
     (x, y) = backgroundPosition background'
 
+-- | Отобразить фон статистики.
+drawBack :: Picture -> Maybe Table -> Maybe Picture
+drawBack _ Nothing = Nothing
+drawBack image (Just tablee) = Just (translate x y image)
+  where
+    (x, y) = tablePosition tablee
+
 -- | Инициализация статистики
 initTable :: Table
 initTable = Table { tablePosition = (0, 0) }
 
 -- | Инициализация статистики
 initTableBack :: Table
-initTableBack = Table { tablePosition = (0, 0) }
+initTableBack = Table { tablePosition = (-10, 0) }
 
 -- | Отобразить фон для статистики
 drawTableBack :: Maybe Table -> Maybe Picture
 drawTableBack Nothing = Nothing
 drawTableBack (Just tableback)
   = Just (translate (-w) h (scale 10 10 (pictures
-            [ color blue (polygon [ (25, -18.5), (25, -55.5), (90, -55.5), (90, -18.5) ]) -- белая рамка
-            , color white (polygon [ (26, -19.5), (26, -54.5), (89, -54.5), (89, -19.5) ]) -- чёрные внутренности
-            , translate 44 (-23.5) (scale 0.02 0.02 (color black (text name)))
-            , translate 28 (-26.5) (scale 0.01 0.01 (color black (text headers)))
-            , translate 28 (-28.5) (scale 0.01 0.01 (color black (text metr)))
+            [ translate 56 (-20.5) (scale 0.02 0.02 (color black (text name)))
+            , translate 38 (-23.5) (scale 0.01 0.01 (color black (text headers)))
+            , translate 38 (-24.5) (scale 0.01 0.01 (color black (text metr)))
           ])))
             where
               w = screenRight
@@ -50,12 +55,12 @@ drawTable :: Maybe Table -> Float -> Score -> Maybe Picture
 drawTable Nothing _ _  = Nothing
 drawTable (Just table) shift score
   = Just (translate (-w) h (scale 10 10 (pictures
-            [ translate 28 (-shift) (scale 0.01 0.01 (color black (text name))) 
-            , translate 42 (-shift) (scale 0.01 0.01 (color black (text name1)))
-            , translate 51 (-shift) (scale 0.01 0.01 (color black (text name2)))
-            , translate 61 (-shift) (scale 0.01 0.01 (color black (text name3)))
-            , translate 69 (-shift) (scale 0.01 0.01 (color black (text name4)))
-            , translate 79 (-shift) (scale 0.01 0.01 (color black (text name5))) 
+            [ translate 38 (-shift) (scale 0.015 0.015 (color black (text name))) 
+            , translate 52 (-shift) (scale 0.015 0.015 (color black (text name1)))
+            , translate 61 (-shift) (scale 0.015 0.015 (color black (text name2)))
+            , translate 70 (-shift) (scale 0.015 0.015 (color black (text name3)))
+            , translate 78 (-shift) (scale 0.015 0.015 (color black (text name4)))
+            , translate 88 (-shift) (scale 0.015 0.015 (color black (text name5))) 
             ])))
             where
               w = screenRight

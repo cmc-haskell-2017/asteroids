@@ -50,8 +50,9 @@ drawUniverse images u = pictures
   , drawBonuses    (imageBonus1 images) (imageBonus2 images)  (imageBonus3 images) (imageBonus4 images) (bonuses u)  
   ] 
   ++ drawSpaceships  (imageSpaceship images)  (spaceships u)
-  ++ drawMaybe [drawTableBack (tableback u)]
-  ++ drawMaybe (drawTables (table u) (scores u) 30.5) )
+  ++ drawMaybe [drawBack (imageStat images) (tableback u)]
+  ++ drawMaybe [drawTableBack  (tableback u)]
+  ++ drawMaybe (drawTables (table u) (scores u) 27.5) )
 
 -- =========================================
 -- Обработка событий
