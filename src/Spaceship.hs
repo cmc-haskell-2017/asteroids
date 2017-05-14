@@ -41,15 +41,30 @@ initSpaceships g ident num = [(initSpaceship Bot pos ident 2)]
     (y, g'') = randomR yShipPositions g'
     pos      = (x,y)
 
+initScore :: Mode -> Int -> Score
+initScore mode ident = Score
+  { scoreMode  = mode  
+  , scoreID    = ident
+  , scoreAst   = 0
+  , scoreShip  = 0
+  , scoreDeath = 0
+  , scoreBonus = 0
+  }
+
+initScores :: Int -> Int -> [Score]
+initScores _ 0 = []
+initScores ident num = [(initScore Bot ident)] ++ (initScores (ident + 1) (num - 1) )
+
 -- | Инициализация пули
 initBullet :: Spaceship -> Bullet
 initBullet ship = Bullet
-    { bulletPosition  = spaceshipPosition ship
+    { bulletID        = spaceshipID ship
+    , bulletPosition  = spaceshipPosition ship
         + rotateV (spaceshipDirection ship * pi / 180) (0, 60)
     , bulletVelocity  = rotateV (spaceshipDirection ship * pi / 180) (0, 10)
     , bulletDirection = spaceshipDirection ship
     , bulletSize      = 15
-}
+    }
 
 -- | Отрисовка списка кораблей
 drawSpaceships :: Picture -> [Spaceship] -> [Picture]
@@ -123,7 +138,7 @@ updateSpaceship t ship = ship
   , spaceshipDirection = newDir
   , shipLife           = isAlive
   , fireReload         = newReload
-  , bonIndex           = overORnot 
+  , bonIndex           = overORnot
   }
   where
     shipDir 
@@ -135,8 +150,11 @@ updateSpaceship t ship = ship
       | shipDir <    0 = shipDir + 360
       | otherwise      = shipDir
     newReload
-      | fireReload ship == reloadTime && isfire ship == False = reloadTime
-      | fireReload ship == reloadTime = 0
+      | fst (bonIndex ship) == 4 && isfire ship == False = reloadTime
+      | fst (bonIndex ship) == 4 && fireReload ship >= reloadTime = 0
+      | fst (bonIndex ship) == 4 = fireReload ship + 5
+      | fst (bonIndex ship) /= 4 && fireReload ship >= reloadTime && isfire ship == False = reloadTime
+      | fst (bonIndex ship) /= 4 && fireReload ship >= reloadTime = 0
       | otherwise = fireReload ship + 1
     isAlive
       | shipLife ship <= 0 = 0
@@ -193,18 +211,43 @@ updateShipVelocity t ship
 bulletsFaceSpaceships :: Universe -> Universe
 bulletsFaceSpaceships u = u {
     bullets    = newB
-  , score      = newScore
   , spaceships = newS
+  , scores     = newScore
   }
   where
     s    = spaceships u
     b    = bullets u
+    a    = asteroids u
     newB = filter (not . bulletFaceSpaceships s) b
     newS = map (checkSpaceshipsCollisions u) s
-    newScore 
-       | spaceshipFaceAsteroids s (asteroids u) 
-         || (spaceshipFaceBullets s b) = 0
-       | otherwise = score u
+    newScore = newScoreee4 (filter (checkCol a b) s)
+                           (newScoreee1 (filter (bulletFaceSpaceships s) b) (scores u))
+                   
+newScoreee1 :: [Bullet] -> [Score] -> [Score]
+newScoreee1 [] scores = scores
+newScoreee1 bullets scores = map (newScoreee2 bullets) scores
+
+newScoreee2 :: [Bullet] -> Score -> Score
+newScoreee2 [] score = score
+newScoreee2 bullets s  
+  | bulletID (head bullets) == scoreID s = s { scoreShip = scoreShip s + 1} 
+  | otherwise = newScoreee2 (tail bullets) s
+
+newScoreee4 :: [Spaceship] -> [Score] -> [Score]
+newScoreee4 [] scores = scores
+newScoreee4 spaceships scores = map (newScoreee3 spaceships) scores  
+
+newScoreee3 :: [Spaceship] -> Score -> Score
+newScoreee3 [] score = score
+newScoreee3 spaceships s
+  | spaceshipID (head spaceships) == scoreID s = s { scoreDeath = scoreDeath s + 1} 
+  | otherwise = newScoreee3 (tail spaceships) s
+
+checkCol :: [Asteroid] -> [Bullet] -> Spaceship -> Bool
+checkCol asteroids bullets ship
+  = spaceshipFaceAsteroids [ship] asteroids 
+    || spaceshipFaceBullets [ship] bullets 
+
 
 
 -- | Проверка столкновений корабля с объектами, которые могут его уничтожить

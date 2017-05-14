@@ -34,7 +34,6 @@ bonusesNumber = 50
 botsNumber :: Int
 botsNumber = 2
 
-
 -- | Интервал позиций по оси абсцисс для астероидов
 xPositions :: (Float, Float)
 xPositions = (- width, width)
@@ -61,7 +60,7 @@ yShipPositions = (- height, height)
 
 -- | Интвервал номеров для бонусов
 numbers :: (Int,Int)
-numbers = (1,3)
+numbers = (1,4)
 
 -- | Интервал скоростей для астероидов
 velocities :: (Float, Float)
@@ -82,6 +81,10 @@ damping = (0.98, 0.98)
 -- | Время перезарядки
 reloadTime :: Float
 reloadTime = 30.0
+
+-- | Бонусное время перезарядки 
+brTime :: Float
+brTime = 1.0
 
 -- | Ширина экрана.
 screenWidth :: Int

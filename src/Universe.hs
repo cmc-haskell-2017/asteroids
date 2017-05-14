@@ -21,18 +21,20 @@ emptyUniverse g = Universe
   , spaceships     = initSpaceships g 1 botsNumber
   , playerID       = 0
   , background     = initBackground
+  , tableback      = Nothing
   , table          = Nothing
   , freshPositions = initShipPositions g
   , freshAsteroids = drop asteroidsNumber (initAsteroids g)
   , freshBonuses   = drop bonusesNumber   (initBonuses g)
-  , score          = 0
+  , scores         = initScores 1 botsNumber
   }
 
 -- | Инициализация игровой вселенной
 initUniverse :: StdGen -> Universe
 initUniverse g = (emptyUniverse g)
-  { spaceships = initSpaceship Player (0,0) 1 1: initSpaceships g 2 botsNumber
+  { spaceships = initSpaceship Player (0,0) 1 1 : initSpaceships g 2 botsNumber
   , playerID   = 1
+  , scores     = initScore Player 1 : initScores 2 botsNumber
   }
 
 -- | Обновить фон

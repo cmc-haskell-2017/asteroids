@@ -14,21 +14,18 @@ data Images = Images
   , imageAsteroid   :: Picture -- ^ Aстероид.
   , imageBackground :: Picture -- ^ Фон.
   , imageSpaceship  :: Picture -- ^ Корабль.
-  , imageTable      :: Picture -- ^ Заставка
   , imageBonus1     :: Picture -- ^ Бонус-топливо
   , imageBonus2     :: Picture -- ^ Бонус-замедление
   , imageBonus3     :: Picture -- ^ Бонус-ускорение
+  , imageBonus4     :: Picture -- ^ Бонус-оружие
   }
 
--- | Заставка
+-- | Статистика
 data Table = Table 
-  { tablePosition :: Point -- ^ Положение фона
+  { tablePosition :: Point -- ^ Положение фона статистики
   } deriving (Generic)
 
 instance Binary Table
-
--- | Счёт.
-type Score = Int
 
 -- | Идентификатор игрока
 type PlayerID = Int
@@ -68,7 +65,8 @@ instance Binary Spaceship
 
 -- | Пуля
 data Bullet = Bullet
-  { bulletPosition  :: Point  -- ^ Положение пули
+  { bulletID        :: PlayerID -- ^ Какому кораблю принадлежит пуля  
+  , bulletPosition  :: Point  -- ^ Положение пули
   , bulletVelocity  :: Vector -- ^ Скорость пули
   , bulletDirection :: Float  -- ^ Направление пули
   , bulletSize      :: Float  -- ^ Размер пули
@@ -84,11 +82,12 @@ data Universe = Universe
   , playerID       :: PlayerID    -- ^ Идентификатор игрока
   , background     :: Background  -- ^ Фон
   , bullets        :: [Bullet]    -- ^ Пули
-  , table          :: Maybe Table -- ^ Заставка
+  , tableback      :: Maybe Table -- ^ Фон статистики
+  , table          :: Maybe Table -- ^ Сама статистика
   , freshPositions :: [Point]     -- ^ Бесконечный список "свежих" позиций для кораблей
   , freshAsteroids :: [Asteroid]  -- ^ Бесконечный список "свежих" астероидов
   , freshBonuses   :: [Bonus]     -- ^ Бесконечный список "свежих" бонусов
-  , score          :: Score       -- ^ Счёт
+  , scores         :: [Score]     -- ^ Список счета каждого корабля
   } deriving (Generic)
 
 instance Binary Universe
@@ -117,6 +116,18 @@ data Bonus = Bonus
   } deriving (Generic)
 
 instance Binary Bonus
+
+-- | Счет
+data Score = Score
+  { scoreID        :: PlayerID   -- ^ Имя корабля
+  , scoreMode      :: Mode
+  , scoreAst       :: Int  -- ^ Количество убитых астероидов
+  , scoreShip      :: Int  -- ^ Количество убитых кораблей
+  , scoreDeath     :: Int  -- ^ Количество собстенных смертей
+  , scoreBonus     :: Int  -- ^ Количество собранных бонусов
+  } deriving (Generic)
+
+instance Binary Score
 
 -- | Поворот корабля
 data RotateAction = ToLeft | ToRight deriving(Eq, Generic)

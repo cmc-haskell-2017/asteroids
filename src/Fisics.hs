@@ -9,19 +9,31 @@ bulletsFaceAsteroids :: Universe -> Universe
 bulletsFaceAsteroids u = u
   { asteroids = newA
   , bullets   = newB
-  , score     = score u + length b - length newB
+  , scores    = newS
   }
   where
     a    = asteroids u
     b    = bullets u
     newA = filter (not . asteroidFaceBullets b) a
     newB = filter (not . bulletFaceAsteroids a) b
+    newS = newScore1 (filter (bulletFaceAsteroids a) b) (scores u)
+
+newScore1 :: [Bullet] -> [Score] -> [Score]
+newScore1 [] scores = scores
+newScore1 bullets scores = map (newScore2 bullets) scores
+
+newScore2 :: [Bullet] -> Score -> Score
+newScore2 [] score = score
+newScore2 bullets s  
+  | bulletID (head bullets) == scoreID s = s { scoreAst = scoreAst s + 1} 
+  | otherwise = newScore2 (tail bullets) s
 
 -- | Столкновение бонусов с кораблями
 bonusesFaceSpaceships :: Universe -> Universe
 bonusesFaceSpaceships u = u
   { bonuses = newBo
   , spaceships = newS
+  , scores = newScore
   }
   where
     s     = spaceships u
@@ -30,6 +42,20 @@ bonusesFaceSpaceships u = u
     newS 
       | spaceshipFaceBonuses s bo = activBonus s (filter (bonusFaceSpaceships s) bo)
       | otherwise = s
+    newScore = newScoree1 (filter (checkColl bo) s) (scores u)
+
+newScoree1 :: [Spaceship] -> [Score] -> [Score]
+newScoree1 [] scores = scores
+newScoree1 spaceships scores = map (newScoree2 spaceships) scores
+
+newScoree2 :: [Spaceship] -> Score -> Score
+newScoree2 [] score = score
+newScoree2 spaceships s  
+  | spaceshipID (head spaceships) == scoreID s = s { scoreBonus = scoreBonus s + 1} 
+  | otherwise = newScoree2 (tail spaceships) s
+
+checkColl :: [Bonus] -> Spaceship -> Bool
+checkColl bonuses ship = shipFaceBonuses bonuses ship
 
 -- | Астероид сталкивается с пулями?
 asteroidFaceBullets :: [Bullet] -> Asteroid -> Bool
@@ -103,7 +129,7 @@ actBonus :: [Bonus] -> Spaceship -> Spaceship
 actBonus bonuses ship 
   | shipFaceBonuses bonuses ship && whichBonusIs bonuses == 1 
       = ship { shipLife = limit }
-  | shipFaceBonuses bonuses ship && ((whichBonusIs bonuses == 2) || (whichBonusIs bonuses == 3))
+  | shipFaceBonuses bonuses ship && (whichBonusIs bonuses >= 2) 
       = ship { shipLife = isAlive
              , bonIndex = (whichBonusIs bonuses, 20)
              }
@@ -120,6 +146,7 @@ actBonus bonuses ship
 whichBonusIs :: [Bonus] -> Int
 whichBonusIs [] = 0
 whichBonusIs bonuses 
+  | any (check 4) bonuses = 4
   | any (check 2) bonuses = 2
   | any (check 3) bonuses = 3
   | otherwise = 1
