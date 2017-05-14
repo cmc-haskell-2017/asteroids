@@ -6,11 +6,12 @@ import Config
 import Graphics.Gloss.Data.Vector
 import Graphics.Gloss.Interface.Pure.Game
 import AI.Strategy.Calculations
+import AI.Strategy.Config
 
 -- | Определение бонуса, который нужно взять
 getBonusTarget :: [Bonus] -> Spaceship -> Point
 getBonusTarget [] _ = (800*screenUp, 800*screenUp)
-getBonusTarget bs ship = minimumBy f (map bonusPosition  bs)
+getBonusTarget b ship = minimumBy f (map bonusPosition  b)
   where
     pos = spaceshipPosition ship
     f pos1 pos2 = compare (distant pos1 pos) (distant pos2 pos)
@@ -19,7 +20,7 @@ getBonusTarget bs ship = minimumBy f (map bonusPosition  bs)
 bonusTargetHeuristic :: Point -> Spaceship -> Float
 bonusTargetHeuristic p s
   | shipLife s < 20 = 0.98
-  | otherwise = 20/nearLife 
+  | otherwise = bs/nearLife 
   where
     nearLife = distant p (spaceshipPosition s)
 

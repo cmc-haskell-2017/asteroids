@@ -5,13 +5,14 @@ import Config
 import Graphics.Gloss.Data.Vector
 import Graphics.Gloss.Interface.Pure.Game
 import AI.Strategy.Calculations
+import AI.Strategy.Config
 
 -- | Эвристика стратегии Уворот от астероида
 avoidanceHeuristic :: Universe -> Spaceship -> Float
 avoidanceHeuristic u s
-  | nearAst < 300 = 1
-  | boards        = 1
-  | otherwise     = 1/nearAst 
+  | nearAst < 300 + av = 1
+  | boards             = av
+  | otherwise          = av/nearAst 
   where
     nearAst = nearAsteroidDist s (asteroids u)
     boards  = (abs (fst (spaceshipPosition s))) > screenRight/3

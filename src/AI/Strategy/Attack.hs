@@ -5,6 +5,7 @@ import Config
 import Graphics.Gloss.Data.Vector
 import Graphics.Gloss.Interface.Pure.Game
 import AI.Strategy.Calculations
+import AI.Strategy.Config
 
 -- | Получение цели для атаки
 getAttackTarget :: [Spaceship] -> Spaceship -> Point
@@ -21,8 +22,8 @@ getAttackTarget (sh:shs) ship
 -- | Эвристика стратегии Атака цели
 attackTargetHeuristic :: Point -> Spaceship -> Float
 attackTargetHeuristic p s
-  | nearEnemy < 500 = 0.99
-  | otherwise = 100/nearEnemy 
+  | nearEnemy < 5*at = 0.99
+  | otherwise        = at/nearEnemy 
   where
     nearEnemy = distant p (spaceshipPosition s)
 
