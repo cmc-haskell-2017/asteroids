@@ -249,6 +249,8 @@ checkCol asteroids bullets ship
     || spaceshipFaceBullets [ship] bullets 
 
 
+
+-- | Проверка столкновений корабля с объектами, которые могут его уничтожить
 checkSpaceshipsCollisions :: Universe -> Spaceship -> Spaceship
 checkSpaceshipsCollisions u ship
   | spaceshipFaceAsteroids [ship] asteroids' 

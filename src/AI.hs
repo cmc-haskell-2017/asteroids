@@ -10,7 +10,7 @@ botAction u ship
    | (spaceshipMode ship) == Bot = analyseUniverse u ship
    | otherwise = mempty 
 
--- | Действие бота
+-- | Действие бота в соответствии с выбранной стратегией
 analyseUniverse :: Universe -> Spaceship -> ShipAction
 analyseUniverse u ship = strategyToAction (tactic (getStrategy u ship)) u ship
 
@@ -26,6 +26,7 @@ getStrategy u ship = mconcat [
         gA   = getAttackTarget (spaceships u) ship
         gB   = getBonusTarget (filter (visibleGoodBonus) (bonuses u)) ship
 
+-- | Создание выбранной стратегии
 makeStrategy :: Tactic -> Universe -> Spaceship -> Strategy
 makeStrategy t u s = Strategy {
     tactic    = t
@@ -33,6 +34,7 @@ makeStrategy t u s = Strategy {
   , heuristic = getHeuristic t u s
   }
 
+-- | Вычисление эвристики для данной тактики
 getHeuristic :: Tactic -> Universe -> Spaceship -> Float
 getHeuristic Avoidance u s    = avoidanceHeuristic u s
 getHeuristic (AttackTarget p) _ s = attackTargetHeuristic p s

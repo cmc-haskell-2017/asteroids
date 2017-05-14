@@ -15,6 +15,7 @@ loadImages = do
   Just bonus2      <- loadJuicyPNG "images/low_speed.png"
   Just bonus3      <- loadJuicyPNG "images/high_speed.png"
   Just bonus4      <- loadJuicyPNG "images/gun.png"
+  Just stat        <- loadJuicyPNG "images/stat.png"
   return Images
     { imageBullet     = scale 0.07 0.07 bullet
     , imageAsteroid   = scale  1.0  1.0 asteroid
@@ -24,4 +25,5 @@ loadImages = do
     , imageBonus2     = scale  0.10  0.10 bonus2
     , imageBonus3     = scale  0.10  0.10 bonus3
     , imageBonus4     = scale  0.08  0.08 bonus4
+    , imageStat       = scale  1.0  1.0 stat
     }

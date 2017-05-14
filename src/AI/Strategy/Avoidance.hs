@@ -5,18 +5,20 @@ import Config
 import Graphics.Gloss.Data.Vector
 import Graphics.Gloss.Interface.Pure.Game
 import AI.Strategy.Calculations
+import AI.Strategy.Config
 
+-- | Эвристика стратегии Уворот от астероида
 avoidanceHeuristic :: Universe -> Spaceship -> Float
 avoidanceHeuristic u s
-  | nearAst < 300 = 1
-  | boards        = 1
-  | otherwise     = 1/nearAst 
+  | nearAst < 300 + av = critAv
+  | boards             = av
+  | otherwise          = av/nearAst 
   where
     nearAst = nearAsteroidDist s (asteroids u)
     boards  = (abs (fst (spaceshipPosition s))) > screenRight/3
       || (abs (snd (spaceshipPosition s))) > screenUp/3
 
-
+-- | Дествие при стратегии Уворот от астероида
 avoidanceAction :: Universe ->  Spaceship -> ShipAction
 avoidanceAction u ship = ShipAction { 
     shipID       = spaceshipID ship
@@ -25,7 +27,7 @@ avoidanceAction u ship = ShipAction {
   , fireAction   = fireAvoidance   u ship
   }
 
- -- | Определение направления поворота при стратегии ухода
+ -- | Определение направления поворота при стратегии Уворот от астероида
 rotateAvoidance :: Universe -> Spaceship -> Maybe RotateAction
 rotateAvoidance u ship
   | (ang > 0.1 && ang < pi - 0.1) && angDir > 0 = Just ToRight
@@ -36,7 +38,7 @@ rotateAvoidance u ship
     angDir = angleDir (norm $ shipDir ship) (norm vns)
     vns    = (-1)*(velocityNearSystem ship (asteroids u)) 
 
--- | Определение ускорения при стратегии ухода
+-- | Определение ускорения при стратегии Уворот от астероида
 engineAvoidance :: Universe -> Spaceship -> Maybe EngineAction
 engineAvoidance u ship
   | vns == (0, 0) = Nothing
@@ -47,7 +49,7 @@ engineAvoidance u ship
     ang    = divangAvoidance u ship
     vns    = (-1)*(velocityNearSystem ship (asteroids u))
 
--- | Определение необходимости огня при стратегии ухода
+-- | Определение необходимости огня при стратегии Уворот от астероида
 fireAvoidance :: Universe -> Spaceship -> Bool
 fireAvoidance u ship
   | length(filter (nearTargetAst ship) (asteroids u)) == 0 = False
@@ -63,7 +65,7 @@ nearTargetAst ship as
     dir     = (unitVectorAtAngle ((90 + (spaceshipDirection ship)) * pi / 180))
     astdir  = vector (spaceshipPosition ship) (asteroidPosition as)
 
--- | Основной вектор-цель, с направлением которого должно совпасть направление корабля
+-- | Основной угол, между направлением корабля и направлением, куда нужно уйти
 divangAvoidance :: Universe -> Spaceship -> Float
 divangAvoidance u ship 
   | vns /= (0, 0) = angleVV (norm vns) (norm $ shipDir ship)
