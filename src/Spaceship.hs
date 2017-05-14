@@ -206,6 +206,8 @@ bulletsFaceSpaceships u = u {
          || (spaceshipFaceBullets s b) = 0
        | otherwise = score u
 
+
+-- | Проверка столкновений корабля с объектами, которые могут его уничтожить
 checkSpaceshipsCollisions :: Universe -> Spaceship -> Spaceship
 checkSpaceshipsCollisions u ship
   | spaceshipFaceAsteroids [ship] asteroids' 

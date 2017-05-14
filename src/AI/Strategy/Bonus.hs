@@ -7,6 +7,7 @@ import Graphics.Gloss.Data.Vector
 import Graphics.Gloss.Interface.Pure.Game
 import AI.Strategy.Calculations
 
+-- | Определение бонуса, который нужно взять
 getBonusTarget :: [Bonus] -> Spaceship -> Point
 getBonusTarget [] _ = (800*screenUp, 800*screenUp)
 getBonusTarget bs ship = minimumBy f (map bonusPosition  bs)
@@ -14,6 +15,7 @@ getBonusTarget bs ship = minimumBy f (map bonusPosition  bs)
     pos = spaceshipPosition ship
     f pos1 pos2 = compare (distant pos1 pos) (distant pos2 pos)
 
+-- | Эвристика стратегии Взять бонус
 bonusTargetHeuristic :: Point -> Spaceship -> Float
 bonusTargetHeuristic p s
   | shipLife s < 20 = 0.98
@@ -21,6 +23,7 @@ bonusTargetHeuristic p s
   where
     nearLife = distant p (spaceshipPosition s)
 
+-- | Действие при стратегии Взять бонус
 bonusAction :: Point -> Spaceship -> ShipAction
 bonusAction p ship = ShipAction { 
     shipID       = spaceshipID ship
@@ -29,7 +32,7 @@ bonusAction p ship = ShipAction {
   , fireAction   = False
   }
 
- -- | Определение направления поворота при стратегии ухода
+ -- | Определение направления поворота при стратегии Взять бонус
 rotateBonus :: Point -> Spaceship -> Maybe RotateAction
 rotateBonus p ship
   | (ang > 0.01 || ang > pi - 0.01) && angDir > 0 = Just ToLeft
@@ -39,7 +42,7 @@ rotateBonus p ship
     ang       = divangBonus p ship
     angDir    = angleDir (norm $ shipDir ship) (norm $ vector (spaceshipPosition ship) p)
 
--- | Определение ускорения при стратегии ухода
+-- | Определение ускорения при стратегии Взять бонус
 engineBonus :: Point -> Spaceship -> Maybe EngineAction
 engineBonus p ship
   | ang < 0.2    = Just Forward
