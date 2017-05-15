@@ -63,15 +63,13 @@ addClient client Config{..} = atomically $ do
   return ident
 
 spawnPlayer :: PlayerID -> Universe -> Universe
-spawnPlayer ident u = u { spaceships = addPlayer (spaceships u) }
+spawnPlayer ident u = u
+  { spaceships = addPlayer (spaceships u)
+  , scores     = initScore Player ident : scores u
+  }
   where
-    addPlayer ships
-      | ident > botsNumber = initSpaceship Player pos ident 1 : ships
-      | otherwise = map changeMod ships
-    changeMod ship
-      | spaceshipID ship == ident = initSpaceship Player pos ident 1
-      | otherwise                 = ship
-    pos = head $ freshPositions u
+    addPlayer ships = initSpaceship Player pos ident 1 : ships
+    pos             = head $ freshPositions u
 
 handleActions :: PlayerID -> Connection -> Config -> IO ()
 handleActions ident conn Config{..} = forever $ do
@@ -116,10 +114,13 @@ broadcastUpdate universe Config{..} = do
 
 kickPlayer :: PlayerID -> Universe -> Universe
 kickPlayer ident u = u
-  { spaceships = addBot (filter isConnected $ spaceships u) }
+  { spaceships = addBot (filter isConnected $ spaceships u)
+  , scores     = filter isInTable $ scores u
+  }
   where
     addBot ships
       | length ships >= botsNumber = ships
       | otherwise = initSpaceship Bot pos ident 2 : ships 
     isConnected ship = ident /= spaceshipID ship
-    pos = head $ freshPositions u
+    pos              = head $ freshPositions u
+    isInTable score  = ident /= scoreID score
