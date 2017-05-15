@@ -19,6 +19,7 @@ data Images = Images
   , imageBonus3     :: Picture -- ^ Бонус-ускорение
   , imageBonus4     :: Picture -- ^ Бонус-оружие
   , imageStat       :: Picture -- ^ Фон статистики
+  , imageShield     :: Picture -- ^ Защитный экран
   }
 
 -- | Статистика
@@ -60,6 +61,7 @@ data Spaceship = Spaceship
   , isfire              :: Bool       -- ^ Ведётся ли огонь?
   , fireReload          :: Float      -- ^ Счётчик перезарядки 
   , bonIndex            :: (Int, Float) -- ^ Номер действующего индекса
+  , shieldTime          :: Float      -- ^ Время действия защитного экрана
   } deriving (Generic)
 
 instance Binary Spaceship

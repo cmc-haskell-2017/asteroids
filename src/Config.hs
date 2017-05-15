@@ -24,7 +24,7 @@ ints range g = randomRs range g
 
 -- | Количество астероидов
 asteroidsNumber :: Int
-asteroidsNumber = 50
+asteroidsNumber = 200
 
 -- | Количество бонусов
 bonusesNumber :: Int
@@ -32,7 +32,7 @@ bonusesNumber = 50
 
 -- | Количество ботов
 botsNumber :: Int
-botsNumber = 7
+botsNumber = 1
 
 -- | Интервал позиций по оси абсцисс для астероидов
 xPositions :: (Float, Float)

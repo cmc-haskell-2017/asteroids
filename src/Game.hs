@@ -49,7 +49,7 @@ drawUniverse images u = pictures
   , drawAsteroids  (imageAsteroid images)   (asteroids u)
   , drawBonuses    (imageBonus1 images) (imageBonus2 images)  (imageBonus3 images) (imageBonus4 images) (bonuses u)  
   ] 
-  ++ drawSpaceships  (imageSpaceship images)  (spaceships u)
+  ++ drawSpaceships  (imageSpaceship images) (imageShield images) (spaceships u)
   ++ drawMaybe [drawBack (imageStat images) (tableback u)]
   ++ drawMaybe [drawTableBack  (tableback u)]
   ++ drawMaybe (drawTables (table u) (scores u) 27.5) )

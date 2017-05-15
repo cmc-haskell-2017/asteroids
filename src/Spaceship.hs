@@ -25,6 +25,7 @@ initSpaceship mode pos ident gr = Spaceship
   , isfire              = False
   , fireReload          = 0
   , bonIndex            = (0, 0)
+  , shieldTime          = 20
   }
 
 -- | Создание бесконечного списка позиций для кораблей
@@ -67,21 +68,32 @@ initBullet ship = Bullet
     }
 
 -- | Отрисовка списка кораблей
-drawSpaceships :: Picture -> [Spaceship] -> [Picture]
-drawSpaceships image spaceships' = map (drawSpaceship image) spaceships'
+drawSpaceships :: Picture -> Picture -> [Spaceship] -> [Picture]
+drawSpaceships image1 image2 spaceships' = map (drawSpaceship image1 image2) spaceships'
 
 -- | Отобразить корабль.
-drawSpaceship :: Picture -> Spaceship -> Picture
-drawSpaceship image spaceship'
-  = translate x y (pictures 
-    [(rotate (- spaceshipDirection spaceship') image)
-    , translate (-30) (50)  (scale 0.15 0.15 (color red (text name1)))
-    , translate (-30) (75)  (scale 0.15 0.15 (color blue (text name2)))
-    , translate (-30) (100) (scale 0.15 0.15 (color white (text name3)))
-    ])
+drawSpaceship :: Picture -> Picture -> Spaceship -> Picture
+drawSpaceship image1 image2 spaceship'
+  | shieldTime spaceship' > 0 =
+      translate x y (pictures 
+        [(rotate (- spaceshipDirection spaceship') image1)
+        , (rotate (-spaceshipDirection spaceship') image2)
+        , translate (-30) (50)  (scale 0.15 0.15 (color red (text name1)))
+        , translate (-30) (75)  (scale 0.15 0.15 (color blue (text name2)))
+        , translate (-30) (100) (scale 0.15 0.15 (color white (text name3)))
+        ]) 
+  | otherwise = 
+      translate x y (pictures 
+        [(rotate (- spaceshipDirection spaceship') image1)
+        , translate (-30) (50)  (scale 0.15 0.15 (color red (text name1)))
+        , translate (-30) (75)  (scale 0.15 0.15 (color blue (text name2)))
+        , translate (-30) (100) (scale 0.15 0.15 (color white (text name3)))
+        ])
   where
     (x, y) = spaceshipPosition spaceship'
-    name1 = "Player " ++ show (spaceshipID spaceship')
+    name1 
+      | spaceshipMode spaceship' == Bot = "Bot " ++ show (spaceshipID spaceship')
+      | otherwise = "Player " ++ show (spaceshipID spaceship')
     name2 = "Fuel "   ++ show (shipLife spaceship')
     name3 = "Bonus " ++ show (fst (bonIndex spaceship')) ++ " : " ++ show (snd (bonIndex spaceship'))
 
@@ -139,6 +151,7 @@ updateSpaceship t ship = ship
   , shipLife           = isAlive
   , fireReload         = newReload
   , bonIndex           = overORnot
+  , shieldTime         = protection
   }
   where
     shipDir 
@@ -163,6 +176,9 @@ updateSpaceship t ship = ship
     overORnot
       | snd (bonIndex ship) <= 0 = (0, 0)
       | otherwise = (fst (bonIndex ship), snd (bonIndex ship) - 0.1)
+    protection
+      | shieldTime ship <= 0 = 0
+      | otherwise = shieldTime ship - 0.1
 
 -- | Обновление состояния списка кораблей
 updateSpaceships :: Float -> [Spaceship] -> [Spaceship]
@@ -248,13 +264,11 @@ checkCol asteroids bullets ship
   = spaceshipFaceAsteroids [ship] asteroids 
     || spaceshipFaceBullets [ship] bullets 
 
-
-
 -- | Проверка столкновений корабля с объектами, которые могут его уничтожить
 checkSpaceshipsCollisions :: Universe -> Spaceship -> Spaceship
 checkSpaceshipsCollisions u ship
-  | spaceshipFaceAsteroids [ship] asteroids' 
-    || (spaceshipFaceBullets [ship] bullets') 
+  | (spaceshipFaceAsteroids [ship] asteroids' 
+    || (spaceshipFaceBullets [ship] bullets')) && (shieldTime ship == 0)
     = initSpaceship (spaceshipMode ship) pos ident (group ship)
   | otherwise = ship
   where
