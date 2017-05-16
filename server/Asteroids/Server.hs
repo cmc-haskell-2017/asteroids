@@ -23,14 +23,17 @@ import Models
 import Items
 import Spaceship
 
+-- | Соединение с клиентом
 type Client = Connection
 
+-- | Конфигурация
 data Config = Config
-  { configUniverse :: TVar Universe
-  , configClients  :: TVar (Map PlayerID Client)
-  , configIDs      :: TVar [PlayerID]
+  { configUniverse :: TVar Universe              -- ^ Игровая вселенная
+  , configClients  :: TVar (Map PlayerID Client) -- ^ Список клиентов
+  , configIDs      :: TVar [PlayerID]            -- ^ Список свободных ID игроков/ботов
   }
 
+-- | Создание начальной конфигурации
 mkDefaultConfig :: IO Config
 mkDefaultConfig = do
   g   <- newStdGen
@@ -44,8 +47,10 @@ mkDefaultConfig = do
       { tableback = Just initTableBack
       , table     = Just initTable
       }
+
 type AsteroidsAPI = "connect" :> Raw
 
+-- | Сервер
 server :: Config -> Server AsteroidsAPI
 server config = websocketsOr defaultConnectionOptions wsApp backupApp
   where
@@ -58,6 +63,7 @@ server config = websocketsOr defaultConnectionOptions wsApp backupApp
 
     backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
 
+-- | Добавление клиента в конфигурацию
 addClient :: Client -> Config -> IO PlayerID
 addClient client Config{..} = atomically $ do
   ident:ids <- readTVar configIDs
@@ -66,6 +72,7 @@ addClient client Config{..} = atomically $ do
   modifyTVar configUniverse (spawnPlayer ident)
   return ident
 
+-- | Создание игрока во вселенной
 spawnPlayer :: PlayerID -> Universe -> Universe
 spawnPlayer ident u = u
   { spaceships = addPlayer (spaceships u)
@@ -76,6 +83,7 @@ spawnPlayer ident u = u
     pos1            = head $ freshPositions u
     pos2            = head $ tail $ freshPositions u
 
+-- | Обработка действий клиентов
 handleActions :: PlayerID -> Connection -> Config -> IO ()
 handleActions ident conn Config{..} = forever $ do
   action <- receiveData conn
@@ -83,9 +91,11 @@ handleActions ident conn Config{..} = forever $ do
     modifyTVar configUniverse (handleShipsAction [setID action])
     where
 
+      -- | Установить ID корабля
       setID :: ShipAction -> ShipAction
       setID act = act { shipID = ident }
 
+-- | Обновление вселенной на сервере
 periodicUpdates :: Int -> Config -> IO ()
 periodicUpdates ms cfg@Config{..} = forever $ do
   threadDelay ms
@@ -97,6 +107,7 @@ periodicUpdates ms cfg@Config{..} = forever $ do
   where
     dt = fromIntegral ms / 1000000
 
+-- | Отправка изменений на клиенты
 broadcastUpdate :: Universe -> Config -> IO ()
 broadcastUpdate universe Config{..} = do
   clients <- readTVarIO configClients
@@ -110,6 +121,7 @@ broadcastUpdate universe Config{..} = do
       , freshPositions = []
       }
 
+    -- | Обработка отключения клиента
     handleClosedConnection :: PlayerID -> ConnectionException -> IO ()
     handleClosedConnection ident _ = do
       putStrLn ("Player " ++ show ident ++ " disconected.")
@@ -117,6 +129,7 @@ broadcastUpdate universe Config{..} = do
         modifyTVar configClients (Map.delete ident)
         modifyTVar configUniverse (kickPlayer ident)
 
+-- | Удаление игрока с сервера
 kickPlayer :: PlayerID -> Universe -> Universe
 kickPlayer ident u = u
   { spaceships = filter isConnected $ spaceships u

@@ -17,10 +17,11 @@ import Game
 import Config
 import Models
 
+-- | Игровое состояние клиента
 data GameState = GameState
-  { gameUniverse    :: TVar Universe
-  , isShowTable     :: Bool
-  , gameConnection  :: Connection
+  { gameUniverse    :: TVar Universe -- ^ Игровая вселенная
+  , isShowTable     :: Bool          -- ^ Показывать ли таблицу статистики?
+  , gameConnection  :: Connection    -- ^ Соединение с сервером
   }
 
 main :: IO ()
@@ -29,6 +30,7 @@ main = do
   images     <- loadImages
   runIO ip (read port :: Int) images
 
+-- | Обработка нажатий клиента
 handleGame :: Event -> GameState -> IO GameState
 handleGame (EventKey (SpecialKey KeyEsc) Down _ _) g = const exitSuccess g
 handleGame (EventKey (SpecialKey KeyUp) Down _ _) g@GameState{..} = do
@@ -77,11 +79,13 @@ handleGame (EventKey (SpecialKey KeyTab) Up _ _) g@GameState{..} =
   return g { isShowTable = False }
 handleGame _ g = return g
 
+-- | Обработка обновлений с сервера
 handleUpdates :: GameState -> IO ()
 handleUpdates GameState{..} = forever $ do
   universe <- receiveData gameConnection
   atomically $ writeTVar gameUniverse universe
 
+-- | Отобразить игровую вселенную (клиент)
 drawGame :: Images -> GameState -> IO Picture
 drawGame images GameState{..} = do
   u <- readTVarIO gameUniverse
@@ -94,6 +98,7 @@ drawGame images GameState{..} = do
         , table     = Nothing
         }
 
+-- | Обновить состояние игровой вселенной (клиент)
 updateGame :: Float -> GameState -> IO GameState
 updateGame _ g = return g
 
