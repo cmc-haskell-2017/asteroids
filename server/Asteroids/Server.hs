@@ -20,6 +20,7 @@ import Servant
 
 import Universe
 import Models
+import Items
 import Spaceship
 import Config
 
@@ -35,11 +36,15 @@ mkDefaultConfig :: IO Config
 mkDefaultConfig = do
   g   <- newStdGen
   cfg <- atomically $ Config
-    <$> newTVar (emptyUniverse g)
+    <$> newTVar (showTable (emptyUniverse g))
     <*> newTVar Map.empty
     <*> newTVar [(botsNumber + 1)..]
   return cfg
-
+  where
+    showTable u = u
+      { tableback = Just initTableBack
+      , table     = Just initTable
+      }
 type AsteroidsAPI = "connect" :> Raw
 
 server :: Config -> Server AsteroidsAPI

@@ -12,7 +12,6 @@ import System.Exit (exitSuccess)
 
 import Universe
 import Images
-import Items
 import Game
 import Config
 import Models
@@ -82,20 +81,19 @@ handleUpdates GameState{..} = forever $ do
   atomically $ writeTVar gameUniverse universe
 
 drawGame :: Images -> GameState -> IO Picture
-drawGame images GameState{..} = drawUniverse images <$> readTVarIO gameUniverse
-
-updateGame :: Float -> GameState -> IO GameState
-updateGame _ g@GameState{..} = do
-  atomically $ do
-    modifyTVar gameUniverse showStat
-  return g
+drawGame images GameState{..} = do
+  u <- readTVarIO gameUniverse
+  return $ drawUniverse images (showStat u)
   where
     showStat u
       | isShowTable = u
-        { tableback = Just initTableBack
-        , table     = Just initTableBack
+      | otherwise   = u
+        { tableback = Nothing
+        , table     = Nothing
         }
-      | otherwise = u
+
+updateGame :: Float -> GameState -> IO GameState
+updateGame _ g = return g
 
 runIO :: Images -> IO ()
 runIO images = do
