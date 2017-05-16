@@ -20,28 +20,37 @@ import Servant
 
 import Universe
 import Models
+import Items
 import Spaceship
-import Config
 
+-- | Соединение с клиентом
 type Client = Connection
 
+-- | Конфигурация
 data Config = Config
-  { configUniverse :: TVar Universe
-  , configClients  :: TVar (Map PlayerID Client)
-  , configIDs      :: TVar [PlayerID]
+  { configUniverse :: TVar Universe              -- ^ Игровая вселенная
+  , configClients  :: TVar (Map PlayerID Client) -- ^ Список клиентов
+  , configIDs      :: TVar [PlayerID]            -- ^ Список свободных ID игроков/ботов
   }
 
+-- | Создание начальной конфигурации
 mkDefaultConfig :: IO Config
 mkDefaultConfig = do
   g   <- newStdGen
   cfg <- atomically $ Config
-    <$> newTVar (emptyUniverse g)
+    <$> newTVar (showTable (emptyUniverse g))
     <*> newTVar Map.empty
-    <*> newTVar [(botsNumber + 1)..]
+    <*> newTVar [1,3..]
   return cfg
+  where
+    showTable u = u
+      { tableback = Just initTableBack
+      , table     = Just initTable
+      }
 
 type AsteroidsAPI = "connect" :> Raw
 
+-- | Сервер
 server :: Config -> Server AsteroidsAPI
 server config = websocketsOr defaultConnectionOptions wsApp backupApp
   where
@@ -54,6 +63,7 @@ server config = websocketsOr defaultConnectionOptions wsApp backupApp
 
     backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
 
+-- | Добавление клиента в конфигурацию
 addClient :: Client -> Config -> IO PlayerID
 addClient client Config{..} = atomically $ do
   ident:ids <- readTVar configIDs
@@ -62,15 +72,18 @@ addClient client Config{..} = atomically $ do
   modifyTVar configUniverse (spawnPlayer ident)
   return ident
 
+-- | Создание игрока во вселенной
 spawnPlayer :: PlayerID -> Universe -> Universe
 spawnPlayer ident u = u
   { spaceships = addPlayer (spaceships u)
-  , scores     = initScore Player ident : scores u
+  , scores     = initScore Player ident : initScore Bot (ident + 1) : scores u
   }
   where
-    addPlayer ships = initSpaceship Player pos ident 1 : ships
-    pos             = head $ freshPositions u
+    addPlayer ships = initSpaceship Player pos1 ident 1 : initSpaceship Bot pos2 (ident + 1) 2 : ships
+    pos1            = head $ freshPositions u
+    pos2            = head $ tail $ freshPositions u
 
+-- | Обработка действий клиентов
 handleActions :: PlayerID -> Connection -> Config -> IO ()
 handleActions ident conn Config{..} = forever $ do
   action <- receiveData conn
@@ -78,9 +91,11 @@ handleActions ident conn Config{..} = forever $ do
     modifyTVar configUniverse (handleShipsAction [setID action])
     where
 
+      -- | Установить ID корабля
       setID :: ShipAction -> ShipAction
       setID act = act { shipID = ident }
 
+-- | Обновление вселенной на сервере
 periodicUpdates :: Int -> Config -> IO ()
 periodicUpdates ms cfg@Config{..} = forever $ do
   threadDelay ms
@@ -92,6 +107,7 @@ periodicUpdates ms cfg@Config{..} = forever $ do
   where
     dt = fromIntegral ms / 1000000
 
+-- | Отправка изменений на клиенты
 broadcastUpdate :: Universe -> Config -> IO ()
 broadcastUpdate universe Config{..} = do
   clients <- readTVarIO configClients
@@ -105,6 +121,7 @@ broadcastUpdate universe Config{..} = do
       , freshPositions = []
       }
 
+    -- | Обработка отключения клиента
     handleClosedConnection :: PlayerID -> ConnectionException -> IO ()
     handleClosedConnection ident _ = do
       putStrLn ("Player " ++ show ident ++ " disconected.")
@@ -112,15 +129,12 @@ broadcastUpdate universe Config{..} = do
         modifyTVar configClients (Map.delete ident)
         modifyTVar configUniverse (kickPlayer ident)
 
+-- | Удаление игрока с сервера
 kickPlayer :: PlayerID -> Universe -> Universe
 kickPlayer ident u = u
-  { spaceships = addBot (filter isConnected $ spaceships u)
+  { spaceships = filter isConnected $ spaceships u
   , scores     = filter isInTable $ scores u
   }
   where
-    addBot ships
-      | length ships >= botsNumber = ships
-      | otherwise = initSpaceship Bot pos ident 2 : ships 
-    isConnected ship = ident /= spaceshipID ship
-    pos              = head $ freshPositions u
-    isInTable score  = ident /= scoreID score
+    isConnected ship = ident /= spaceshipID ship && ident + 1 /= spaceshipID ship
+    isInTable score  = ident /= scoreID score && ident + 1 /= scoreID score

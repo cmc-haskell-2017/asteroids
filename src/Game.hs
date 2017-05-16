@@ -3,7 +3,6 @@ module Game where
 import Control.Concurrent.STM
 import System.Random
 import System.Exit
-import Graphics.Gloss.Geometry.Line()
 import Graphics.Gloss.Interface.IO.Game
 import Universe
 import Models
@@ -106,10 +105,3 @@ nullAct 1 act = act { engineAction = Nothing }
 nullAct 2 act = act { rotateAction = Nothing }
 nullAct 3 act = act { fireAction = False }
 nullAct _ _   = mempty
-
--- | Поиск корабля с нужным ID
-findShip :: Int -> [Spaceship] -> Spaceship
-findShip _ []           = initSpaceship Bot 0 0 2
-findShip i (ship:ships)
-  | (spaceshipID ship) == i = ship
-  | otherwise = findShip i ships

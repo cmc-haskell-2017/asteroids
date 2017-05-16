@@ -117,11 +117,13 @@ drawBullet image bullet =
 
 -- | Движение корабля
 moveShip :: Float -> [Spaceship] -> [Spaceship]
-moveShip a ships = (head ships) { spaceshipAccelerate = a } : (tail ships)
+moveShip _ [] = []
+moveShip a (ship:ships) = ship { spaceshipAccelerate = a } : ships
 
 -- | Поворот корабля
 turnShip :: Float -> [Spaceship] -> [Spaceship]
-turnShip a ships = (head ships) { spaceshipAngularV = a } : (tail ships)
+turnShip _ [] = []
+turnShip a (ship:ships) = ship { spaceshipAngularV = a } : ships
 
 -- | Выстрел корабля
 fireSpaceships :: [Spaceship] -> [Bullet]
@@ -294,7 +296,7 @@ initShipAction i r e b = ShipAction {
 
 -- | Обработка действий кораблей
 handleShipsAction :: [ShipAction] -> Universe -> Universe
-handleShipsAction act u = u {spaceships = map (doActions act) (spaceships u)}
+handleShipsAction act u = u { spaceships = map (doActions act) (spaceships u) }
 
 -- | Обработка действий корабля
 doActions :: [ShipAction] -> Spaceship -> Spaceship
