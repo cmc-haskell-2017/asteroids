@@ -21,11 +21,14 @@ emptyUniverse g = Universe
   , background     = initBackground
   , tableback      = Nothing
   , table          = Nothing
-  , freshPositions = initShipPositions g
-  , freshAsteroids = initAsteroids g
-  , freshBonuses   = initBonuses g
+  , freshPositions = initShipPositions g1
+  , freshAsteroids = initAsteroids g2
+  , freshBonuses   = initBonuses g3
   , scores         = []
   }
+  where
+    (g1,g') = split g
+    (g2,g3) = split g'
 
 -- | Инициализация игровой вселенной
 initUniverse :: StdGen -> Universe
