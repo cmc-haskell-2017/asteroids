@@ -68,26 +68,28 @@ initBullet ship = Bullet
     }
 
 -- | Отрисовка списка кораблей
-drawSpaceships :: Picture -> Picture -> [Spaceship] -> [Picture]
-drawSpaceships image1 image2 spaceships' = map (drawSpaceship image1 image2) spaceships'
+drawSpaceships :: Picture -> Picture -> [Picture] -> [Spaceship] -> [Picture]
+drawSpaceships image1 image2 pics spaceships' = map (drawSpaceship image1 image2 pics) spaceships'
 
 -- | Отобразить корабль.
-drawSpaceship :: Picture -> Picture -> Spaceship -> Picture
-drawSpaceship image1 image2 spaceship'
+drawSpaceship :: Picture -> Picture -> [Picture] -> Spaceship -> Picture
+drawSpaceship image1 image2 pics spaceship'
   | shieldTime spaceship' > 0 =
       translate x y (pictures 
         [(rotate (- spaceshipDirection spaceship') image1)
         , (rotate (-spaceshipDirection spaceship') image2)
         , translate (-30) (50)  (scale 0.15 0.15 (color red (text name1)))
         , translate (-30) (75)  (scale 0.15 0.15 (color blue (text name2)))
-        , translate (-30) (100) (scale 0.15 0.15 (color white (text name3)))
+        , translate (-25) (113) (scale 0.5 0.5 num)
+        , translate (-15) (100)  (scale 0.15 0.15 (color white (text name3)))
         ]) 
   | otherwise = 
       translate x y (pictures 
         [(rotate (- spaceshipDirection spaceship') image1)
         , translate (-30) (50)  (scale 0.15 0.15 (color red (text name1)))
         , translate (-30) (75)  (scale 0.15 0.15 (color blue (text name2)))
-        , translate (-30) (100) (scale 0.15 0.15 (color white (text name3)))
+        , translate (-25) (113) (scale 0.5 0.5 num)
+        , translate (-15) (100)  (scale 0.15 0.15 (color white (text name3)))
         ])
   where
     (x, y) = spaceshipPosition spaceship'
@@ -95,7 +97,11 @@ drawSpaceship image1 image2 spaceship'
       | spaceshipMode spaceship' == Bot = "Bot " ++ show (spaceshipID spaceship')
       | otherwise = "Player " ++ show (spaceshipID spaceship')
     name2 = "Fuel "   ++ show (shipLife spaceship')
-    name3 = "Bonus " ++ show (fst (bonIndex spaceship')) ++ " : " ++ show (snd (bonIndex spaceship'))
+    name3 = " : " ++ show (snd (bonIndex spaceship'))
+    num = pics !! ident
+    ident 
+      | fst (bonIndex spaceship') >= 2 && fst (bonIndex spaceship') <= 4 = fst (bonIndex spaceship') - 1
+      | otherwise = fst (bonIndex spaceship')
 
 -- | Отобразить пули.
 drawBullets :: Picture -> [Bullet] -> Picture
@@ -240,29 +246,29 @@ bulletsFaceSpaceships u = u {
                            (newScoreee1 (filter (bulletFaceSpaceships s) b) (scores u))
                    
 newScoreee1 :: [Bullet] -> [Score] -> [Score]
-newScoreee1 [] scores = scores
-newScoreee1 bullets scores = map (newScoreee2 bullets) scores
+newScoreee1 [] scores' = scores'
+newScoreee1 bullets' scores' = map (newScoreee2 bullets') scores'
 
 newScoreee2 :: [Bullet] -> Score -> Score
 newScoreee2 [] score = score
-newScoreee2 bullets s  
-  | bulletID (head bullets) == scoreID s = s { scoreShip = scoreShip s + 1} 
-  | otherwise = newScoreee2 (tail bullets) s
+newScoreee2 bullets' s  
+  | bulletID (head bullets') == scoreID s = s { scoreShip = scoreShip s + 1} 
+  | otherwise = newScoreee2 (tail bullets') s
 
 newScoreee4 :: [Spaceship] -> [Score] -> [Score]
-newScoreee4 [] scores = scores
-newScoreee4 spaceships scores = map (newScoreee3 spaceships) scores  
+newScoreee4 [] scores' = scores'
+newScoreee4 spaceships' scores' = map (newScoreee3 spaceships') scores'  
 
 newScoreee3 :: [Spaceship] -> Score -> Score
 newScoreee3 [] score = score
-newScoreee3 spaceships s
-  | spaceshipID (head spaceships) == scoreID s = s { scoreDeath = scoreDeath s + 1} 
-  | otherwise = newScoreee3 (tail spaceships) s
+newScoreee3 spaceships' s
+  | spaceshipID (head spaceships') == scoreID s = s { scoreDeath = scoreDeath s + 1} 
+  | otherwise = newScoreee3 (tail spaceships') s
 
 checkCol :: [Asteroid] -> [Bullet] -> Spaceship -> Bool
-checkCol asteroids bullets ship
-  = spaceshipFaceAsteroids [ship] asteroids 
-    || spaceshipFaceBullets [ship] bullets 
+checkCol asteroids' bullets' ship
+  = (spaceshipFaceAsteroids [ship] asteroids' 
+    || spaceshipFaceBullets [ship] bullets') && shieldTime ship == 0
 
 -- | Проверка столкновений корабля с объектами, которые могут его уничтожить
 checkSpaceshipsCollisions :: Universe -> Spaceship -> Spaceship

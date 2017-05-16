@@ -11,10 +11,10 @@ loadImages = do
   Just asteroid    <- loadJuicyPNG "images/asteroid.png"
   Just background' <- loadJuicyPNG "images/background.png"
   Just spaceship'  <- loadJuicyPNG "images/spaceship.png"
-  Just bonus1      <- loadJuicyPNG "images/oil.png"
-  Just bonus2      <- loadJuicyPNG "images/low_speed.png"
-  Just bonus3      <- loadJuicyPNG "images/high_speed.png"
-  Just bonus4      <- loadJuicyPNG "images/gun.png"
+  Just b_oil      <- loadJuicyPNG "images/oil.png"
+  Just b_low     <- loadJuicyPNG "images/low_speed.png"
+  Just b_fast      <- loadJuicyPNG "images/high_speed.png"
+  Just b_gun      <- loadJuicyPNG "images/gun.png"
   Just stat        <- loadJuicyPNG "images/stat.png"
   Just shield      <- loadJuicyPNG "images/shield.png"
   return Images
@@ -22,10 +22,10 @@ loadImages = do
     , imageAsteroid   = scale  1.0  1.0 asteroid
     , imageBackground = scale  1.5  1.5 background'
     , imageSpaceship  = scale  0.2  0.2 spaceship'
-    , imageBonus1     = scale  0.06  0.06 bonus1
-    , imageBonus2     = scale  0.10  0.10 bonus2
-    , imageBonus3     = scale  0.10  0.10 bonus3
-    , imageBonus4     = scale  0.08  0.08 bonus4
+    , imageB_oil     = scale  0.06  0.06 b_oil
+    , imageB_low     = scale  0.10  0.10 b_low
+    , imageB_high     = scale  0.10  0.10 b_fast
+    , imageB_gun     = scale  0.08  0.08 b_gun
     , imageStat       = scale  1.0  1.0 stat
     , imageShield     = scale  0.3  0.3 shield
     }

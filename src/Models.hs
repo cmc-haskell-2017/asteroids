@@ -14,10 +14,10 @@ data Images = Images
   , imageAsteroid   :: Picture -- ^ Aстероид.
   , imageBackground :: Picture -- ^ Фон.
   , imageSpaceship  :: Picture -- ^ Корабль.
-  , imageBonus1     :: Picture -- ^ Бонус-топливо
-  , imageBonus2     :: Picture -- ^ Бонус-замедление
-  , imageBonus3     :: Picture -- ^ Бонус-ускорение
-  , imageBonus4     :: Picture -- ^ Бонус-оружие
+  , imageB_oil      :: Picture -- ^ Бонус-топливо
+  , imageB_low      :: Picture -- ^ Бонус-замедление
+  , imageB_high     :: Picture -- ^ Бонус-ускорение
+  , imageB_gun      :: Picture -- ^ Бонус-оружие
   , imageStat       :: Picture -- ^ Фон статистики
   , imageShield     :: Picture -- ^ Защитный экран
   }

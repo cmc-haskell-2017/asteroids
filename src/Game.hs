@@ -47,9 +47,9 @@ drawUniverse images u = pictures
   ([ drawBackground (imageBackground images) (background u) 
   , drawBullets    (imageBullet images)     (bullets u)
   , drawAsteroids  (imageAsteroid images)   (asteroids u)
-  , drawBonuses    (imageBonus1 images) (imageBonus2 images)  (imageBonus3 images) (imageBonus4 images) (bonuses u)  
+  , drawBonuses    (imageB_oil images) (imageB_low images)  (imageB_high images) (imageB_gun images) (bonuses u)  
   ] 
-  ++ drawSpaceships  (imageSpaceship images) (imageShield images) (spaceships u)
+  ++ drawSpaceships  (imageSpaceship images) (imageShield images) [blank,(imageB_low images), (imageB_high images), (imageB_gun images)] (spaceships u)
   ++ drawMaybe [drawBack (imageStat images) (tableback u)]
   ++ drawMaybe [drawTableBack  (tableback u)]
   ++ drawMaybe (drawTables (table u) (scores u) 27.5) )
