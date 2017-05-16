@@ -79,25 +79,23 @@ drawSpaceship image1 image2 pics spaceship'
         [(rotate (- spaceshipDirection spaceship') image1)
         , (rotate (-spaceshipDirection spaceship') image2)
         , translate (-30) (50)  (scale 0.15 0.15 (color red (text name1)))
-        , translate (-30) (75)  (scale 0.15 0.15 (color blue (text name2)))
-        , translate (-25) (113) (scale 0.5 0.5 num)
-        , translate (-15) (100)  (scale 0.15 0.15 (color white (text name3)))
+        , translate (-15) (133) (scale 0.5 0.5 num)
+        , color white (polygon [ (-60, 80), (-60, 110), (60, 110), (60, 80) ]) -- белая рамка
+        , color green (polygon [ (-57, 83), (-57, 107), (-57 + shipLife spaceship', 107), (-57 + shipLife spaceship', 83) ]) -- белая рамка
         ]) 
   | otherwise = 
       translate x y (pictures 
         [(rotate (- spaceshipDirection spaceship') image1)
         , translate (-30) (50)  (scale 0.15 0.15 (color red (text name1)))
-        , translate (-30) (75)  (scale 0.15 0.15 (color blue (text name2)))
-        , translate (-25) (113) (scale 0.5 0.5 num)
-        , translate (-15) (100)  (scale 0.15 0.15 (color white (text name3)))
+        , translate (-15) (133) (scale 0.5 0.5 num)
+        , color white (polygon [ (-60, 80), (-60, 110), (60, 110), (60, 80) ]) -- белая рамка
+        , color green (polygon [ (-57, 83), (-57, 107), (-57 + shipLife spaceship', 107), (-57 + shipLife spaceship', 83) ]) -- белая рамка
         ])
   where
     (x, y) = spaceshipPosition spaceship'
     name1 
       | spaceshipMode spaceship' == Bot = "Bot " ++ show (spaceshipID spaceship')
       | otherwise = "Player " ++ show (spaceshipID spaceship')
-    name2 = "Fuel "   ++ show (shipLife spaceship')
-    name3 = " : " ++ show (snd (bonIndex spaceship'))
     num = pics !! ident
     ident 
       | fst (bonIndex spaceship') >= 2 && fst (bonIndex spaceship') <= 4 = fst (bonIndex spaceship') - 1
