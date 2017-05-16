@@ -111,11 +111,13 @@ drawBullet image bullet =
 
 -- | Движение корабля
 moveShip :: Float -> [Spaceship] -> [Spaceship]
-moveShip a ships = (head ships) { spaceshipAccelerate = a } : (tail ships)
+moveShip _ [] = []
+moveShip a (ship:ships) = ship { spaceshipAccelerate = a } : ships
 
 -- | Поворот корабля
 turnShip :: Float -> [Spaceship] -> [Spaceship]
-turnShip a ships = (head ships) { spaceshipAngularV = a } : (tail ships)
+turnShip _ [] = []
+turnShip a (ship:ships) = ship { spaceshipAngularV = a } : ships
 
 -- | Выстрел корабля
 fireSpaceships :: [Spaceship] -> [Bullet]
@@ -245,19 +247,19 @@ newScoreee1 bullets scores = map (newScoreee2 bullets) scores
 
 newScoreee2 :: [Bullet] -> Score -> Score
 newScoreee2 [] score = score
-newScoreee2 bullets s  
-  | bulletID (head bullets) == scoreID s = s { scoreShip = scoreShip s + 1} 
-  | otherwise = newScoreee2 (tail bullets) s
+newScoreee2 (b:bs) s  
+  | bulletID b == scoreID s = s { scoreShip = scoreShip s + 1} 
+  | otherwise = newScoreee2 bs s
 
 newScoreee4 :: [Spaceship] -> [Score] -> [Score]
 newScoreee4 [] scores = scores
-newScoreee4 spaceships scores = map (newScoreee3 spaceships) scores  
+newScoreee4 ships scores = map (newScoreee3 ships) scores  
 
 newScoreee3 :: [Spaceship] -> Score -> Score
 newScoreee3 [] score = score
-newScoreee3 spaceships s
-  | spaceshipID (head spaceships) == scoreID s = s { scoreDeath = scoreDeath s + 1} 
-  | otherwise = newScoreee3 (tail spaceships) s
+newScoreee3 (ship:ships) s
+  | spaceshipID ship == scoreID s = s { scoreDeath = scoreDeath s + 1} 
+  | otherwise = newScoreee3 ships s
 
 checkCol :: [Asteroid] -> [Bullet] -> Spaceship -> Bool
 checkCol asteroids bullets ship
@@ -288,7 +290,7 @@ initShipAction i r e b = ShipAction {
 
 -- | Обработка действий кораблей
 handleShipsAction :: [ShipAction] -> Universe -> Universe
-handleShipsAction act u = u {spaceships = map (doActions act) (spaceships u)}
+handleShipsAction act u = u { spaceships = map (doActions act) (spaceships u) }
 
 -- | Обработка действий корабля
 doActions :: [ShipAction] -> Spaceship -> Spaceship

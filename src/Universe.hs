@@ -1,8 +1,6 @@
 module Universe where
 
 import System.Random
-import Graphics.Gloss.Geometry.Line()
-import Graphics.Gloss.Data.Vector
 import Asteroids
 import Bonuses
 import Spaceship
@@ -12,21 +10,21 @@ import Models
 import AI
 import Fisics
 
--- | Инициализация игровой вселенной без игроков (только с ботами)
+-- | Инициализация игровой вселенной без игроков
 emptyUniverse :: StdGen -> Universe
 emptyUniverse g = Universe
   { bullets        = []
-  , asteroids      = take asteroidsNumber (initAsteroids g)
-  , bonuses        = take bonusesNumber   (initBonuses g)
-  , spaceships     = initSpaceships g 1 botsNumber
+  , asteroids      = []
+  , bonuses        = []
+  , spaceships     = []
   , playerID       = 0
   , background     = initBackground
   , tableback      = Nothing
   , table          = Nothing
   , freshPositions = initShipPositions g
-  , freshAsteroids = drop asteroidsNumber (initAsteroids g)
-  , freshBonuses   = drop bonusesNumber   (initBonuses g)
-  , scores         = initScores 1 botsNumber
+  , freshAsteroids = initAsteroids g
+  , freshBonuses   = initBonuses g
+  , scores         = []
   }
 
 -- | Инициализация игровой вселенной
@@ -37,17 +35,6 @@ initUniverse g = (emptyUniverse g)
   , scores     = initScore Player 1 : initScores 2 botsNumber
   }
 
--- | Обновить фон
-updateBackground :: Float -> Universe -> Background
-updateBackground t u = Background
-  { backgroundPosition 
-      = (checkBoards (fst (backgroundPosition (background u))) (fst newPos) screenRight
-        , checkBoards (snd(backgroundPosition (background u))) (snd newPos) screenUp)
-  , backgroundVelocity = - spaceshipVelocity (head(spaceships u))
-  }
-  where
-    newPos = backgroundPosition (background u) + mulSV t (backgroundVelocity (background u))
-
 -- | Обновить состояние игровой вселенной.
 updateUniverse :: Float -> Universe -> Universe
 updateUniverse dt u = handleBotsActions (bulletsFaceSpaceships (bulletsFaceAsteroids (bonusesFaceSpaceships u
@@ -55,7 +42,6 @@ updateUniverse dt u = handleBotsActions (bulletsFaceSpaceships (bulletsFaceAster
       , asteroids      = updateAsteroids t newAsteroids
       , bonuses        = updateBonuses t newBonuses
       , spaceships     = updateSpaceships t (spaceships u)
-      , background     = updateBackground t u
       , freshPositions = tail (freshPositions u)
       , freshAsteroids = tail (freshAsteroids u) 
       , freshBonuses   = tail (freshBonuses u)
@@ -79,3 +65,10 @@ handleBotsActions u = handleShipsAction (map (botAction u) (spaceships u)) u
 -- | Сбросить игру.
 resetUniverse :: StdGen -> Universe -> Universe
 resetUniverse g _ = initUniverse g
+
+-- | Поиск корабля с нужным ID
+findShip :: Int -> [Spaceship] -> Spaceship
+findShip i []           = initSpaceship Bot (0, 0) i 2
+findShip i (ship:ships)
+  | (spaceshipID ship) == i = ship
+  | otherwise = findShip i ships

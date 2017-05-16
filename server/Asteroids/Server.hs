@@ -22,7 +22,6 @@ import Universe
 import Models
 import Items
 import Spaceship
-import Config
 
 type Client = Connection
 
@@ -38,7 +37,7 @@ mkDefaultConfig = do
   cfg <- atomically $ Config
     <$> newTVar (showTable (emptyUniverse g))
     <*> newTVar Map.empty
-    <*> newTVar [(botsNumber + 1)..]
+    <*> newTVar [1,3..]
   return cfg
   where
     showTable u = u
@@ -70,11 +69,12 @@ addClient client Config{..} = atomically $ do
 spawnPlayer :: PlayerID -> Universe -> Universe
 spawnPlayer ident u = u
   { spaceships = addPlayer (spaceships u)
-  , scores     = initScore Player ident : scores u
+  , scores     = initScore Player ident : initScore Bot (ident + 1) : scores u
   }
   where
-    addPlayer ships = initSpaceship Player pos ident 1 : ships
-    pos             = head $ freshPositions u
+    addPlayer ships = initSpaceship Player pos1 ident 1 : initSpaceship Bot pos2 (ident + 1) 2 : ships
+    pos1            = head $ freshPositions u
+    pos2            = head $ tail $ freshPositions u
 
 handleActions :: PlayerID -> Connection -> Config -> IO ()
 handleActions ident conn Config{..} = forever $ do
@@ -119,13 +119,9 @@ broadcastUpdate universe Config{..} = do
 
 kickPlayer :: PlayerID -> Universe -> Universe
 kickPlayer ident u = u
-  { spaceships = addBot (filter isConnected $ spaceships u)
+  { spaceships = filter isConnected $ spaceships u
   , scores     = filter isInTable $ scores u
   }
   where
-    addBot ships
-      | length ships >= botsNumber = ships
-      | otherwise = initSpaceship Bot pos ident 2 : ships 
-    isConnected ship = ident /= spaceshipID ship
-    pos              = head $ freshPositions u
-    isInTable score  = ident /= scoreID score
+    isConnected ship = ident /= spaceshipID ship && ident + 1 /= spaceshipID ship
+    isInTable score  = ident /= scoreID score && ident + 1 /= scoreID score

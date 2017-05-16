@@ -8,6 +8,7 @@ import Control.Monad (forever)
 import Graphics.Gloss.Interface.IO.Game
 import Network.WebSockets
 import System.Random
+import System.Environment
 import System.Exit (exitSuccess)
 
 import Universe
@@ -24,8 +25,9 @@ data GameState = GameState
 
 main :: IO ()
 main = do
-  images <- loadImages
-  runIO images
+  [ip, port] <- getArgs
+  images     <- loadImages
+  runIO ip (read port :: Int) images
 
 handleGame :: Event -> GameState -> IO GameState
 handleGame (EventKey (SpecialKey KeyEsc) Down _ _) g = const exitSuccess g
@@ -95,13 +97,11 @@ drawGame images GameState{..} = do
 updateGame :: Float -> GameState -> IO GameState
 updateGame _ g = return g
 
-runIO :: Images -> IO ()
-runIO images = do
+runIO :: String -> Int -> Images -> IO ()
+runIO ip port images = do
   g        <- newStdGen
   universe <- atomically $ newTVar (emptyUniverse g)
-  putStrLn "Input IP-adress"
-  ipAddr   <- getLine
-  runClient ipAddr 8000 "/connect" $ \conn -> do
+  runClient ip port "/connect" $ \conn -> do
     let gs = GameState universe False conn
     _ <- forkIO (handleUpdates gs)
     playIO display bgColor fps gs (drawGame images) handleGame updateGame
