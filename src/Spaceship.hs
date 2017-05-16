@@ -261,8 +261,8 @@ newScoreee3 spaceships s
 
 checkCol :: [Asteroid] -> [Bullet] -> Spaceship -> Bool
 checkCol asteroids bullets ship
-  = spaceshipFaceAsteroids [ship] asteroids 
-    || spaceshipFaceBullets [ship] bullets 
+  = (spaceshipFaceAsteroids [ship] asteroids || spaceshipFaceBullets [ship] bullets)
+    && shieldTime ship == 0
 
 -- | Проверка столкновений корабля с объектами, которые могут его уничтожить
 checkSpaceshipsCollisions :: Universe -> Spaceship -> Spaceship
