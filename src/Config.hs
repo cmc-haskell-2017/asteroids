@@ -28,7 +28,7 @@ asteroidsNumber = 100
 
 -- | Количество бонусов
 bonusesNumber :: Int
-bonusesNumber = 50
+bonusesNumber = 20
 
 -- | Количество ботов
 botsNumber :: Int

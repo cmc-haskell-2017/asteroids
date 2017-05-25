@@ -6,17 +6,50 @@ module AI.Strategy.Config where
 -- | Чем выше параметр, тем более предпочтительна стратегия для ботов
 -- | 1 <= Параметр <= 100 (желательно, так как при высоких значениях остальные стратегии будут всегда игнорироваться)
 
+-- | Уровни сложности:
+-- | Easy - боты мало обращают внимания на игрока, не собирают бонусы, 
+-- |  в основном уворачиваются от астероидов
+-- | Medium - боты собирают астероиды, атакуют игрока на небольшом расстоянии
+-- | Hard - основная цель ботов - убить игрока
+-- | Profi - боты уделяют полноценное внимание своему выживанию и убиству игрока
+data Difficulty = Easy | Medium | Hard | Profi deriving(Eq)
+
+-- | Уровень сложности 
+difficultyLevel :: Difficulty
+difficultyLevel = Profi
+
 -- | Параметр для стратегии Уход от астероидов 
 av:: Float
-av = 1.0 
+av = getav difficultyLevel
 
 -- | Параметр для стратегии Атака цели 
 at:: Float
-at = 1.0 
+at = getat difficultyLevel
 
 -- | Параметр для стратегии Взять бонус 
 bs:: Float
-bs = 20.0
+bs = getbs difficultyLevel
+
+-- | Вычисление параметра для стратегии Уход от астероидов
+getav :: Difficulty -> Float
+getav Easy   = 50
+getav Medium = 10
+getav Hard   = 1
+getav Profi  = 1
+
+-- | Вычисление параметра для стратегии Атака цели
+getat :: Difficulty -> Float
+getat Easy   = 30
+getat Medium = 50
+getat Hard   = 150
+getat Profi  = 100
+
+-- | Вычисление параметра для стратегии Взять бонус
+getbs :: Difficulty -> Float
+getbs Easy   = 0
+getbs Medium = 1
+getbs Hard   = 10
+getbs Profi  = 20
 
 -- | Параметр критического значения эвристики при стратегии Уход от астероидов
 critAv:: Float
