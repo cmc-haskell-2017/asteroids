@@ -89,7 +89,7 @@ bulletFaceAsteroid b a = collision aPos aRad bPos bRad
 bulletFaceSpaceships :: [Spaceship] -> Bullet -> Bool
 bulletFaceSpaceships [] _ = False
 bulletFaceSpaceships (sh:shs) b 
-  = (spaceshipFaceBullet sh b) || (bulletFaceSpaceships shs b)
+  = (spaceshipFaceBullet sh b && shieldTime sh == 0) || (bulletFaceSpaceships shs b)
 
 -- | Определение столкновения корабля с астероидами
 spaceshipFaceAsteroids :: [Spaceship] -> [Asteroid] -> Bool

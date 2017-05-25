@@ -21,7 +21,7 @@ initSpaceship mode pos ident gr = Spaceship
   , spaceshipAngularV   = 0
   , spaceshipDirection  = 0 
   , spaceshipSize       = 40
-  , shipLife            = 100
+  , shipLife            = 103
   , isfire              = False
   , fireReload          = 0
   , bonIndex            = (0, 0)
@@ -80,16 +80,18 @@ drawSpaceship image1 image2 pics spaceship'
         , (rotate (-spaceshipDirection spaceship') image2)
         , translate (-30) (50)  (scale 0.15 0.15 (color red (text name1)))
         , translate (-15) (133) (scale 0.5 0.5 num)
-        , color white (polygon [ (-60, 80), (-60, 110), (60, 110), (60, 80) ]) -- белая рамка
-        , color green (polygon [ (-57, 83), (-57, 107), (-57 + shipLife spaceship', 107), (-57 + shipLife spaceship', 83) ]) -- белая рамка
+        , color white (polygon [ (-60, 80), (-60, 110), (57, 110), (57, 80) ]) -- белая рамка
+        , color green (polygon [ (-57, 83), (-57, 107), (-57 + shipLife spaceship', 107), 
+                                                        (-57 + shipLife spaceship', 83) ]) -- индикатор
         ]) 
   | otherwise = 
       translate x y (pictures 
         [(rotate (- spaceshipDirection spaceship') image1)
         , translate (-30) (50)  (scale 0.15 0.15 (color red (text name1)))
         , translate (-15) (133) (scale 0.5 0.5 num)
-        , color white (polygon [ (-60, 80), (-60, 110), (60, 110), (60, 80) ]) -- белая рамка
-        , color green (polygon [ (-57, 83), (-57, 107), (-57 + shipLife spaceship', 107), (-57 + shipLife spaceship', 83) ]) -- белая рамка
+        , color white (polygon [ (-60, 80), (-60, 110), (57, 110), (57, 80) ]) -- белая рамка
+        , color green (polygon [ (-57, 83), (-57, 107), (-57 + shipLife spaceship', 107), 
+                                                        (-57 + shipLife spaceship', 83) ]) -- индикатор
         ])
   where
     (x, y) = spaceshipPosition spaceship'
@@ -98,7 +100,7 @@ drawSpaceship image1 image2 pics spaceship'
       | otherwise = "Player " ++ show (spaceshipID spaceship')
     num = pics !! ident
     ident 
-      | fst (bonIndex spaceship') >= 2 && fst (bonIndex spaceship') <= 4 = fst (bonIndex spaceship') - 1
+      | fst (bonIndex spaceship') >= 2 && fst (bonIndex spaceship') <= 5 = fst (bonIndex spaceship') - 1
       | otherwise = fst (bonIndex spaceship')
 
 -- | Отобразить пули.
@@ -183,7 +185,7 @@ updateSpaceship t ship = ship
       | snd (bonIndex ship) <= 0 = (0, 0)
       | otherwise = (fst (bonIndex ship), snd (bonIndex ship) - 0.1)
     protection
-      | shieldTime ship <= 0 = 0
+      | shieldTime ship <= 0 && fst (bonIndex ship) == 5 = 0q
       | otherwise = shieldTime ship - 0.1
 
 -- | Обновление состояния списка кораблей

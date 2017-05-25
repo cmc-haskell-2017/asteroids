@@ -46,20 +46,18 @@ initBonuses g = bonusList (ints numbers g)
                           (vectors velocities velocities g)
 
 -- | Отобразить список бонусов
-drawBonuses :: Picture -> Picture -> Picture -> Picture -> [Bonus] -> Picture
-drawBonuses image1 image2 image3 image4 bonuses' = foldMap (drawBonus image1 image2 image3 image4) bonuses'
+drawBonuses :: [Picture] -> [Bonus] -> Picture
+drawBonuses pics bonuses' = foldMap (drawBonus pics) bonuses'
 
 -- | Отобразить бонус
-drawBonus :: Picture -> Picture -> Picture -> Picture -> Bonus -> Picture 
-drawBonus image1 image2 image3 image4 bonus
-  | bonusNumber bonus == 1 = translate x y (resize (rotate (- bonusDirection bonus) image1))
-  | bonusNumber bonus == 2 = translate x y (resize (rotate (- bonusDirection bonus) image2))
-  | bonusNumber bonus == 3 = translate x y (resize (rotate (- bonusDirection bonus) image3))
-  | otherwise = translate x y (resize (rotate (- bonusDirection bonus) image4))
+drawBonus :: [Picture] -> Bonus -> Picture 
+drawBonus pics bonus = translate x y (resize (rotate (- bonusDirection bonus) num))
   where
     size   = bonusSize bonus
     resize = scale size size
     (x, y) = bonusPosition bonus
+    num = pics !! ident
+    ident = bonusNumber bonus
 
 -- | Обновить бонусы игровой вселенной.
 updateBonuses :: Float -> [Bonus] -> [Bonus]

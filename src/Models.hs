@@ -18,6 +18,7 @@ data Images = Images
   , imageB_low      :: Picture -- ^ Бонус-замедление
   , imageB_high     :: Picture -- ^ Бонус-ускорение
   , imageB_gun      :: Picture -- ^ Бонус-оружие
+  , imageB_def      :: Picture -- ^ Бонус-защита
   , imageStat       :: Picture -- ^ Фон статистики
   , imageShield     :: Picture -- ^ Защитный экран
   }
