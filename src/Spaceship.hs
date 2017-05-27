@@ -4,6 +4,7 @@ import System.Random
 import Graphics.Gloss.Data.Vector
 import Graphics.Gloss.Geometry.Line()
 import Graphics.Gloss.Interface.Pure.Game
+
 import Config
 import Models
 import Fisics
@@ -21,11 +22,12 @@ initSpaceship mode pos ident gr = Spaceship
   , spaceshipAngularV   = 0
   , spaceshipDirection  = 0 
   , spaceshipSize       = 40
-  , shipLife            = 103
+  , shipLife            = 100
   , isfire              = False
   , fireReload          = 0
   , bonIndex            = (0, 0)
   , shieldTime          = 20
+  , flag                = False
   }
 
 -- | Создание бесконечного списка позиций для кораблей
@@ -74,9 +76,9 @@ drawSpaceships image1 image2 pics spaceships' = map (drawSpaceship image1 image2
 -- | Отобразить корабль.
 drawSpaceship :: Picture -> Picture -> [Picture] -> Spaceship -> Picture
 drawSpaceship image1 image2 pics spaceship'
-  | shieldTime spaceship' > 0 =
+  | shieldTime spaceship' > 0 || fst (bonIndex spaceship') == 5 =
       translate x y (pictures 
-        [(rotate (- spaceshipDirection spaceship') image1)
+        [ (rotate (-spaceshipDirection spaceship') image1)
         , (rotate (-spaceshipDirection spaceship') image2)
         , translate (-30) (50)  (scale 0.15 0.15 (color red (text name1)))
         , translate (-15) (133) (scale 0.5 0.5 num)
@@ -100,8 +102,8 @@ drawSpaceship image1 image2 pics spaceship'
       | otherwise = "Player " ++ show (spaceshipID spaceship')
     num = pics !! ident
     ident 
-      | fst (bonIndex spaceship') >= 2 && fst (bonIndex spaceship') <= 5 = fst (bonIndex spaceship') - 1
-      | otherwise = fst (bonIndex spaceship')
+      | fst (bonIndex spaceship') >= 2 && fst (bonIndex spaceship') /= 6  = fst (bonIndex spaceship') - 1
+      | otherwise = 0
 
 -- | Отобразить пули.
 drawBullets :: Picture -> [Bullet] -> Picture
@@ -185,7 +187,9 @@ updateSpaceship t ship = ship
       | snd (bonIndex ship) <= 0 = (0, 0)
       | otherwise = (fst (bonIndex ship), snd (bonIndex ship) - 0.1)
     protection
-      | shieldTime ship <= 0 && fst (bonIndex ship) == 5 = 0q
+      | fst (bonIndex ship) == 5 && shieldTime ship > 0  = shieldTime ship - 0.1
+      | fst (bonIndex ship) == 5 && shieldTime ship <= 0 = 20
+      | fst (bonIndex ship) < 5 && shieldTime ship <= 0  = 0
       | otherwise = shieldTime ship - 0.1
 
 -- | Обновление состояния списка кораблей
@@ -245,7 +249,7 @@ bulletsFaceSpaceships u = u {
     newB = filter (not . bulletFaceSpaceships s) b
     newS = map (checkSpaceshipsCollisions u) s
     newScore = newScoreee4 (filter (checkCol a b) s)
-                           (newScoreee1 (filter (bulletFaceSpaceships s) b) (scores u))
+                           (newScoreee1 (filter (bulletFaceSpaceships s) b) (scores u)) 
                    
 newScoreee1 :: [Bullet] -> [Score] -> [Score]
 newScoreee1 [] scores' = scores'
@@ -270,13 +274,13 @@ newScoreee3 spaceships' s
 checkCol :: [Asteroid] -> [Bullet] -> Spaceship -> Bool
 checkCol asteroids' bullets' ship
   = (spaceshipFaceAsteroids [ship] asteroids' 
-    || spaceshipFaceBullets [ship] bullets') && shieldTime ship == 0
+    || spaceshipFaceBullets [ship] bullets') && (shieldTime ship == 0)
 
 -- | Проверка столкновений корабля с объектами, которые могут его уничтожить
 checkSpaceshipsCollisions :: Universe -> Spaceship -> Spaceship
 checkSpaceshipsCollisions u ship
   | (spaceshipFaceAsteroids [ship] asteroids' 
-    || (spaceshipFaceBullets [ship] bullets')) && (shieldTime ship == 0)
+    || spaceshipFaceBullets [ship] bullets') && (shieldTime ship == 0)
     = initSpaceship (spaceshipMode ship) pos ident (group ship)
   | otherwise = ship
   where

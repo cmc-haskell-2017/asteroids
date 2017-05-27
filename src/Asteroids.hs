@@ -22,6 +22,7 @@ initAsteroid pos dir vel siz
     , asteroidDirection = dir
     , asteroidVelocity  = rotateV (dir * pi / 180) vel
     , asteroidSize      = siz
+    , astBonusTime      = (False, 0)
     }
     where
       (x, y) = pos
@@ -71,6 +72,17 @@ updateAsteroids t asteroids'
 -- | Обновить астероид
 updateAsteroid :: Float -> Asteroid -> Asteroid 
 updateAsteroid t asteroid = asteroid
-  { asteroidPosition = newPosition }
+  { asteroidPosition = newPosition 
+  , astBonusTime     = (newastBool, newastTime)
+  }
   where
-    newPosition = asteroidPosition asteroid + mulSV t (asteroidVelocity asteroid)
+    newPosition 
+       | newastBool == True = asteroidPosition asteroid + mulSV (0.2 * t) (asteroidVelocity asteroid)
+       | otherwise = asteroidPosition asteroid + mulSV t (asteroidVelocity asteroid)
+    newastBool 
+       | snd (astBonusTime asteroid) <= 0 = False
+       | otherwise = True
+    newastTime
+       | snd (astBonusTime asteroid) <= 0 = 0.0 
+       | otherwise = snd (astBonusTime asteroid) - 0.1
+

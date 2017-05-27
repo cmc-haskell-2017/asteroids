@@ -24,15 +24,15 @@ ints range g = randomRs range g
 
 -- | Количество астероидов
 asteroidsNumber :: Int
-asteroidsNumber = 100
+asteroidsNumber = 50
 
 -- | Количество бонусов
 bonusesNumber :: Int
-bonusesNumber = 20
+bonusesNumber = 50
 
 -- | Количество ботов
 botsNumber :: Int
-botsNumber = 1
+botsNumber = 0
 
 -- | Интервал позиций по оси абсцисс для астероидов
 xPositions :: (Float, Float)
@@ -60,7 +60,7 @@ yShipPositions = (- height, height)
 
 -- | Интвервал номеров для бонусов
 numbers :: (Int,Int)
-numbers = (1,4)
+numbers = (1,7)
 
 -- | Интервал скоростей для астероидов
 velocities :: (Float, Float)
@@ -81,10 +81,6 @@ damping = (0.98, 0.98)
 -- | Время перезарядки
 reloadTime :: Float
 reloadTime = 30.0
-
--- | Бонусное время перезарядки 
-brTime :: Float
-brTime = 1.0
 
 -- | Ширина экрана.
 screenWidth :: Int

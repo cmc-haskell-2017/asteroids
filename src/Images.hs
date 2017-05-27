@@ -17,7 +17,9 @@ loadImages = do
   Just b_gun       <- loadJuicyPNG "images/gun.png"
   Just stat        <- loadJuicyPNG "images/stat.png"
   Just shield      <- loadJuicyPNG "images/shield.png"
-  Just b_def       <- loadJuicyPNG "images/def.png"
+  Just b_def       <- loadJuicyPNG "images/deff.png"
+  Just b_clear     <- loadJuicyPNG "images/ast_killer.png"
+  Just b_barrier   <- loadJuicyPNG "images/block_ast.png"
   return Images
     { imageBullet     = scale 0.07 0.07 bullet
     , imageAsteroid   = scale  1.0  1.0 asteroid
@@ -29,5 +31,7 @@ loadImages = do
     , imageB_gun      = scale  0.08  0.08 b_gun
     , imageStat       = scale  1.0  1.0 stat
     , imageShield     = scale  0.3  0.3 shield
-    , imageB_def      = scale  0.1  0.1  b_def
+    , imageB_def      = scale  0.2  0.2  b_def
+    , imageB_clear    = scale  0.6  0.6  b_clear
+    , imageB_barrier  = scale  0.03  0.03  b_barrier
     }

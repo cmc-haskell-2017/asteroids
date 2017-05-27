@@ -21,6 +21,8 @@ data Images = Images
   , imageB_def      :: Picture -- ^ Бонус-защита
   , imageStat       :: Picture -- ^ Фон статистики
   , imageShield     :: Picture -- ^ Защитный экран
+  , imageB_clear    :: Picture -- ^ Бонус-очищение экрана от астероидов
+  , imageB_barrier  :: Picture -- ^ Торможение бонусов
   }
 
 -- | Статистика
@@ -63,6 +65,7 @@ data Spaceship = Spaceship
   , fireReload          :: Float      -- ^ Счётчик перезарядки 
   , bonIndex            :: (Int, Float) -- ^ Номер действующего индекса
   , shieldTime          :: Float      -- ^ Время действия защитного экрана
+  , flag                :: Bool       -- ^ Зачистка экрана
   } deriving (Generic)
 
 instance Binary Spaceship
@@ -106,6 +109,7 @@ data Asteroid = Asteroid
   , asteroidDirection :: Float  -- ^ Направление астероида
   , asteroidVelocity  :: Vector -- ^ Скорость астероида
   , asteroidSize      :: Float  -- ^ Размер астероида
+  , astBonusTime      :: (Bool, Float)  -- ^ Активен ли бонус 
   } deriving (Generic)
 
 instance Binary Asteroid

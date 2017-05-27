@@ -37,7 +37,7 @@ initTableBack = Table { tablePosition = (-10, 0) }
 -- | Отобразить фон для статистики
 drawTableBack :: Maybe Table -> Maybe Picture
 drawTableBack Nothing = Nothing
-drawTableBack (Just tableback)
+drawTableBack (Just tableback')
   = Just (translate (-w) h (scale 10 10 (pictures
             [ translate 56 (-20.5) (scale 0.02 0.02 (color white (text name)))
             , translate 38 (-23.5) (scale 0.01 0.01 (color white (text headers)))
@@ -53,14 +53,14 @@ drawTableBack (Just tableback)
 -- | Отобразить статистику 
 drawTable :: Maybe Table -> Float -> Score -> Maybe Picture
 drawTable Nothing _ _  = Nothing
-drawTable (Just table) shift score
+drawTable (Just table') shiftt score
   = Just (translate (-w) h (scale 10 10 (pictures
-            [ translate 38 (-shift) (scale 0.015 0.015 (color white (text name))) 
-            , translate 52 (-shift) (scale 0.015 0.015 (color white (text name1)))
-            , translate 61 (-shift) (scale 0.015 0.015 (color white (text name2)))
-            , translate 70 (-shift) (scale 0.015 0.015 (color white (text name3)))
-            , translate 78 (-shift) (scale 0.015 0.015 (color white (text name4)))
-            , translate 88 (-shift) (scale 0.015 0.015 (color white (text name5))) 
+            [ translate 38 (-shiftt) (scale 0.015 0.015 (color white (text name))) 
+            , translate 52 (-shiftt) (scale 0.015 0.015 (color white (text name1)))
+            , translate 61 (-shiftt) (scale 0.015 0.015 (color white (text name2)))
+            , translate 70 (-shiftt) (scale 0.015 0.015 (color white (text name3)))
+            , translate 78 (-shiftt) (scale 0.015 0.015 (color white (text name4)))
+            , translate 88 (-shiftt) (scale 0.015 0.015 (color white (text name5))) 
             ])))
             where
               w = screenRight
@@ -78,8 +78,8 @@ drawTable (Just table) shift score
 drawTables :: Maybe Table -> [Score] -> Float -> [Maybe Picture]
 drawTables Nothing _ _ = [Nothing]
 drawTables _ [] _ = []
-drawTables (Just tablee) (score : scores) shift 
-    = drawTable (Just tablee) shift score : drawTables (Just tablee) scores (shift + 3)
+drawTables (Just tablee) (scoree : scorees) shiftt 
+    = drawTable (Just tablee) shiftt scoree : drawTables (Just tablee) scorees (shiftt + 3)
 
 drawMaybe :: [Maybe Picture] -> [Picture]
 drawMaybe [] = [blank]
