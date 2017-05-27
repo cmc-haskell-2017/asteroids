@@ -60,14 +60,14 @@ drawAsteroid image asteroid
 
 -- | Обновить астероиды игровой вселенной.
 updateAsteroids :: Float -> [Asteroid] -> [Asteroid]
-updateAsteroids t asteroids'
-  = filter visible (map (updateAsteroid t) asteroids')
+updateAsteroids t asteroids' = filter visible (map (updateAsteroid t) asteroids')
   where
     visible asteroid = abs x <= 2 * screenRight + radius
-      && abs y <= 2 * screenUp + radius
-      where
-      (x, y)  = asteroidPosition asteroid
-      radius  = asteroidSize asteroid * 70
+                       && abs y <= 2 * screenUp + radius && size > 0.2
+                        where
+                          size = asteroidSize asteroid
+                          (x, y) = asteroidPosition asteroid
+                          radius = asteroidSize asteroid * 70
 
 -- | Обновить астероид
 updateAsteroid :: Float -> Asteroid -> Asteroid 
