@@ -1,11 +1,11 @@
-# asteroids
+# Asteroids
 
 Игра "Астероиды"
 
 Вам предложено сыграть за корабль с именем "Player". Против Вас играют агрессивные боты "Bot". 
-Ваша задача : убивать астероиды, убивать ботов, собирать бонусы для того, чтобы выжить.
+               Ваша задача : убивать астероиды, убивать ботов, собирать бонусы для того, чтобы выжить.
 
-![Астероиды.](images/asters.gif)
+![Астероиды.](images/sd.gif)
 
 
 [![Build Status](https://travis-ci.org/cmc-haskell-2017/project-template.svg?branch=master)](https://travis-ci.org/cmc-haskell-2017/project-template)
