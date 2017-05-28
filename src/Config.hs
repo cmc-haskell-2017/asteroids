@@ -24,7 +24,7 @@ ints range g = randomRs range g
 
 -- | Количество астероидов
 asteroidsNumber :: Int
-asteroidsNumber = 70
+asteroidsNumber = 50
 
 -- | Количество бонусов
 bonusesNumber :: Int
